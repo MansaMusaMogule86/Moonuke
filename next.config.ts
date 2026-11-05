@@ -9,6 +9,7 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  serverExternalPackages: ["pg"],
   reactStrictMode: true,
   async headers() {
     return [{ source: "/(.*)", headers: securityHeaders }];

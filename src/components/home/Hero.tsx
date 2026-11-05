@@ -119,13 +119,18 @@ export function Hero() {
           <div aria-hidden className="hairline my-8 max-w-[22rem]" />
 
           <div className="flex flex-wrap items-center gap-3">
-            <Button href={role === "fan" ? "#tiers" : "#creators"} size="lg" arrow>
-              {role === "fan" ? "Request entry" : "Apply as a creator"}
+            <Button href="/signin" size="lg" arrow>
+              Sign in
             </Button>
-            <Button href="#circle" variant="quiet" size="lg">
-              See the Circle
+            <Button href={role === "fan" ? "#tiers" : "#creators"} variant="quiet" size="lg">
+              {role === "fan" ? "How membership works" : "What creators get"}
             </Button>
           </div>
+          <p className="mt-5 max-w-[24rem] text-[13px] leading-relaxed text-ash" aria-live="polite">
+            {role === "fan"
+              ? "Entry is by invitation only. A member can ask the house to vouch for you."
+              : "Creators are invited and approved personally by the house."}
+          </p>
         </motion.div>
 
         <motion.div
@@ -160,7 +165,7 @@ function Eclipse() {
         <Portrait
           alt="Editorial study: a figure lit by the edge of an eclipse"
           study={{ hair: "wrap", light: "left", tilt: -3, adorn: "hoops", glow: 1 }}
-          className="absolute inset-x-[6%] bottom-[-22%] top-[24%] bg-transparent [mask-image:radial-gradient(ellipse_50%_55%_at_50%_45%,black_30%,transparent_96%)]"
+          className="absolute inset-x-[6%] bottom-[-22%] top-[24%] bg-transparent [mask-image:radial-gradient(closest-side,black_45%,transparent_100%)]"
           priority
         />
         <div aria-hidden className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_60%_40%,transparent_45%,rgb(5_5_5/0.7)_80%)]" />

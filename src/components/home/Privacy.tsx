@@ -86,7 +86,7 @@ export function Privacy() {
               ["Alias-first", "Creators see your alias and tier — never your name or card."],
               ["Discreet billing", "A neutral statement descriptor on every charge."],
               ["Your controls", "Block, report, hide activity, or leave in a tap."],
-              ["Adults only", "Every account is age-verified before entry."],
+              ["Adults only", "Every account is 18+ and approved personally by the house."],
             ].map(([t, d]) => (
               <div key={t}>
                 <dt className="font-display text-[20px] text-ivory">{t}</dt>

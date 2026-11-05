@@ -82,7 +82,7 @@ export function Tiers() {
           })}
         </ol>
         <p className="mt-10 text-center text-[13px] text-ash">
-          Prices are set by each creator and confirmed at checkout. Cancel anytime from Settings → Subscriptions.
+          Prices are set by each creator and confirmed at checkout. Payments are not yet active.
         </p>
       </div>
     </section>

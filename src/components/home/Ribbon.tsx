@@ -1,4 +1,4 @@
-const words = ["Members only", "Known by alias", "Invited creators", "Locked means locked", "Verified adults", "Private vault"];
+const words = ["Members only", "Known by alias", "Invited creators", "Locked means locked", "Adults only", "Private vault"];
 
 /** A slow, quiet ribbon between the hero and the Circle. Paused under reduced motion. */
 export function Ribbon() {

@@ -66,9 +66,10 @@ export function SiteHeader() {
               solid ? "opacity-100" : "opacity-0",
             )}
           />
-          <Link href="/" aria-label="Moonuke home" className="flex items-center gap-3 rounded-md">
+          <Link href="/" className="flex items-center gap-3 rounded-md">
+            <span className="sr-only">Moonuke home</span>
             <Symbol size={30} />
-            <Wordmark className="hidden text-[15px] sm:inline-flex" />
+            <Wordmark decorative className="hidden text-[15px] sm:inline-flex" />
           </Link>
 
           <nav aria-label="Primary" className="hidden lg:block">
@@ -101,11 +102,9 @@ export function SiteHeader() {
           </nav>
 
           <div className="flex items-center gap-2">
-            <Button href="/#tiers" variant="quiet" size="sm" className="hidden sm:inline-flex">
+            <span className="hidden text-[12px] uppercase tracking-[0.2em] text-ash xl:inline">By invitation</span>
+            <Button href="/signin" size="sm" className="hidden sm:inline-flex">
               Sign in
-            </Button>
-            <Button href="/#tiers" size="sm" className="hidden sm:inline-flex">
-              Request entry
             </Button>
             <button
               type="button"
@@ -147,13 +146,11 @@ export function SiteHeader() {
             ))}
           </ul>
         </nav>
-        <div className="mt-6 grid grid-cols-2 gap-3 pb-2">
-          <Button href="/#tiers" variant="outline" onClick={() => setOpen(false)}>
+        <div className="mt-6 pb-2">
+          <Button href="/signin" className="w-full" onClick={() => setOpen(false)}>
             Sign in
           </Button>
-          <Button href="/#tiers" onClick={() => setOpen(false)}>
-            Request entry
-          </Button>
+          <p className="mt-3 text-center text-[13px] text-ash">Membership is by invitation only.</p>
         </div>
       </Sheet>
     </>

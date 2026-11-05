@@ -48,8 +48,8 @@ export function ForCreators() {
             ))}
           </div>
           <Reveal delay={0.2} className="mt-14 flex flex-wrap gap-3">
-            <Button href="#top" size="lg" arrow>
-              Apply as a creator
+            <Button href="/signin" size="lg" arrow>
+              Creator sign in
             </Button>
             <Button href="#privacy" size="lg" variant="outline">
               How verification works

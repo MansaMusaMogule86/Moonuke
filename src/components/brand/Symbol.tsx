@@ -14,7 +14,7 @@ type SymbolProps = {
  * corona, and one point of light. Private, rare, and only for a moment.
  */
 export function Symbol({ size = 32, className, title }: SymbolProps) {
-  const id = useId().replace(/:/g, "");
+  const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   return (
     <svg
       width={size}

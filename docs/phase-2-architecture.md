@@ -171,3 +171,35 @@ Next.js server actions get Origin-header CSRF protection from the framework. Eve
 - The creator studio and publishing (Phase 4). Phase 2 content comes from the dev seed.
 - Real object storage, ID verification, moderation queues and 2FA (Phase 5).
 - Payment providers, the ledger and webhooks (Phase 6).
+
+## 11. Privileged (`system()`) call sites
+
+These are the only code paths that bypass RLS. Each runs a fixed query with no viewer-controlled SQL.
+
+| Module | Operation | Why it is privileged |
+|---|---|---|
+| `services/sessions.ts` | create, resolve and revoke sessions | `app.sessions` is unreachable for `mk_app` by design |
+| `services/accounts.ts` | inspect and redeem invitations, sign in, bootstrap the owner | Runs before any viewer exists |
+| `services/rateLimit.ts` | Increment counters | Shared across viewers |
+| `services/admin.ts` (via `revokeAllSessions`) | Revoke sessions after rejection or suspension | Runs only after an owner-authorised RLS update has succeeded |
+| `seed/` | Dev data | Refuses to run when `NODE_ENV=production` |
+
+## 12. Verification (this branch)
+
+| Check | Result |
+|---|---|
+| `pnpm lint` (tsc strict) | clean |
+| `pnpm build` (Next 16, Turbopack) | 16 routes |
+| `pnpm test` | 64/64: 17 UI and 47 server security tests against PostgreSQL 16 |
+| `scripts/e2e-smoke.mjs` (Phase 1) | 17/17, including axe on `/` and `/design-system` at 1440 and 390 |
+| `scripts/e2e-phase2.mjs` | 64/64: full invite → apply → approve → discover → entitlement → referral → suspension flow, plus axe WCAG 2.1 AA on every new route at 1440 and 390 |
+
+## 13. Known limitations
+- **No password reset or email delivery.** Both need an email provider (D2). The owner delivers invitation links by hand.
+- **No 2FA, no ID verification.** Age is an 18+ attestation plus owner review (D5). Both are planned for Phase 5.
+- **Creator content comes from the dev seed.** There is no studio or upload until Phase 4. Media is a placeholder SVG streamed through the signed route. Phase 5 swaps in private object storage behind the same URL contract.
+- **Blocking and reporting are not built.** They are scheduled for Phase 3.
+- **Rate limits and audit IP hashes use the first `X-Forwarded-For` hop.** Deploy only behind a proxy that overwrites that header.
+- **No global Content-Security-Policy yet.** Next's inline scripts need a nonce setup (Phase 7). The media route sends its own strict CSP.
+- **Decided rows keep stale badges.** After approving an application or referral, the row keeps its old status badge until the page reloads. This is deliberate, so the one-time invitation link is not unmounted.
+- **The end-to-end suites are Node scripts, not CI jobs.** Each needs a freshly seeded DB and a running server.

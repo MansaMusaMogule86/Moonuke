@@ -17,7 +17,7 @@ const browser = await chromium.launch();
   const page = await ctx.newPage();
   await page.goto(BASE + "/", { waitUntil: "networkidle" });
 
-  const desktopCta = page.getByRole("banner").getByRole("link", { name: "Request entry" });
+  const desktopCta = page.getByRole("banner").getByRole("link", { name: "Sign in" });
   check("mobile: header CTAs collapse", !(await desktopCta.isVisible()));
 
   await page.getByRole("button", { name: "Open menu" }).click();
@@ -47,7 +47,8 @@ const browser = await chromium.launch();
 
   const hero = page.locator("section[aria-labelledby=hero-title]");
   await hero.getByRole("radio", { name: "Creator" }).check({ force: true });
-  check("hero: role toggle swaps primary CTA", await hero.getByRole("link", { name: "Apply as a creator" }).isVisible());
+  check("hero: role toggle swaps secondary CTA", await hero.getByRole("link", { name: "What creators get" }).isVisible());
+  check("hero: no public registration CTA", (await page.getByRole("link", { name: /request entry|register|sign up|apply/i }).count()) === 0);
 
   const counter = page.getByText(/^0\d \/ 05$/).first();
   const before = await counter.textContent();

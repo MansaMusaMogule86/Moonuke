@@ -3,7 +3,7 @@ import { Wordmark } from "@/components/brand/Wordmark";
 
 const cols = [
   { title: "Club", links: [["The Circle", "/#circle"], ["Membership", "/#tiers"], ["The Vault", "/#vault"]] },
-  { title: "Creators", links: [["Apply", "/#creators"], ["Studio", "/#creators"], ["Verification", "/#privacy"]] },
+  { title: "Creators", links: [["For creators", "/#creators"], ["Sign in", "/signin"], ["How entry works", "/#privacy"]] },
   { title: "Trust", links: [["Privacy", "/#privacy"], ["Safety & reporting", "/#privacy"], ["Design system", "/design-system"]] },
 ] as const;
 

@@ -10,17 +10,17 @@ export function Closing() {
       <Reveal className="relative mx-auto max-w-4xl px-5 text-center">
         <Symbol size={56} className="mx-auto" />
         <h2 id="closing-title" className="mt-10 font-display text-[52px] italic leading-[0.98] tracking-[-0.03em] text-ivory md:text-[120px]">
-          The door is <span className="text-metal">open</span> tonight.
+          The door opens <span className="text-metal">by name.</span>
         </h2>
         <p className="mx-auto mt-8 max-w-md text-[17px] text-stone">
-          Entry is free. Verification takes a few minutes. Your alias is yours from the first night.
+          Moonuke is invitation-only. Members can ask the house to invite someone they know, and every account is approved personally. Your alias is yours from the first night.
         </p>
         <div className="mt-12 flex flex-wrap justify-center gap-3">
-          <Button href="#tiers" size="lg" arrow>
-            Request entry
+          <Button href="/signin" size="lg" arrow>
+            Sign in
           </Button>
-          <Button href="#creators" size="lg" variant="outline">
-            I&apos;m a creator
+          <Button href="#tiers" size="lg" variant="outline">
+            How membership works
           </Button>
         </div>
       </Reveal>

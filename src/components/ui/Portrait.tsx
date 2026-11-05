@@ -43,13 +43,14 @@ export function Portrait({ src, alt, study, className, priority, sizes = "(max-w
   );
 }
 
-function Study({ alt, hair, light, tilt = 0, adorn = "none", glow = 0.6 }: PortraitStudy & { alt: string }) {
-  const id = useId().replace(/:/g, "");
+export function Study({ alt, hair, light, tilt = 0, adorn = "none", glow = 0.6 }: PortraitStudy & { alt: string }) {
+  const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
   const lx = light === "left" ? 0.18 : 0.82;
   const rimX1 = light === "left" ? 0 : 1;
   const rimX2 = light === "left" ? 1 : 0;
   return (
     <svg
+      xmlns="http://www.w3.org/2000/svg"
       viewBox="0 0 300 400"
       preserveAspectRatio="xMidYMid slice"
       {...(alt ? { role: "img", "aria-label": alt } : { "aria-hidden": true })}

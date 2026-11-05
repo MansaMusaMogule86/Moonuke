@@ -6,6 +6,8 @@ Detailed references:
 - `docs/phase-4-architecture.md`: onboarding.
 - `docs/phase-5-architecture.md`: creator studio (posts, tiers, analytics).
 - `docs/phase-6-architecture.md`: fan app (library, vault, purchases, memberships, notifications).
+- `docs/phase-8-infrastructure.md`: payments, uploads and auth seam (disabled), flags, moderation and retention design.
+- `docs/security-testing.md`: what each security suite proves.
 - `docs/phase-7-messaging.md`: messaging (7a built; Blasts, attachments and paid features planned or blocked).
 - `docs/deployment.md`: env and deployment.
 - `docs/runbook.md`: operations (health, logs, jobs, backups, incidents).
@@ -36,9 +38,10 @@ src/server/
   ai/                      profile assistant: template (default) | anthropic | disabled
   imports/                 profile import parser (local) + social link normalisation
   messaging/               rule-based message risk scoring
-  payments/                PaymentProvider interface, EMPTY registry
+  payments/                provider interface (EMPTY registry), state machine, ledger, webhook contract, engine (disabled)
   verification/            VerificationProvider interface, EMPTY registry
-  media/                   signed URL HMAC + placeholder SVG renderer
+  media/                   signed URL HMAC, placeholder renderer, upload pipeline (disabled; mock providers for tests)
+  flags.ts                 server-enforced feature flags (all off)
   net/                     trusted-proxy IP parsing, CSP and security headers
   ops/                     maintenance (dead-row housekeeping)
   log.ts                   redacted JSON logging (used by onRequestError)
@@ -94,6 +97,8 @@ scripts/                   migrate, seed, create-owner, env-check, email-drain,
 | `20261109000001_phase5_creator_posts` | posts: drafts/scheduling (nullable `published_at`), creator write policies, `posts_guard` |
 | `20261109000002_phase5_creator_tiers` | tiers: creator write policies, `tiers_guard` |
 | `20261109000003_phase5_creator_analytics` | `my_post_unlocks()` aggregate helper |
+| `20261113000001_phase8_hardening` | Blast lease, missing indexes |
+| `20261113000002_phase8_payments_media` | payments, payment_events, ledger_entries (balanced, append-only), payouts, media_uploads (inert) |
 | `20261111000001..3_phase7_*` | messaging: `message` report target, conversations, messages, messaging_settings, messaging_restrictions, definer helpers, notify trigger |
 | `20261110000001_phase6_fan_app` | notifications, subscription cancel-at-period-end, `my_purchase_states()`, `post_is_live()`, notify triggers |
 

@@ -22,6 +22,7 @@
 | A14 | Profile imports: paste or export file, platform-agnostic; display name, tagline, bio and links; avatars later (needs storage) | Phase 4 session answers |
 | A16 | Next phase after Phase 4: the creator studio | Phase 5 session answer |
 | A17 | After Phase 5c: release hardening | Hardening session answer |
+| A20 | Phase 8: zero-cost production readiness; payments, uploads and Supabase Auth prepared but disabled | Phase 8 brief |
 | A19 | Phase 7 messaging: hybrid creator-controlled DMs, rich media, paid features, Blasts and layered moderation. Paid features stay disabled until a compliant provider is integrated; prioritise secure free messaging | Phase 7 brief |
 | A18 | Phase 6, the fan app: dashboard, vault, purchases, memberships with cancellation, notification centre ready for Messaging and Blasts. No payments, no new tracking, no fake transactions | Phase 6 brief |
 | A15 | Defer proposal emails, stalled-stage reminders and AI-drafted tiers or perks | Phase 4 session answers |
@@ -77,6 +78,10 @@
 | B1 | Blasts: 3 per day, up to 5,000 recipients, up to 30 days ahead, 3 attempts | phase-7 doc |
 | B2 | Custom Blast lists hold members only; followers stay anonymous | phase-7 doc |
 | B3 | Content held in a direct message is refused in a Blast | phase-7 doc |
+| U1 | Upload limits: images 25 MB, video 2 GB, audio 50 MB; 10 uploads in progress; abandoned after 24 hours | phase-8 doc |
+| U2 | Quarantined media is kept, never served, until retention is decided | phase-8 doc |
+| PAY1 | Platform fee is rounded down in the creator's favour (the fee itself is undecided) | phase-8 doc |
+| PAY2 | A purchase stays after a refund or chargeback until decided | phase-8 doc |
 | C1 | `style-src 'unsafe-inline'` is allowed (React and Motion style attributes); scripts are nonce-locked | phase-3 doc |
 
 ## Still unconfirmed: pricing and tier defaults (P1–P3, T1–T4)
@@ -91,6 +96,9 @@ These were built as defaults in Phase 5 and are **not** approved. The fan app do
 | T2 | When a price changes, do existing members keep their price (grandfathering)? There's no billing yet, so this is undecided. |
 | T3 | Should a tier with past members stay type-locked and undeletable (as now)? |
 | T4 | Must a creator always keep one tier active? |
+
+## Phase 8 conflict needing a decision
+- **Visual identity.** The Phase 8 brief asks for an identity "distinct from the competitor's black-and-gold identity". The approved identity (Phase 1, `MASTER_PRD.md` §1) *is* black and gold, with fixed tokens. Changing it is a rebrand, and the brief also says "do not perform a full visual rebrand without approval". **Nothing was changed.** The owner should decide whether to keep the approved palette or commission a new direction.
 
 ## Open questions (unresolved — do not assume)
 1. **Missing PRD.** The original "MOONUKE PRD" was never supplied. Should it be added to `docs/`?

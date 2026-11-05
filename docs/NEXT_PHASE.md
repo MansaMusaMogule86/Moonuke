@@ -1,23 +1,24 @@
 # Next phase
 
-**Phase 7, messaging, is built** (7a direct messages, 7b Blasts, 7c appeals; owner brief A19). See `docs/phase-7-messaging.md`. Before that: Phase 6 (fan app), release hardening and Phase 5 (creator studio).
+**Latest work: Phase 8, zero-cost production readiness.** See `docs/PHASE_8_REPORT.md` and `docs/phase-8-infrastructure.md`. Payments, uploads and Supabase Auth are **built but disabled**: server-enforced flags, refused in production. Phases 1–7 are complete.
 
 ## What's left, and why it isn't built
 Everything that needs no decision is built. **Each remaining item needs the owner's approval, money, or a legal or business answer:**
 
 | Item | Blocked by |
 |---|---|
-| Attachments (photos, video, GIFs, voice notes) and real post uploads | Approval of an object-storage provider **and** CSAM/NCII hash-matching (paid services) |
-| Payments: checkout, PPV purchases, tips, paid messages, paid Blasts, payouts, ledger, crypto | A compliant, approved provider (A10); fees, payout schedule and currencies (open question #6); pricing defaults P1–P3, T1–T4 |
+| Attachments and real post uploads | The pipeline is built and disabled (Phase 8). It needs approval of an object-storage provider **and** CSAM/NCII hash-matching (paid services), then an adapter for each |
+| Payments: checkout, tips, paid messages, paid Blasts, payouts, crypto | The engine, ledger and webhook contract are built and disabled (Phase 8). It needs a compliant approved provider (A10); fee, payout minimum and hold, currencies (#6); refund entitlement policy; P1–P3, T1–T4 |
 | Earnings dashboard | Payments |
-| Supabase Auth switch | Open questions in `docs/supabase-auth-migration.md` §10 (A3: don't switch until approved) |
+| Supabase Auth switch | The provider seam and regression tests are built (Phase 8). It needs the §10 answers, a Supabase project, and approval (A3) |
 | ID and age verification vendor | Vendor selection (A7) |
 | Real email delivery | SMTP provider and sending domain (open question #7) |
 | Production deployment | Approval and a hosting target (A10, open question #9) |
 | Editorial photography | Visual direction approval (A13) |
-| A separate moderator role | Owner decision; only one owner exists today (A1) |
+| A separate moderator role | Capabilities are designed (`src/server/auth/staff.ts`, inactive). It needs the owner's decision (A1) |
 | Retention and deletion periods, data export | Legal (open question #5) |
-| Re-enabling CI | Approval (A11) |
+| Re-enabling CI | The workflow is updated to run `pnpm verify` and stays disabled. It needs approval (A11) and an Actions-enabled account |
+| Visual identity change | Owner decision: the Phase 8 brief conflicts with the approved black-and-gold identity (see DECISIONS) |
 
 Defaults built and awaiting confirmation: see `docs/DECISIONS.md` (D, S, M, V, E, W, C, I, P, T, F, M, B, R).
 

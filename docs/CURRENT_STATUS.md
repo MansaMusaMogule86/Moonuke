@@ -1,6 +1,6 @@
 # Current status
 
-**Branch:** `claude/cool-noether-uvf5h7`. **Last code commit:** `cb942bc`. **Deployed:** no. **Payments active:** no.
+**Branch:** `claude/cool-noether-uvf5h7`. **Last code commit:** `8f6a0d5`. **Deployed:** no. **Payments active:** no.
 
 ## Completed phases
 
@@ -43,6 +43,9 @@
 | 7b/7c | Blasts and appeals server (RLS, worker, tests) | `6f698aa` |
 | 7b/7c | Blasts and appeals UI and e2e | `3584a0b` |
 | 7b/7c | Docs | `cb942bc` |
+| 8 | Worker hardening, indexes, security regression suite | `1a2bf42` |
+| 8 | Payments, uploads and auth seam (disabled behind flags) | `b8b0d94` |
+| 8 | CI workflow updated (still disabled); loading.tsx reverted | `147045c`, `8f6a0d5` |
 
 What Phase 4 delivered:
 - White-glove cases and the pipeline board.
@@ -89,23 +92,25 @@ Phase 7a, messaging (details in `docs/phase-7-messaging.md`):
 - Appeals of messaging pauses (7c).
 - Attachments and paid features are blocked by storage and payments. The full list of blocked work is in `docs/NEXT_PHASE.md`.
 
+Phase 8, zero-cost production readiness (`docs/PHASE_8_REPORT.md`):
+- Security fixes to the Blast worker and appeals.
+- An RLS regression suite.
+- Indexes.
+- Payment, upload and auth infrastructure, **built and disabled**.
+
 What's still open is in `docs/NEXT_PHASE.md`.
 
-## Test results (last full local run: `pnpm verify` at `cb942bc`, PASS, ~8.5 min)
+## Test results (last full local run: `pnpm verify` at `8f6a0d5`, PASS, ~9 min)
 This was a **local** run. GitHub Actions did not run.
 
 | Step | Result |
 |---|---|
 | TypeScript strict | pass |
 | Dependency audit (`pnpm audit --prod`) | no known vulnerabilities |
-| Vitest: UI and PostgreSQL security tests, including schema lint | 204 / 204 (21 files) |
+| Vitest: UI and PostgreSQL security tests, including schema lint and RLS regression | 236 / 236 (26 files) |
 | Production build, env-safety check | pass |
-| Browser, Phases 1–4 | 17 / 17, 70 / 70, 66 / 66, 43 / 43 |
-| Browser, Phase 5 (studio) | 39 / 39 |
-| Browser, Phase 6 (fan app) | 41 / 41 |
-| Browser, Phase 7 (messaging, Blasts, appeals) | 44 / 44 |
-| Browser, release hardening | 21 / 21 |
-| Backup and restore drill | 39 tables, 79 policies, 46 definer functions, 10 triggers matched |
+| Browser, Phases 1–7 and hardening | 17 / 17, 70 / 70, 66 / 66, 43 / 43, 39 / 39, 41 / 41, 44 / 44, 21 / 21 |
+| Backup and restore drill | 44 tables, 80 policies, 47 definer functions, 12 triggers matched |
 
 ## Known issues and limitations
 - **Auth:** our own implementation; the Supabase switch is planned, not done. There's no ID-verification vendor; checks are manual.

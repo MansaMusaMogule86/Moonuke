@@ -59,6 +59,12 @@ Every HTML response carries a per-request CSP nonce (`src/proxy.ts`). The static
 Health check: `GET /api/health`. Logs, backups, restore and incidents are covered in `docs/runbook.md`.
 
 ## 6. Before go-live checklist
+These items, all from Phase 8, are code-complete and need an owner decision rather than engineering work:
+- [ ] Feature flags are all off (`FEATURE_PAYMENTS`, `FEATURE_UPLOADS`, `AUTH_PROVIDER=own`, no mock providers). Production enforces this.
+- [ ] Scheduled jobs: `email:drain`, `blasts:run`, `maintenance`.
+- [ ] `/api/health` is monitored; the log drain is checked for redaction (`docs/runbook.md`).
+- [ ] The visual identity question is resolved (`docs/DECISIONS.md`).
+
 - [ ] Approval to deploy, and the legal/compliance review for an 18+ creator platform in each target jurisdiction.
 - [ ] `pnpm env:check` passes with production values.
 - [ ] The owner is created, MFA is enrolled and the recovery codes are stored offline.

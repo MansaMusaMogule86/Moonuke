@@ -68,6 +68,11 @@ GoTrue can import some external hash formats (bcrypt is documented). **scrypt su
    - a suspended user's tokens stop working within the JWT lifetime (set a short `jwt_expiry` and revoke refresh tokens on suspend).
 5. Rehearse the owner's MFA re-enrolment and rollback.
 
+## 8b. Prepared in Phase 8 (not active)
+- The `AuthProvider` seam (`src/server/auth/provider.ts`): `own` is implemented; the `supabase` stub refuses. `AUTH_PROVIDER=supabase` is refused in production.
+- The regression suite to run against both providers: `tests/server/auth-regression.test.ts`.
+- Authorization (`can()`, RLS through `asViewer`) is unchanged by a provider switch.
+
 ## 9. Rollback
 
 - Keep the legacy columns and tables (`password_hash`, `app.sessions`, `app.mfa_*`) read-only for one release.

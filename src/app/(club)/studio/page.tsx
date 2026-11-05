@@ -68,7 +68,8 @@ export default async function StudioPage() {
             <Badge tone={ob.profile?.published ? "vip" : "neutral"}>{ob.profile?.published ? "Published" : "Private draft"}</Badge>
           </div>
           <div className="mt-8">
-            <ProfileEditor key={JSON.stringify(ob.profile)} initial={ob.profile} categories={categories} assist={assistantInfo()} userId={viewer.id} />
+            {/* Remount only when a house proposal was accepted (to load its values) — never on an ordinary save, which would drop the confirmation. */}
+            <ProfileEditor key={proposals.find((p) => p.status === "accepted")?.id ?? "draft"} initial={ob.profile} categories={categories} assist={assistantInfo()} userId={viewer.id} />
           </div>
         </section>
 

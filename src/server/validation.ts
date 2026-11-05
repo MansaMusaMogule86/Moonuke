@@ -46,7 +46,7 @@ export const referralSchema = z.object({
 export const decisionSchema = z.object({ id: uuid, note });
 
 export const reportSchema = z.object({
-  targetType: z.enum(["creator", "post"]),
+  targetType: z.enum(["creator", "post", "message"]),
   targetId: uuid,
   reason: z.enum(["harassment", "impersonation", "spam", "copyright", "other", "underage_concern", "non_consensual", "illegal_content"], { message: "Choose a reason." }),
   details: z.string().trim().max(2000).optional().transform((v) => (v ? v : undefined)),

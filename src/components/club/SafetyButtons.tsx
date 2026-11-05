@@ -19,7 +19,7 @@ const REASONS = [
 ] as const;
 
 /** Report a creator or a post. Opens a bottom sheet; the server validates everything. */
-export function ReportButton({ targetType, targetId, label, compact = false }: { targetType: "creator" | "post"; targetId: string; label: string; compact?: boolean }) {
+export function ReportButton({ targetType, targetId, label, compact = false }: { targetType: "creator" | "post" | "message"; targetId: string; label: string; compact?: boolean }) {
   const [open, setOpen] = useState(false);
   const [state, action] = useActionState(reportAction, idle);
   const group = useId();
@@ -34,7 +34,7 @@ export function ReportButton({ targetType, targetId, label, compact = false }: {
           Report
         </Button>
       )}
-      <Sheet open={open} onOpenChange={setOpen} title={`Report ${targetType === "post" ? "this post" : label}`} description="Reports are confidential. The person you report is not told who filed it.">
+      <Sheet open={open} onOpenChange={setOpen} title={`Report ${targetType === "post" ? "this post" : targetType === "message" ? "this message" : label}`} description="Reports are confidential. The person you report is not told who filed it.">
         {state.status === "success" ? (
           <div className="space-y-5 pb-4">
             <FormMessage state={state} />

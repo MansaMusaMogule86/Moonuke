@@ -62,7 +62,7 @@ export async function myBlocks(viewer: Viewer): Promise<BlockedRow[]> {
 
 // ---------------------------------------------------------------- reporting
 
-export type ReportInput = { targetType: "creator" | "post"; targetId: string; reason: ReportReason; details?: string };
+export type ReportInput = { targetType: "creator" | "post" | "message"; targetId: string; reason: ReportReason; details?: string };
 
 /**
  * File a report. The target must be visible to the reporter (checked under
@@ -76,7 +76,10 @@ export async function fileReport(viewer: Viewer, input: ReportInput, meta: { ipH
     const t =
       input.targetType === "creator"
         ? await q.one<{ uid: string }>(`select user_id as uid from app.creators where user_id = $1`, [input.targetId])
-        : await q.one<{ uid: string }>(`select creator_id as uid from app.posts where id = $1`, [input.targetId]);
+        : input.targetType === "message"
+          ? // Only a participant can see (and so report) a message.
+            await q.one<{ uid: string }>(`select sender_id as uid from app.messages where id = $1 and status = 'sent'`, [input.targetId])
+          : await q.one<{ uid: string }>(`select creator_id as uid from app.posts where id = $1`, [input.targetId]);
     if (!t) throw new AppError("not_found", "That's no longer available.");
     if (t.uid === viewer.id) throw new AppError("validation", "You can't report your own content.");
     try {
@@ -96,6 +99,11 @@ export async function fileReport(viewer: Viewer, input: ReportInput, meta: { ipH
   if (critical) {
     // Privileged follow-up: the reporter can't hide posts or mail the owner themselves.
     await system(async (q) => {
+      if (input.targetType === "message") {
+        // Critical report: withhold the message from the conversation pending review.
+        const held = await q.one(`update app.messages set status = 'held' where id = $1 and status = 'sent' returning id`, [input.targetId]);
+        if (held) await audit(q, { actorId: null, action: "moderation.auto_hold_message", targetType: "message", targetId: input.targetId, metadata: { report: id } });
+      }
       if (input.targetType === "post") {
         const hidden = await q.one(
           `update app.posts set hidden_at = now(), hidden_reason = 'Pending review (automatic, critical report)' where id = $1 and hidden_at is null returning id`,
@@ -123,7 +131,7 @@ export async function myReports(viewer: Viewer): Promise<MyReportRow[]> {
 
 export type QueueRow = {
   id: string;
-  target_type: "creator" | "post" | "user";
+  target_type: "creator" | "post" | "user" | "message";
   target_id: string;
   target_user_id: string | null;
   target_label: string | null;
@@ -148,7 +156,7 @@ export async function moderationQueue(viewer: Viewer, view: "open" | "escalated"
     q.query<QueueRow>(
       `select r.id, r.target_type, r.target_id, r.target_user_id, r.reason, r.details, r.severity, r.status, r.escalation_ref, r.resolution_note, r.created_at,
               ru.alias::text as reporter_alias,
-              coalesce(p.teaser, c.display_name, tu.alias::text) as target_label,
+              case when r.target_type = 'message' then 'Private message from ' || coalesce(tu.alias::text, 'a member') else coalesce(p.teaser, c.display_name, tu.alias::text) end as target_label,
               coalesce(pc.handle, c.handle)::text as target_handle,
               tu.status::text as target_status,
               (p.hidden_at is not null) as post_hidden,

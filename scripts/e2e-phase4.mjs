@@ -186,6 +186,42 @@ check("unverified creator still hidden", rhea.status() === 404);
 const memberAdmin = await m.page.goto(`${BASE}/admin/onboarding/case/00000000-0000-0000-0000-000000000000`);
 check("member /admin/onboarding/case → 404", memberAdmin.status() === 404);
 
+// ================================================================ profile import (creator, export file → proposal → consent)
+const ri = await signIn("rhea@moonuke.test");
+await ri.page.goto(`${BASE}/studio`);
+const imp = ri.page.locator("section").filter({ has: ri.page.getByRole("heading", { name: "Import a profile" }) });
+await imp.locator('input[type="file"]').setInputFiles({
+  name: "export.json",
+  mimeType: "application/json",
+  buffer: Buffer.from(JSON.stringify({ profile: { tagline: "Wood-fired, slow, singular.", website: "https://www.tiktok.com/@rhea.kiln?lang=en" } })),
+});
+await imp.getByRole("button", { name: "Import as a proposal" }).click();
+await ri.page.getByTestId("import-result").waitFor();
+check("import: result lists fields and an unverified link", /tagline/.test(await ri.page.getByTestId("import-result").innerText()) && /1 link/.test(await ri.page.getByTestId("import-result").innerText()));
+check("import: profile unchanged before consent", !(await ri.page.getByLabel("Tagline (optional)").inputValue()).includes("Wood-fired"));
+await ri.page.getByRole("button", { name: "Review the proposal" }).click();
+const importCard = ri.page.getByRole("article", { name: "Imported profile proposal" });
+await importCard.waitFor();
+check("import: proposal card shows the imported link", await importCard.getByText("TikTok · @rhea.kiln").isVisible());
+await shot(ri.page, "studio-import-proposal-desktop");
+await axe(ri.page, "/studio (import proposal) @1440");
+await importCard.getByRole("button", { name: "Accept and update my draft" }).click();
+await importCard.getByText("Accepted").first().waitFor();
+await importCard.getByRole("button", { name: "View my updated draft" }).click();
+await ri.page.waitForTimeout(800);
+check("import: tagline applied after consent", (await ri.page.getByLabel("Tagline (optional)").inputValue()) === "Wood-fired, slow, singular.");
+const socialsSec = ri.page.locator("section").filter({ has: ri.page.getByRole("heading", { name: "Social profiles" }) });
+check("import: link added as an unverified claim", (await socialsSec.getByText("TikTok · @rhea.kiln").count()) === 1 && (await socialsSec.getByTestId("proof-code").count()) >= 2);
+// Same content pasted as text: recognised as a duplicate, nothing filed.
+await imp.getByLabel("Paste profile details").fill("Tagline: Wood-fired, slow, singular.\nhttps://www.tiktok.com/@rhea.kiln");
+await imp.getByRole("button", { name: "Import as a proposal" }).click();
+await imp.locator("form [role=alert]").first().waitFor();
+check("import: duplicate refused", /already filed/.test(await imp.locator("form [role=alert]").first().innerText()));
+check("import: pasted text echoed after error", (await imp.getByLabel("Paste profile details").inputValue()).includes("Wood-fired"));
+const memberStudio = await m.page.goto(`${BASE}/studio`);
+check("member /studio → 404 (no import surface)", memberStudio.status() === 404);
+await ri.ctx.close();
+
 // ================================================================ mobile
 const om = await signIn("owner@moonuke.test", mobile);
 await om.page.goto(`${BASE}/admin/onboarding`);

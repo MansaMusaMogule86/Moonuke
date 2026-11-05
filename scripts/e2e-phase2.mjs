@@ -156,8 +156,8 @@ await visitor.getByRole("button", { name: "Following" }).waitFor();
 await visitor.reload();
 check("follow persists", await visitor.getByRole("button", { name: "Following" }).isVisible());
 
-await visitor.goto(`${BASE}/c/orsolya`);
-check("private profile 404 for non-subscriber", (await visitor.title()).includes("404") || (await visitor.getByText(/could not be found|not found/i).count()) > 0);
+const orsolya = await visitor.goto(`${BASE}/c/orsolya`);
+check("private profile 404 for non-subscriber", orsolya.status() === 404 && (await visitor.getByTestId("error-shell").count()) === 1);
 await visitor.goto(`${BASE}/c/amaya`);
 check("discreet profile reachable by link", await visitor.getByRole("heading", { level: 1 }).isVisible());
 

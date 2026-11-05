@@ -1,6 +1,6 @@
 # Current status
 
-**Branch:** `claude/cool-noether-uvf5h7`. **Last code commit:** `6e7a72b`. **Deployed:** no. **Payments active:** no.
+**Branch:** `claude/cool-noether-uvf5h7`. **Last code commit:** `3abcf98`. **Deployed:** no. **Payments active:** no.
 
 ## Completed phases
 
@@ -29,6 +29,11 @@
 | 5b | Tiers UI and e2e | `a552160` |
 | 5 | Docs | `54bfd9e` |
 | 5c | Studio analytics (aggregates only) and docs | `f296276`, `6e7a72b` |
+| H | Hardening: schema lint | `487d667` |
+| H | Hardening: 404/error pages, health, redacted logs | `32d8962`, `71bc38e` |
+| H | Hardening: maintenance job | `851378f`, `63cac29` |
+| H | Hardening: backup drill and dependency audit in verify | `b08825e` |
+| H | Hardening: docs and runbook | `3abcf98` |
 
 What Phase 4 delivered:
 - White-glove cases and the pipeline board.
@@ -47,21 +52,31 @@ What Phase 5 has delivered so far (the creator studio; details in `docs/phase-5-
   - Seats can't drop below current members.
 - **Analytics** (`/studio/analytics`): aggregate counts from existing data only — members, followers, weekly trend, tier fill, posts by state, pay-per-view unlocks. No fan identities, no view tracking, no money figures.
 
+Release hardening (details in `docs/release-hardening.md`, operations in `docs/runbook.md`):
+- A schema security lint covering RLS, policies, grants, definer `search_path` and invoker guards.
+- Branded, non-revealing 404 and error pages.
+- `/api/health` and redacted JSON error logs.
+- `pnpm maintenance`.
+- A backup and restore drill, plus a dependency audit, both inside `pnpm verify`.
+
 What's still open is in `docs/NEXT_PHASE.md`.
 
-## Test results (last full local run: `pnpm verify` at `6e7a72b`, PASS, ~6 min)
+## Test results (last full local run: `pnpm verify` at `3abcf98`, PASS, ~6 min)
 This was a **local** run. GitHub Actions did not run.
 
 | Step | Result |
 |---|---|
 | TypeScript strict | pass |
-| Vitest: UI and PostgreSQL security tests | 156 / 156 (15 files) |
+| Dependency audit (`pnpm audit --prod`) | no known vulnerabilities |
+| Vitest: UI and PostgreSQL security tests, including schema lint | 167 / 167 (18 files) |
 | Production build, env-safety check | pass |
 | Browser, Phase 1 (homepage and axe) | 17 / 17 |
 | Browser, Phase 2 (access, entitlements, axe) | 70 / 70 |
 | Browser, Phase 3 (recovery, MFA, safety, verification, axe) | 66 / 66 |
 | Browser, Phase 4 (white-glove flow, profile import, axe) | 43 / 43 |
 | Browser, Phase 5 (studio posts, tiers, analytics, axe) | 39 / 39 |
+| Browser, release hardening (404s, headers, health, leaks, axe) | 21 / 21 |
+| Backup and restore drill | 27 tables, rows, policies, definers and triggers matched |
 
 ## Known issues and limitations
 - **Auth:** our own implementation; the Supabase switch is planned, not done. There's no ID-verification vendor; checks are manual.
@@ -75,6 +90,7 @@ This was a **local** run. GitHub Actions did not run.
 - **Escalation:** recorded only, not wired to outside reporting bodies.
 - **CSP:** allows inline styles.
 - **Rate limits:** depend on a correctly set `TRUSTED_PROXY`.
+- **Ops:** no external log drain, uptime monitor or error tracker (they need accounts or money). No pentest or load test. The `APP_SECRET` rotation path for MFA hasn't been exercised.
 - **UI:** after approving an application or referral, the row keeps its state until you press "Done". This is intentional.
 
 ## Infrastructure

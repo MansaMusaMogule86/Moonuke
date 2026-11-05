@@ -149,6 +149,15 @@ const E2E_DB = withDb(baseUrl, `${dbName(baseUrl)}_e2e`);
 const SECRET = process.env.APP_SECRET ?? dot.APP_SECRET ?? "verify-only-not-a-secret-verify-only-not-a-secret";
 
 run("Typecheck (tsc --noEmit, strict)", "pnpm", ["-s", "lint"]);
+{
+  // Dependency audit. Needs the registry; a network failure is reported as skipped, not passed.
+  const start = Date.now();
+  const r = spawnSync("pnpm", ["audit", "--prod"], { cwd: ROOT, encoding: "utf8", timeout: 90_000 });
+  const out = `${r.stdout ?? ""}${r.stderr ?? ""}`;
+  if (/No known vulnerabilities found/.test(out)) record("Dependency audit (pnpm audit --prod)", true, Date.now() - start, "no known vulnerabilities");
+  else if (/vulnerabilit/i.test(out) && !/ERR_|ENOTFOUND|ETIMEDOUT|ECONNRESET|fetch failed/i.test(out)) record("Dependency audit (pnpm audit --prod)", false, Date.now() - start, (out.match(/\d+ vulnerabilit[^\n]*/) ?? ["vulnerabilities found"])[0]);
+  else record("Dependency audit (pnpm audit --prod)", null, Date.now() - start, "registry unreachable — not checked");
+}
 run("Unit + PostgreSQL security tests (vitest)", "pnpm", ["-s", "vitest", "run"], { TEST_DATABASE_URL: TEST_DB }, { summarize: vitestSummary });
 
 if (!QUICK) {
@@ -206,6 +215,9 @@ if (!QUICK) {
     try {
       process.kill(-server.pid, "SIGTERM");
     } catch {}
+    // Backup → restore → compare (rows, RLS, policies, definers, triggers, grants).
+    spawnSync("pnpm", ["-s", "db:seed"], { cwd: ROOT, env: { ...process.env, ...serverEnv }, encoding: "utf8" });
+    run("Backup + restore drill (pg_dump → pg_restore)", "node", ["scripts/backup-drill.mjs", E2E_DB], {}, { summarize: (out) => (out.match(/[✓✗] restore drill[^\n]*/) ?? [""])[0].replace(/^[✓✗] restore drill:? ?/, "") });
   }
 }
 

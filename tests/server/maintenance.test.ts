@@ -35,7 +35,7 @@ describe("maintenance (dead operational rows only)", () => {
 
     const r = await runMaintenance();
     expect(r.rateLimits).toBeGreaterThanOrEqual(1);
-    expect(r.passwordResets).toBe(1);
+    expect(r.expiredResets).toBe(1);
     expect(r.sessions).toBe(2);
     expect(await count(`select count(*) as n from app.rate_limits where bucket = 'new'`)).toBe(1);
     expect(await count(`select count(*) as n from app.password_resets where expires_at > now()`)).toBe(1);
@@ -44,6 +44,6 @@ describe("maintenance (dead operational rows only)", () => {
     expect(await count(`select count(*) as n from app.audit_log`)).toBe(auditBefore);
     expect(await count(`select count(*) as n from app.email_outbox`)).toBe(outboxBefore);
     // Idempotent.
-    expect(await runMaintenance()).toEqual({ rateLimits: 0, passwordResets: 0, sessions: 0 });
+    expect(await runMaintenance()).toEqual({ rateLimits: 0, expiredResets: 0, sessions: 0 });
   });
 });

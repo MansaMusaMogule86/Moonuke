@@ -15,7 +15,7 @@ export const RETENTION = {
   endedSessionDays: 30,
 } as const;
 
-export type MaintenanceResult = { rateLimits: number; passwordResets: number; sessions: number };
+export type MaintenanceResult = { rateLimits: number; expiredResets: number; sessions: number };
 
 export async function runMaintenance(now = new Date()): Promise<MaintenanceResult> {
   return system(async (q) => {
@@ -30,6 +30,6 @@ export async function runMaintenance(now = new Date()): Promise<MaintenanceResul
       `delete from app.sessions where (revoked_at is not null and revoked_at < $1) or expires_at < $1 returning 1`,
       [at(RETENTION.endedSessionDays)],
     );
-    return { rateLimits: rl.length, passwordResets: pr.length, sessions: ss.length };
+    return { rateLimits: rl.length, expiredResets: pr.length, sessions: ss.length };
   });
 }

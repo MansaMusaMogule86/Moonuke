@@ -64,7 +64,7 @@
 | Verification and approval workflow | Done (manual; no vendor) |
 | Social profile connections (proof-code verification) | Done |
 | AI-assisted profile preparation | Done (local template; Claude adapter opt-in, untested live) |
-| Profile imports | Planned. Scope UNKNOWN, see `docs/NEXT_PHASE.md` |
+| Profile imports | **Done**: paste or export file, platform-agnostic; name, tagline, bio, links; always a proposal. Avatars deferred (needs storage) |
 | Content publishing, media management, scheduled posts | Planned |
 | Tier and VIP management, locked content, exclusive drops | Planned (seeded data only) |
 | Blasts campaigns, fan messaging, audience segmentation, top fans | Planned |

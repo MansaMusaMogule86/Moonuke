@@ -43,6 +43,26 @@ Stages are derived from the data, never stored.
 - **Usage is metered** in `ai_assist_usage` (who, provider, character counts, blocked or not). Prompts and outputs are **never stored**.
 - **Rate limit:** 30 drafts per day per user.
 
+## Profile imports
+Scope confirmed by the owner: **paste text or upload an export file**, platform-agnostic, fields **display name, tagline, bio and links**. Avatars are wanted but deferred until media storage and CSAM/NCII hash-matching exist.
+
+- **Who:** a creator for themselves (`/studio`), or the owner at AAL2 for any creator (case page).
+- **Input:** a textarea (≤20,000 chars) **or** a `.txt`/`.json`/`.md`/`.csv` file (≤64 KB; never both). Parsed on the server by `src/server/imports/parse.ts`. It's local and deterministic, with no network calls.
+  - Text: labelled lines (`Name:`, `Tagline:`, `Bio:`, `Website:` …). If nothing is labelled, the first short line is the name and the rest is the bio.
+  - JSON: a bounded breadth-first search for familiar keys (`name`, `display_name`, `bio`, `biography`, `website`, `external_url` …), including `{ "Name": { "value": … } }` export shapes.
+- **Sanitising:**
+  - Control and bidi characters are stripped, contact details are removed (`sanitizeCopy`), and lengths are capped (60/160/2000).
+  - The same minors and non-consent safety filter applies.
+  - Links must be `https://`, with no credentials, and are canonicalised. Platform URLs are rewritten to `base + handle`, which drops query strings and tracking. At most 8 links, de-duplicated.
+  - Skipped items produce warnings and are never silently changed.
+- **Consent:** the result is **always** a `profile_proposals` row with `source = 'import'`. Nothing reaches the profile until the creator accepts it.
+  - Accepted links become **unverified** `social_connections`, hidden from the profile, each with a fresh proof code. Links are re-validated on accept, and existing ones are skipped.
+  - A links-only import doesn't touch the profile.
+- **Duplicate prevention:** `import_hash` is the SHA-256 of the *parsed* result. The app checks it first, and the partial unique index `(user_id, import_hash) where status <> 'superseded'` backs that check. A creator can't import over an open proposal; the owner's import supersedes it, as house proposals do.
+- **Privacy:** the raw pasted text and the file are **never stored or logged**. The audit entry `proposal.import` records field names, a link count and who imported it.
+- **Rate limit:** 20 imports per day per user (`LIMITS.profileImport`).
+- **RLS:** the insert policy allows `import` only for the owner (AAL2) or the creator themself. Check constraints require a hash on import rows and allow hashes only there.
+
 ## Migration
 `20261107000001_phase4_onboarding.sql` adds:
 - `onboarding_cases`
@@ -50,6 +70,8 @@ Stages are derived from the data, never stored.
 - `social_connections`
 - `ai_assist_usage`
 - RLS policies, the socials guard trigger, and the `my_onboarding_case()` function
+
+`20261108000001_phase4_profile_imports.sql` adds the `import` proposal source, `profile_proposals.import_hash`, its check constraints and the partial unique index, and re-creates `proposals_insert`.
 
 ## Routes
 
@@ -68,9 +90,13 @@ Stages are derived from the data, never stored.
 | W3 | Social verification is manual (proof code in bio) | No platform APIs, scraping or paid services |
 | W4 | Default AI provider | `template` (free, local). `anthropic` only if you set a key |
 | W5 | `AI_MODEL` default | `claude-opus-5-5`. Cheaper models are configurable; that's your call |
+| I1 | Import input limits | 20,000 characters pasted, 64 KB file, 8 links, 20 imports per day |
+| I2 | Imported links | Added as unverified, hidden claims (proof code still required) |
+| I3 | Duplicate rule | The same parsed import is refused unless the earlier one was superseded |
 
 ## Known limitations
 - Social verification is a human check. There is no automated fetch, because platforms block scraping and official APIs need app review.
 - No content studio, tiers editor or uploads yet. Profile copy only.
+- Imports don't bring in avatars or images, because there's no storage yet. JSON parsing is generic, with no per-platform format adapters. Official OAuth imports aren't built.
 - The assistant's safety filter is a keyword and pattern list. It is conservative but not a classifier, so pair it with human review (the owner already approves everything).
 - The Anthropic adapter is typechecked against the SDK but **was not called live**. No API key was used, so no cost was incurred.

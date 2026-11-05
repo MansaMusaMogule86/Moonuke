@@ -19,6 +19,8 @@
 | A11 | GitHub-hosted CI paused; run all verification locally | Phase 4 directive |
 | A12 | Keep integrations configurable; buy no third-party services | Phase 4 directive |
 | A13 | Placeholder portraits until the visual direction is approved | Phase 2 brief |
+| A14 | Profile imports: paste or export file, platform-agnostic; display name, tagline, bio and links; avatars later (needs storage) | Phase 4 session answers |
+| A15 | Defer proposal emails, stalled-stage reminders and AI-drafted tiers or perks | Phase 4 session answers |
 
 ## Built as defaults (confirm or change)
 
@@ -45,12 +47,15 @@
 | W3 | Social verification is manual (proof code in the bio) | phase-4 doc |
 | W4 | The AI provider defaults to `template` (local and free) | phase-4 doc |
 | W5 | `AI_MODEL` defaults to `claude-opus-5-5` when Anthropic is enabled | phase-4 doc |
+| I1 | Import limits: 20,000 characters, 64 KB file, 8 links, 20 imports per day | phase-4 doc |
+| I2 | Imported links become unverified, hidden claims | phase-4 doc |
+| I3 | An identical parsed import is refused unless the earlier one was superseded | phase-4 doc |
 | C1 | `style-src 'unsafe-inline'` is allowed (React and Motion style attributes); scripts are nonce-locked | phase-3 doc |
 
 ## Open questions (unresolved — do not assume)
 1. **Missing PRD.** The original "MOONUKE PRD" was never supplied. Should it be added to `docs/`?
 2. **What's next after Phase 4.** Do we build the fan app (vault, messaging, notifications), the creator studio (posts, media, tiers, Blasts) or payments?
-3. **Profile imports.** Which platforms, which fields, and by what method (manual paste, file export, or OAuth after platform app review)? See `docs/NEXT_PHASE.md`.
+3. **Profile imports, later.** Per-platform export adapters or OAuth (app review on each platform)? Avatar import once storage exists?
 4. **Supabase Auth.** Can it import scrypt hashes? How should recovery codes work? Is per-session revocation needed? What JWT lifetime is acceptable for suspensions? See `docs/supabase-auth-migration.md` §10.
 5. **Legal.** Which jurisdictions are served? Record-keeping standard (for example, 2257-style)? Mandatory-reporting process? Is fan age assurance required? Data retention periods?
 6. **Commercial.** Platform fee percentage, payout schedule, supported currencies, payment providers to apply to.

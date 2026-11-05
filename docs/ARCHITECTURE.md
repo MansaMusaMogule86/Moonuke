@@ -29,6 +29,7 @@ src/server/
   actions/                 server actions (zod → requireViewer → rate limit → service)
   email/                   outbox + templates (dev | smtp | disabled)
   ai/                      profile assistant: template (default) | anthropic | disabled
+  imports/                 profile import parser (local) + social link normalisation
   payments/                PaymentProvider interface, EMPTY registry
   verification/            VerificationProvider interface, EMPTY registry
   media/                   signed URL HMAC + placeholder SVG renderer
@@ -76,6 +77,7 @@ scripts/                   migrate, seed, create-owner, env-check, email-drain,
 | `20261106000003_phase3_safety` | blocks, reports, moderation_actions (+ posts.hidden_at) |
 | `20261106000004_phase3_creator_verification` | creator_verifications (+ creators.published_at) |
 | `20261107000001_phase4_onboarding` | onboarding_cases, profile_proposals, social_connections, ai_assist_usage |
+| `20261108000001_phase4_profile_imports` | profile_proposals: `import` source, `import_hash` + unique index |
 
 ## Integrations
 

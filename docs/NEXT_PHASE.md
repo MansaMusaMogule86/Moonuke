@@ -1,6 +1,6 @@
 # Next phase
 
-**Current phase: 5, the creator studio** (chosen by the owner). Slices 5a (posts), 5b (tiers) and 5c (analytics from existing data) are built; see `docs/phase-5-architecture.md`. Phase 4 (white-glove onboarding, including profile imports) is complete.
+**Latest work: release hardening** (chosen by the owner); see `docs/release-hardening.md`. Before that: **Phase 5, the creator studio**. Slices 5a (posts), 5b (tiers) and 5c (analytics from existing data) are built; see `docs/phase-5-architecture.md`. Phase 4 (white-glove onboarding, including profile imports) is complete.
 
 ## Phase 5: remaining slices (confirm before building)
 - **Analytics, beyond 5c.** **UNKNOWN:** should post views or engagement be recorded? That is new data collection and needs a privacy decision. Should top fans (identities) be shown to creators?

@@ -21,6 +21,7 @@
 | A13 | Placeholder portraits until the visual direction is approved | Phase 2 brief |
 | A14 | Profile imports: paste or export file, platform-agnostic; display name, tagline, bio and links; avatars later (needs storage) | Phase 4 session answers |
 | A16 | Next phase after Phase 4: the creator studio | Phase 5 session answer |
+| A17 | After Phase 5c: release hardening | Hardening session answer |
 | A15 | Defer proposal emails, stalled-stage reminders and AI-drafted tiers or perks | Phase 4 session answers |
 
 ## Built as defaults (confirm or change)
@@ -58,6 +59,8 @@
 | T2 | Tier price changes affect new quotes only | phase-5 doc |
 | T3 | A tier that has had subscribers keeps its kind; it can be switched off but not deleted | phase-5 doc |
 | T4 | At least one tier stays active once a creator has tiers | phase-5 doc |
+| R1 | Housekeeping: rate limits 2 days, reset tokens 7 days, ended sessions 30 days | release-hardening doc |
+| R2 | No pruning of the audit log, outbox, accounts or content until retention is decided | release-hardening doc |
 | C1 | `style-src 'unsafe-inline'` is allowed (React and Motion style attributes); scripts are nonce-locked | phase-3 doc |
 
 ## Open questions (unresolved — do not assume)

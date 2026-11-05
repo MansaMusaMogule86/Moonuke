@@ -5,7 +5,9 @@ Detailed references:
 - `docs/phase-3-architecture.md`: security, safety, verification.
 - `docs/phase-4-architecture.md`: onboarding.
 - `docs/phase-5-architecture.md`: creator studio (posts, tiers).
-- `docs/deployment.md`: env and runbook.
+- `docs/deployment.md`: env and deployment.
+- `docs/runbook.md`: operations (health, logs, jobs, backups, incidents).
+- `docs/release-hardening.md`: hardening checks and what they cover.
 
 ## Stack
 - **App:** Next.js 16 (App Router, Turbopack), React 19, TypeScript (strict), Tailwind CSS 4, Motion, Vaul (bottom sheets).
@@ -35,6 +37,8 @@ src/server/
   verification/            VerificationProvider interface, EMPTY registry
   media/                   signed URL HMAC + placeholder SVG renderer
   net/                     trusted-proxy IP parsing, CSP and security headers
+  ops/                     maintenance (dead-row housekeeping)
+  log.ts                   redacted JSON logging (used by onRequestError)
   seed/                    DEV-only fixtures
 scripts/                   migrate, seed, create-owner, env-check, email-drain,
                            verify, e2e-smoke and e2e-phase2/3/4

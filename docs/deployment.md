@@ -53,14 +53,17 @@ Every HTML response carries a per-request CSP nonce (`src/proxy.ts`). The static
 | Job | Schedule | Purpose |
 |---|---|---|
 | `pnpm email:drain` | every minute | Delivers queued email. This is a safety net; in-request delivery already runs via `after()`. |
+| `pnpm maintenance` | daily | Deletes dead rate-limit windows, spent reset tokens and long-ended sessions. Never touches the audit log, outbox or content. |
+
+Health check: `GET /api/health`. Logs, backups, restore and incidents are covered in `docs/runbook.md`.
 
 ## 6. Before go-live checklist
 - [ ] Approval to deploy, and the legal/compliance review for an 18+ creator platform in each target jurisdiction.
 - [ ] `pnpm env:check` passes with production values.
 - [ ] The owner is created, MFA is enrolled and the recovery codes are stored offline.
 - [ ] SMTP domain authentication is set up (SPF, DKIM, DMARC) if email is enabled.
-- [ ] The CI workflow is green on the release commit.
-- [ ] Backups and a restore drill are done.
+- [ ] `pnpm verify` passes on the release commit (local), or CI if re-enabled with approval.
+- [ ] Backups are configured and a production restore drill is done (`docs/runbook.md`). The local drill already runs in `pnpm verify`.
 - [ ] Verification vendor decision (docs/verification-design.md). Until then, creator reviews are manual.
 - [ ] Supabase Auth migration decision (docs/supabase-auth-migration.md).
 - [ ] Payments remain disabled until a processor approves the business (Phase 6).

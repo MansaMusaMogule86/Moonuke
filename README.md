@@ -44,7 +44,10 @@ pnpm verify:quick    # typecheck + unit + PostgreSQL security tests only
 4. Production build.
 5. Production env-safety check.
 6. Start a production server.
-7. Reseed the database and run every Playwright browser suite with axe WCAG 2.1 AA checks (Phases 1–5).
+7. Reseed the database and run every Playwright browser suite with axe WCAG 2.1 AA checks (Phases 1–5 plus hardening).
+8. Backup and restore drill.
+
+A dependency audit (`pnpm audit --prod`) also runs. It is reported as skipped when the registry is unreachable.
 
 It writes `reports/verify-report.md`, plus logs and screenshots in `reports/`. The report is labelled as a **local run, not GitHub CI**.
 
@@ -64,6 +67,8 @@ The disabled workflow is kept at `ci/github-actions.disabled.yml`. To re-enable 
 | [`docs/MASTER_PRD.md`](docs/MASTER_PRD.md) | Confirmed requirements, with unknowns marked |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | System overview |
 | [`docs/DECISIONS.md`](docs/DECISIONS.md) | Approved decisions, defaults and open questions |
+| [`docs/runbook.md`](docs/runbook.md) | Operations: health, logs, jobs, backups, incidents |
+| [`docs/release-hardening.md`](docs/release-hardening.md) | Hardening checks and what remains |
 
 Detailed references are linked below.
 

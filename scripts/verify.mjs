@@ -191,7 +191,8 @@ if (!QUICK) {
         ["Browser: Phase 2 access + entitlements + axe", "scripts/e2e-phase2.mjs", { SHOTS: path.join(REPORT_DIR, "screens/phase2") }],
         ["Browser: Phase 3 security + safety + axe", "scripts/e2e-phase3.mjs", { SHOTS: path.join(REPORT_DIR, "screens/phase3") }],
         ["Browser: Phase 4 onboarding + axe", "scripts/e2e-phase4.mjs", { SHOTS: path.join(REPORT_DIR, "screens/phase4") }],
-        ["Browser: Phase 5 studio posts + axe", "scripts/e2e-phase5.mjs", { SHOTS: path.join(REPORT_DIR, "screens/phase5") }],
+        ["Browser: Phase 5 studio + axe", "scripts/e2e-phase5.mjs", { SHOTS: path.join(REPORT_DIR, "screens/phase5") }],
+        ["Browser: release hardening + axe", "scripts/e2e-hardening.mjs", { SHOTS: path.join(REPORT_DIR, "screens/hardening") }],
       ];
       for (const [name, file, extra] of suites) {
         if (!fs.existsSync(path.join(ROOT, file))) {

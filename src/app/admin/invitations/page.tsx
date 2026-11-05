@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Badge } from "@/components/ui/Badge";
 import { requireViewer } from "@/server/auth/request";
+import { emailEnabled } from "@/server/email/outbox";
 import { listInvitations } from "@/server/services/admin";
 import { CreateInvitationForm, RevokeForm } from "../ActionForms";
 
@@ -24,7 +25,7 @@ export default async function InvitationsPage() {
           someone <em>apply</em> — you still approve each account.
         </p>
         <div className="mt-8 rounded-[var(--radius-xl)] border border-line bg-ink-2 p-6 md:p-8">
-          <CreateInvitationForm />
+          <CreateInvitationForm emailEnabled={emailEnabled()} />
         </div>
       </section>
 

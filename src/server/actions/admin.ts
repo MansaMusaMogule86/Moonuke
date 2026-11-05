@@ -1,6 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { after } from "next/server";
+import { deliverPending } from "@/server/email/outbox";
 import type { FormState } from "@/lib/forms";
 import { requestMeta, requireViewer } from "@/server/auth/request";
 import { appUrl } from "@/server/env";
@@ -27,14 +29,19 @@ export async function createInvitationAction(_prev: FormState, fd: FormData): Pr
     note: str(fd, "note"),
   });
   if (!parsed.success) return { status: "error", message: "Please check the highlighted fields.", fields: fieldErrors(parsed.error) };
+  const sendEmail = fd.get("sendEmail") === "on";
+  if (sendEmail && !parsed.data.email) return { status: "error", message: "Add an email address to send the invitation by email.", fields: { email: "Required to email the invitation." } };
   const meta = await requestMeta();
   try {
     await hit(`invite:create:${viewer.id}`, LIMITS.invitationCreate);
-    const inv = await admin.createInvitation(viewer, parsed.data, meta);
+    const inv = await admin.createInvitation(viewer, { ...parsed.data, sendEmail }, meta);
+    if (inv.emailed) after(() => deliverPending().catch(() => {}));
     revalidatePath("/admin/invitations");
     return {
       status: "success",
-      message: "Invitation created. Copy the link now — it won't be shown again.",
+      message: inv.emailed
+        ? "Invitation created and queued for email. The link is also shown below once, for manual delivery."
+        : "Invitation created. Copy the link now — it won't be shown again.",
       data: { link: `${appUrl()}/invite/${inv.token}`, expiresAt: inv.expiresAt.toISOString() },
     };
   } catch (e) {
@@ -61,7 +68,8 @@ export async function decideApplicationAction(_prev: FormState, fd: FormData): P
   const parsed = decisionSchema.safeParse({ id: str(fd, "id"), note: str(fd, "note") });
   if (!parsed.success || (decision !== "approve" && decision !== "reject")) return { status: "error", message: "Invalid request." };
   try {
-    await admin.decideApplication(viewer, parsed.data.id, decision, parsed.data.note, await requestMeta());
+    const r = await admin.decideApplication(viewer, parsed.data.id, decision, parsed.data.note, await requestMeta());
+    if (r.emailed) after(() => deliverPending().catch(() => {}));
     // No revalidate: the decided row stays visible with its confirmation until the next visit.
     return { status: "success", message: decision === "approve" ? "Approved. The account is now active." : "Application declined." };
   } catch (e) {
@@ -75,12 +83,15 @@ export async function decideReferralAction(_prev: FormState, fd: FormData): Prom
   const parsed = decisionSchema.safeParse({ id: str(fd, "id"), note: str(fd, "note") });
   if (!parsed.success || (decision !== "approve" && decision !== "decline")) return { status: "error", message: "Invalid request." };
   try {
-    const issued = await admin.decideReferral(viewer, parsed.data.id, decision, parsed.data.note, await requestMeta());
+    const issued = await admin.decideReferral(viewer, parsed.data.id, decision, parsed.data.note, await requestMeta(), { sendEmail: fd.get("sendEmail") === "on" });
+    if (issued?.emailed) after(() => deliverPending().catch(() => {}));
     // No revalidate: re-rendering would unmount the row and lose the one-time link.
     if (issued) {
       return {
         status: "success",
-        message: "Invitation issued — single use, locked to their email, valid 7 days. Copy it now.",
+        message: issued.emailed
+          ? "Invitation issued and queued for email — single use, locked to their email, valid 7 days. The link is also shown once below."
+          : "Invitation issued — single use, locked to their email, valid 7 days. Copy it now.",
         data: { link: `${appUrl()}/invite/${issued.token}`, expiresAt: issued.expiresAt.toISOString() },
       };
     }

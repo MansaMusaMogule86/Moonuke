@@ -3,6 +3,9 @@ import { asViewer, type Q } from "@/server/db";
 import { randomToken, sha256 } from "@/server/auth/crypto";
 import { can, type Permission, type Viewer } from "@/server/auth/permissions";
 import { AppError } from "@/server/errors";
+import { appUrl } from "@/server/env";
+import { emailEnabled, enqueue } from "@/server/email/outbox";
+import { emails } from "@/server/email/templates";
 import { audit } from "./audit";
 import { revokeAllSessions } from "./sessions";
 
@@ -26,6 +29,8 @@ export type NewInvitation = {
   expiresInDays: number;
   note?: string;
   referralRequestId?: string;
+  /** Also email the link to `email` (manual delivery always remains available). */
+  sendEmail?: boolean;
 };
 
 async function insertInvitation(q: Q, viewer: Viewer, input: NewInvitation, meta: Meta) {
@@ -41,9 +46,14 @@ async function insertInvitation(q: Q, viewer: Viewer, input: NewInvitation, meta
     targetType: "invitation",
     targetId: row!.id,
     ipHash: meta.ipHash,
-    metadata: { role: input.role, maxUses: input.maxUses, emailLocked: !!input.email, days: input.expiresInDays, fromReferral: !!input.referralRequestId },
+    metadata: { role: input.role, maxUses: input.maxUses, emailLocked: !!input.email, days: input.expiresInDays, fromReferral: !!input.referralRequestId, emailed: !!(input.sendEmail && input.email) },
   });
-  return { id: row!.id, token, expiresAt: row!.expires_at };
+  let emailed = false;
+  if (input.sendEmail && input.email && emailEnabled()) {
+    await enqueue(q, input.email, emails.invitation({ url: `${appUrl()}/invite/${token}`, role: input.role, expiresAt: row!.expires_at }));
+    emailed = true;
+  }
+  return { id: row!.id, token, expiresAt: row!.expires_at, emailed };
 }
 
 /** Returns the raw token exactly once. Only its hash is stored. */
@@ -131,6 +141,7 @@ export async function decideApplication(
   meta: Meta = {},
 ) {
   assert(viewer, "applications.review");
+  let approvedEmail: { to: string; alias: string } | null = null;
   const userId = await asViewer(viewer.id, async (q) => {
     const app = await q.one<{ user_id: string }>(
       `update app.applications set status = $2, decided_at = now(), decided_by = $3, decision_note = $4
@@ -152,9 +163,17 @@ export async function decideApplication(
       targetId: app.user_id,
       ipHash: meta.ipHash,
     });
+    if (decision === "approve") {
+      const u = await q.one<{ email: string; alias: string }>(`select email::text as email, alias::text as alias from app.users where id = $1`, [app.user_id]);
+      if (u) {
+        await enqueue(q, u.email, emails.approved({ alias: u.alias, url: `${appUrl()}/signin` }), app.user_id);
+        approvedEmail = { to: u.email, alias: u.alias };
+      }
+    }
     return app.user_id;
   });
   if (decision === "reject") await revokeAllSessions(userId);
+  return { userId, emailed: !!approvedEmail && emailEnabled() };
 }
 
 // ---------------------------------------------------------------- referrals
@@ -190,7 +209,8 @@ export async function decideReferral(
   decision: "approve" | "decline",
   note: string | undefined,
   meta: Meta = {},
-): Promise<{ token: string; expiresAt: Date } | null> {
+  opts: { sendEmail?: boolean } = {},
+): Promise<{ token: string; expiresAt: Date; emailed: boolean } | null> {
   assert(viewer, "referrals.review");
   return asViewer(viewer.id, async (q) => {
     const ref = await q.one<{ id: string; invitee_email: string; intended_role: "member" | "creator"; requester_id: string }>(
@@ -199,12 +219,12 @@ export async function decideReferral(
       [referralId],
     );
     if (!ref) throw new AppError("not_found", "Request not found or already decided.");
-    let issued: { id: string; token: string; expiresAt: Date } | null = null;
+    let issued: { id: string; token: string; expiresAt: Date; emailed: boolean } | null = null;
     if (decision === "approve") {
       issued = await insertInvitation(
         q,
         viewer,
-        { role: ref.intended_role, email: ref.invitee_email, maxUses: 1, expiresInDays: 7, note: note ?? "From referral request", referralRequestId: ref.id },
+        { role: ref.intended_role, email: ref.invitee_email, maxUses: 1, expiresInDays: 7, note: note ?? "From referral request", referralRequestId: ref.id, sendEmail: opts.sendEmail },
         meta,
       );
     }
@@ -219,7 +239,7 @@ export async function decideReferral(
       targetId: ref.id,
       ipHash: meta.ipHash,
     });
-    return issued ? { token: issued.token, expiresAt: issued.expiresAt } : null;
+    return issued ? { token: issued.token, expiresAt: issued.expiresAt, emailed: issued.emailed } : null;
   });
 }
 
@@ -299,4 +319,20 @@ export async function overview(viewer: Viewer) {
     );
     return r!;
   });
+}
+
+// ---------------------------------------------------------------- email log
+
+export type EmailRow = { id: string; to_email: string; template: string; subject: string; status: string; attempts: number; last_error: string | null; created_at: Date; sent_at: Date | null };
+
+/** Delivery metadata only — bodies (which may hold one-time links) are never selectable by mk_app. */
+export async function listEmailLog(viewer: Viewer, limit = 100): Promise<EmailRow[]> {
+  assert(viewer, "audit.view");
+  return asViewer(viewer.id, (q) =>
+    q.query<EmailRow>(
+      `select id, to_email::text as to_email, template, subject, status, attempts, last_error, created_at, sent_at
+         from app.email_outbox order by created_at desc limit $1`,
+      [limit],
+    ),
+  );
 }

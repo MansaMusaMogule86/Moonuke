@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { FormMessage, Select, Submit, TextArea } from "@/components/forms";
+import { Check, FormMessage, Select, Submit, TextArea } from "@/components/forms";
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
 import { idle, type FormState } from "@/lib/forms";
@@ -38,7 +38,7 @@ function IssuedLink({ state }: { state: FormState }) {
   );
 }
 
-export function CreateInvitationForm() {
+export function CreateInvitationForm({ emailEnabled }: { emailEnabled: boolean }) {
   const [state, action] = useActionState(createInvitationAction, idle);
   return (
     <form action={action} className="space-y-7" noValidate>
@@ -52,6 +52,11 @@ export function CreateInvitationForm() {
         <Field label="Expires in (days)" name="expiresInDays" type="number" min={1} max={30} defaultValue={7} error={state.fields?.expiresInDays} />
       </div>
       <Field label="Private note" name="note" maxLength={500} hint="Only you see this." error={state.fields?.note} />
+      {emailEnabled ? (
+        <Check name="sendEmail">Also email the invitation to the locked address. The link is still shown to you once.</Check>
+      ) : (
+        <p className="text-[13px] text-ash">Email delivery is disabled — copy the link and send it yourself.</p>
+      )}
       <FormMessage state={state} />
       <IssuedLink state={state} />
       <Submit>Create invitation</Submit>
@@ -70,7 +75,7 @@ export function RevokeForm({ id }: { id: string }) {
   );
 }
 
-export function DecisionForm({ id, kind, label }: { id: string; kind: "application" | "referral"; label: string }) {
+export function DecisionForm({ id, kind, label, emailEnabled = false }: { id: string; kind: "application" | "referral"; label: string; emailEnabled?: boolean }) {
   const [state, action] = useActionState(kind === "application" ? decideApplicationAction : decideReferralAction, idle);
   const [noteOpen, setNoteOpen] = useState(false);
   const no = kind === "application" ? "reject" : "decline";
@@ -86,6 +91,7 @@ export function DecisionForm({ id, kind, label }: { id: string; kind: "applicati
     <form action={action} className="space-y-3" aria-label={`Decide on ${label}`}>
       <input type="hidden" name="id" value={id} />
       {noteOpen && <TextArea label="Note (private)" name="note" rows={2} maxLength={500} />}
+      {kind === "referral" && emailEnabled && <Check name="sendEmail">Email the invitation to them</Check>}
       <div className="flex flex-wrap items-center gap-2">
         <Submit name="decision" value="approve" className="h-10 px-5 text-[13px]">
           {kind === "application" ? "Approve" : "Approve & issue invitation"}

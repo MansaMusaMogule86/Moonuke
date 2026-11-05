@@ -23,6 +23,11 @@ export const applySchema = z.object({
 
 export const signinSchema = z.object({ email, password: z.string().min(1).max(200) });
 
+export const forgotSchema = z.object({ email });
+export const resetSchema = z
+  .object({ password, confirm: z.string() })
+  .refine((v) => v.password === v.confirm, { message: "The passwords don't match.", path: ["confirm"] });
+
 export const createInvitationSchema = z.object({
   role: invitableRole,
   email: z.union([email, z.literal("")]).optional().transform((v) => (v ? v : undefined)),

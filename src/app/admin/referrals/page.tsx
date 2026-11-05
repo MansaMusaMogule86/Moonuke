@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Badge } from "@/components/ui/Badge";
 import { requireViewer } from "@/server/auth/request";
+import { emailEnabled } from "@/server/email/outbox";
 import { listReferrals } from "@/server/services/admin";
 import { DecisionForm } from "../ActionForms";
 
@@ -38,7 +39,7 @@ export default async function ReferralsPage() {
                 <p className="mt-2 text-[12px] text-ash">Requested by {r.requester_alias} ({r.requester_role}) · {new Date(r.created_at).toLocaleDateString("en-GB")}</p>
               </div>
               <div className="md:col-span-5 md:justify-self-end">
-                {r.status === "pending" ? <DecisionForm id={r.id} kind="referral" label={r.invitee_name} /> : null}
+                {r.status === "pending" ? <DecisionForm id={r.id} kind="referral" label={r.invitee_name} emailEnabled={emailEnabled()} /> : null}
               </div>
             </li>
           ))}

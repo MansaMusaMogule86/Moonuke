@@ -11,6 +11,9 @@ export const LIMITS = {
   applySubmit: { limit: 5, windowSec: 60 * 60 },
   referralRequest: { limit: 10, windowSec: 24 * 60 * 60 },
   invitationCreate: { limit: 60, windowSec: 60 * 60 },
+  forgotIp: { limit: 10, windowSec: 60 * 60 },
+  forgotEmail: { limit: 3, windowSec: 60 * 60 },
+  resetSubmit: { limit: 10, windowSec: 60 * 60 },
 } satisfies Record<string, Limit>;
 
 /**

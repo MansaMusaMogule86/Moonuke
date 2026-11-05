@@ -14,6 +14,7 @@ For whoever runs the platform once deployment is approved. **Nothing is deployed
 | Command | Schedule | What it does |
 |---|---|---|
 | `pnpm email:drain` | every minute | Delivers queued email (safety net for in-request delivery) |
+| `pnpm blasts:run` | every minute | Delivers due Blasts (idempotent; safe to overlap) |
 | `pnpm maintenance` | daily | Deletes dead operational rows: rate-limit windows older than 2 days, expired or used reset tokens older than 7 days, sessions ended more than 30 days ago |
 
 `pnpm maintenance` never touches the audit log, the email outbox, accounts or content. Their retention periods are a legal decision that is still open (`docs/DECISIONS.md` #5).

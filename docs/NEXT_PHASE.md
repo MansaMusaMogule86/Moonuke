@@ -1,17 +1,25 @@
 # Next phase
 
-**Current phase: 7, messaging** (owner brief A19). Slice **7a** is built: free text DMs, permissions, risk rules, moderation and notifications. See `docs/phase-7-messaging.md`. Before that: Phase 6 (fan app), release hardening and Phase 5 (creator studio).
+**Phase 7, messaging, is built** (7a direct messages, 7b Blasts, 7c appeals; owner brief A19). See `docs/phase-7-messaging.md`. Before that: Phase 6 (fan app), release hardening and Phase 5 (creator studio).
 
-## Phase 7: next slices
-- **7b Blasts (next, no blocker).**
-  - Segments: all members, VIP, followers, expired members, new members, custom lists.
-  - Templates, scheduling, and a background queue with batching, retries and idempotency.
-  - Delivery and read counts, and opt-outs.
-  - Each recipient gets an individual conversation message; no recipient sees the others.
-- **7c Appeals and moderation history (no blocker).**
-- **7d Attachments:** blocked until object storage and CSAM/NCII hash-matching are approved.
-- **7e Paid messages, PPV in messages, tips, paid requests and paid Blasts:** blocked by payments.
-- **Defaults to confirm:** M1–M6 in `docs/DECISIONS.md`. Open question: a separate moderator role?
+## What's left, and why it isn't built
+Everything that needs no decision is built. **Each remaining item needs the owner's approval, money, or a legal or business answer:**
+
+| Item | Blocked by |
+|---|---|
+| Attachments (photos, video, GIFs, voice notes) and real post uploads | Approval of an object-storage provider **and** CSAM/NCII hash-matching (paid services) |
+| Payments: checkout, PPV purchases, tips, paid messages, paid Blasts, payouts, ledger, crypto | A compliant, approved provider (A10); fees, payout schedule and currencies (open question #6); pricing defaults P1–P3, T1–T4 |
+| Earnings dashboard | Payments |
+| Supabase Auth switch | Open questions in `docs/supabase-auth-migration.md` §10 (A3: don't switch until approved) |
+| ID and age verification vendor | Vendor selection (A7) |
+| Real email delivery | SMTP provider and sending domain (open question #7) |
+| Production deployment | Approval and a hosting target (A10, open question #9) |
+| Editorial photography | Visual direction approval (A13) |
+| A separate moderator role | Owner decision; only one owner exists today (A1) |
+| Retention and deletion periods, data export | Legal (open question #5) |
+| Re-enabling CI | Approval (A11) |
+
+Defaults built and awaiting confirmation: see `docs/DECISIONS.md` (D, S, M, V, E, W, C, I, P, T, F, M, B, R).
 
 ## Phase 6: follow-ups (confirm before building)
 - **Notification preferences** (per-creator mute, email digests). **UNKNOWN** whether wanted. Email would use the existing outbox.

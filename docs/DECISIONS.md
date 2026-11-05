@@ -74,6 +74,9 @@
 | M4 | Reported-message context: 2 before, 1 after, within 24 hours | phase-7 doc |
 | M5 | Exceptional access: owner only, justification of at least 40 characters, audit-first | phase-7 doc |
 | M6 | Messages are kept indefinitely until retention is decided | phase-7 doc |
+| B1 | Blasts: 3 per day, up to 5,000 recipients, up to 30 days ahead, 3 attempts | phase-7 doc |
+| B2 | Custom Blast lists hold members only; followers stay anonymous | phase-7 doc |
+| B3 | Content held in a direct message is refused in a Blast | phase-7 doc |
 | C1 | `style-src 'unsafe-inline'` is allowed (React and Motion style attributes); scripts are nonce-locked | phase-3 doc |
 
 ## Still unconfirmed: pricing and tier defaults (P1–P3, T1–T4)

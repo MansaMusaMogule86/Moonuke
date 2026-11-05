@@ -53,6 +53,7 @@ Every HTML response carries a per-request CSP nonce (`src/proxy.ts`). The static
 | Job | Schedule | Purpose |
 |---|---|---|
 | `pnpm email:drain` | every minute | Delivers queued email. This is a safety net; in-request delivery already runs via `after()`. |
+| `pnpm blasts:run` | every minute | Delivers due Blasts. Idempotent. |
 | `pnpm maintenance` | daily | Deletes dead rate-limit windows, spent reset tokens and long-ended sessions. Never touches the audit log, outbox or content. |
 
 Health check: `GET /api/health`. Logs, backups, restore and incidents are covered in `docs/runbook.md`.

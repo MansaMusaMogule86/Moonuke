@@ -5,7 +5,7 @@ import { motion } from "motion/react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
 
-export type NavItem = { href: string; label: string; icon: "discover" | "invite" | "house" | "account" | "studio" | "library" };
+export type NavItem = { href: string; label: string; icon: "discover" | "invite" | "house" | "account" | "studio" | "library" | "messages" };
 
 const icons: Record<NavItem["icon"], React.ReactNode> = {
   discover: <path d="M10 2.5a7.5 7.5 0 1 0 0 15 7.5 7.5 0 0 0 0-15Zm3 4.5-1.8 4.2L7 13l1.8-4.2L13 7Z" />,
@@ -13,6 +13,7 @@ const icons: Record<NavItem["icon"], React.ReactNode> = {
   house: <path d="M10 2.5 3 6.5v1h14v-1L10 2.5ZM4.5 8.5v6M8 8.5v6M12 8.5v6M15.5 8.5v6M3 16h14" />,
   studio: <path d="M3 16.5h14M5 16.5V9l5-5.5L15 9v7.5M8 16.5v-4h4v4" />,
   library: <path d="M4 3.5h3v13H4zM8.5 3.5h3v13h-3zM13 4.2l2.8-.7 2.7 12.4-2.8.6z" />,
+  messages: <path d="M3.5 4.5h13v9h-7l-4 3v-3h-2z" />,
   account: <path d="M10 2.5 4 5v4.5c0 3.6 2.6 6.6 6 8 3.4-1.4 6-4.4 6-8V5l-6-2.5Zm-2.5 7.5 2 2 3.5-4" />,
 };
 
@@ -56,7 +57,7 @@ export function ClubNav({ items, variant }: { items: NavItem[]; variant: "top" |
               <Link
                 href={it.href}
                 aria-current={active ? "page" : undefined}
-                className={cn("flex min-h-[60px] min-w-[72px] flex-col items-center justify-center gap-1 text-[11px] tracking-[0.08em]", active ? "text-gold" : "text-stone")}
+                className={cn("flex min-h-[60px] min-w-[60px] px-1 flex-col items-center justify-center gap-1 text-[11px] tracking-[0.08em]", active ? "text-gold" : "text-stone")}
               >
                 <svg aria-hidden viewBox="0 0 20 20" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round">
                   {icons[it.icon]}

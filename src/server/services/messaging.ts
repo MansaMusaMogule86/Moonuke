@@ -264,6 +264,13 @@ export async function reviewHeld(owner: Viewer, messageId: string, release: bool
   if (!r?.ok) throw new AppError("not_found", "That message is no longer held.");
 }
 
+export async function exceptionalAccessForReport(owner: Viewer, reportId: string, justification: string) {
+  assertOwner(owner);
+  const c = await asViewer(owner, (q) => q.one<{ id: string | null }>(`select app.report_conversation($1) as id`, [reportId]));
+  if (!c?.id) throw new AppError("not_found", "Report not found.");
+  return exceptionalAccess(owner, c.id, justification);
+}
+
 export async function exceptionalAccess(owner: Viewer, conversationId: string, justification: string) {
   assertOwner(owner);
   if (justification.trim().length < 40) throw new AppError("validation", "Write a justification of at least 40 characters. It is kept permanently in the audit log.", "justification");

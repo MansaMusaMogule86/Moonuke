@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CheckoutButton } from "@/components/club/CheckoutButton";
 import { FollowButton } from "@/components/club/FollowButton";
+import { StartConversation } from "@/components/messaging/StartConversation";
 import { PostTile } from "@/components/club/PostTile";
 import { BlockButton, ReportButton } from "@/components/club/SafetyButtons";
 import { Badge } from "@/components/ui/Badge";
@@ -88,6 +89,7 @@ export default async function CreatorPage({ params }: { params: Promise<{ handle
                   </CheckoutButton>
                 )}
                 <FollowButton creatorId={p.id} handle={p.handle} following={p.viewer.following} />
+                {p.viewer.tier && viewer.role !== "owner" && <StartConversation userId={p.id} name={p.displayName} variant="ghost" />}
               </div>
             )}
             {!p.viewer.isSelf && viewer.role !== "owner" && (

@@ -14,7 +14,10 @@ import { ClubNav, type NavItem } from "./ClubNav";
  */
 export function ClubShell({ viewer, children, unread = 0 }: { viewer: Viewer; children: ReactNode; unread?: number }) {
   const items: NavItem[] = [{ href: "/discover", label: "Discover", icon: "discover" }];
-  if (viewer.role === "member" || viewer.role === "creator") items.push({ href: "/library", label: "Library", icon: "library" });
+  if (viewer.role === "member" || viewer.role === "creator") {
+    items.push({ href: "/library", label: "Library", icon: "library" });
+    items.push({ href: "/messages", label: "Messages", icon: "messages" });
+  }
   if (viewer.role === "creator" && can(viewer, "club.discover")) items.push({ href: "/studio", label: "Studio", icon: "studio" });
   if (can(viewer, "referrals.request")) items.push({ href: "/refer", label: "Invite", icon: "invite" });
   if (can(viewer, "applications.review")) items.push({ href: "/admin", label: "House", icon: "house" });

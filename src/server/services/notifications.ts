@@ -40,6 +40,13 @@ function present(r: Row): FanNotification {
   switch (r.kind) {
     case "post.published":
       return { ...base, title: `${creator?.displayName ?? "A creator"} posted`, detail: r.teaser ? `${r.teaser} · ${ACCESS_LABEL[r.access ?? ""] ?? ""}` : null, href: creator ? `/c/${creator.handle}#post-${r.post_id}` : null };
+    case "message.received":
+      return {
+        ...base,
+        title: `New message from ${typeof r.data.from === "string" ? r.data.from : "a member"}`,
+        detail: "Open the conversation to read it.",
+        href: typeof r.data.conversation === "string" ? `/messages/${r.data.conversation}` : "/messages",
+      };
     case "proposal.received":
       return { ...base, title: r.data.source === "import" ? "Imported details are ready to review" : "The house prepared a profile draft for you", detail: "Nothing changes until you accept it.", href: "/studio" };
     default:

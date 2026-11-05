@@ -202,6 +202,7 @@ if (!QUICK) {
         ["Browser: Phase 4 onboarding + axe", "scripts/e2e-phase4.mjs", { SHOTS: path.join(REPORT_DIR, "screens/phase4") }],
         ["Browser: Phase 5 studio + axe", "scripts/e2e-phase5.mjs", { SHOTS: path.join(REPORT_DIR, "screens/phase5") }],
         ["Browser: Phase 6 fan app + axe", "scripts/e2e-phase6.mjs", { SHOTS: path.join(REPORT_DIR, "screens/phase6") }],
+        ["Browser: Phase 7 messaging + axe", "scripts/e2e-phase7.mjs", { SHOTS: path.join(REPORT_DIR, "screens/phase7") }],
         ["Browser: release hardening + axe", "scripts/e2e-hardening.mjs", { SHOTS: path.join(REPORT_DIR, "screens/hardening") }],
       ];
       for (const [name, file, extra] of suites) {

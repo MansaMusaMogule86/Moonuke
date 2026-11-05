@@ -43,7 +43,12 @@ export function ModerationCard({ row }: { row: QueueRow }) {
         {row.similar_open > 0 && <span className="text-[12px] text-gold-soft">+{row.similar_open} other open report{row.similar_open === 1 ? "" : "s"} on this</span>}
       </div>
       <p className="mt-4 text-[15px] text-ivory">
-        <span className="text-stone">{row.target_type === "post" ? "Post" : "Creator"}:</span> {row.target_label ?? "—"}{" "}
+        <span className="text-stone">{row.target_type === "post" ? "Post" : row.target_type === "message" ? "Message" : "Creator"}:</span> {row.target_label ?? "—"}{" "}
+        {row.target_type === "message" && (
+          <Link href={`/admin/messaging/report/${row.id}`} className="text-[13px] text-gold underline decoration-gold/40 underline-offset-4">
+            Review message (logged)
+          </Link>
+        )}
         {row.target_handle && (
           <Link href={`/c/${row.target_handle}`} className="text-[13px] text-gold underline decoration-gold/40 underline-offset-4">
             /c/{row.target_handle}

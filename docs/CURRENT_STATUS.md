@@ -1,6 +1,6 @@
 # Current status
 
-**Branch:** `claude/cool-noether-uvf5h7`. **Last code commit:** `54bfd9e`. **Deployed:** no. **Payments active:** no.
+**Branch:** `claude/cool-noether-uvf5h7`. **Last code commit:** `6e7a72b`. **Deployed:** no. **Payments active:** no.
 
 ## Completed phases
 
@@ -28,6 +28,7 @@
 | 5b | Studio tiers (server, RLS, tests) | `65181ac` |
 | 5b | Tiers UI and e2e | `a552160` |
 | 5 | Docs | `54bfd9e` |
+| 5c | Studio analytics (aggregates only) and docs | `f296276`, `6e7a72b` |
 
 What Phase 4 delivered:
 - White-glove cases and the pipeline board.
@@ -44,26 +45,27 @@ What Phase 5 has delivered so far (the creator studio; details in `docs/phase-5-
 - **Tiers** (`/studio/tiers`): add, edit price, perks and seats, switch off, delete.
   - A subscribed tier keeps its kind and can't be deleted.
   - Seats can't drop below current members.
+- **Analytics** (`/studio/analytics`): aggregate counts from existing data only — members, followers, weekly trend, tier fill, posts by state, pay-per-view unlocks. No fan identities, no view tracking, no money figures.
 
 What's still open is in `docs/NEXT_PHASE.md`.
 
-## Test results (last full local run: `pnpm verify` at `54bfd9e`, PASS, ~6 min)
+## Test results (last full local run: `pnpm verify` at `6e7a72b`, PASS, ~6 min)
 This was a **local** run. GitHub Actions did not run.
 
 | Step | Result |
 |---|---|
 | TypeScript strict | pass |
-| Vitest: UI and PostgreSQL security tests | 154 / 154 (14 files) |
+| Vitest: UI and PostgreSQL security tests | 156 / 156 (15 files) |
 | Production build, env-safety check | pass |
 | Browser, Phase 1 (homepage and axe) | 17 / 17 |
 | Browser, Phase 2 (access, entitlements, axe) | 70 / 70 |
 | Browser, Phase 3 (recovery, MFA, safety, verification, axe) | 66 / 66 |
 | Browser, Phase 4 (white-glove flow, profile import, axe) | 43 / 43 |
-| Browser, Phase 5 (studio posts and tiers, axe) | 32 / 32 |
+| Browser, Phase 5 (studio posts, tiers, analytics, axe) | 39 / 39 |
 
 ## Known issues and limitations
 - **Auth:** our own implementation; the Supabase switch is planned, not done. There's no ID-verification vendor; checks are manual.
-- **Studio:** no uploads, analytics, Blasts or earnings yet. Scheduled posts go live silently, with no notification.
+- **Studio:** no uploads, Blasts or earnings yet; analytics are counts only. Scheduled posts go live silently, with no notification.
 - **Media:** placeholder SVGs only. No uploads, no object storage, no CSAM/NCII hash-matching (required before real uploads).
 - **Email:** never sent through a real SMTP provider.
 - **AI:** the Claude adapter is typechecked against the official SDK but **never called live** (no key, no cost).

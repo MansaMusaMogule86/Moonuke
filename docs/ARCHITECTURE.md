@@ -4,7 +4,8 @@ Detailed references:
 - `docs/phase-2-architecture.md`: access model, RLS, routes.
 - `docs/phase-3-architecture.md`: security, safety, verification.
 - `docs/phase-4-architecture.md`: onboarding.
-- `docs/phase-5-architecture.md`: creator studio (posts, tiers).
+- `docs/phase-5-architecture.md`: creator studio (posts, tiers, analytics).
+- `docs/phase-6-architecture.md`: fan app (library, vault, purchases, memberships, notifications).
 - `docs/deployment.md`: env and deployment.
 - `docs/runbook.md`: operations (health, logs, jobs, backups, incidents).
 - `docs/release-hardening.md`: hardening checks and what they cover.
@@ -28,7 +29,7 @@ src/server/
   db/                      asViewer() (mk_app + RLS) and system() (privileged)
   auth/                    crypto (scrypt, HMAC), totp, permissions, request guards
   services/                accounts, admin, club, referrals, sessions, mfa, account,
-                           recovery, safety, creatorOnboarding, onboarding, studio, rateLimit, audit
+                           recovery, safety, creatorOnboarding, onboarding, studio, fan, notifications, rateLimit, audit
   actions/                 server actions (zod → requireViewer → rate limit → service)
   email/                   outbox + templates (dev | smtp | disabled)
   ai/                      profile assistant: template (default) | anthropic | disabled
@@ -58,6 +59,8 @@ scripts/                   migrate, seed, create-owner, env-check, email-drain,
      - `is_blocked_between()`, `creator_stats()`, `tier_seats_taken()`.
      - `my_blocks()`, `my_reports()`, `my_onboarding_case()`.
      - `owns_post()`, `post_has_purchases()`, `tier_has_subscribers()`, `my_post_unlocks()`.
+     - `set_my_subscription_cancel()`, `my_purchase_states()`, `post_is_live()`.
+   - Definer triggers (writers, not guards): `posts_notify`, `proposals_notify`.
    - **Guard triggers (invoker):**
      - `creators_guard`: only the owner can publish or feature a profile.
      - `socials_guard`: only the owner can change verification status, and editing a link resets it.
@@ -89,6 +92,7 @@ scripts/                   migrate, seed, create-owner, env-check, email-drain,
 | `20261109000001_phase5_creator_posts` | posts: drafts/scheduling (nullable `published_at`), creator write policies, `posts_guard` |
 | `20261109000002_phase5_creator_tiers` | tiers: creator write policies, `tiers_guard` |
 | `20261109000003_phase5_creator_analytics` | `my_post_unlocks()` aggregate helper |
+| `20261110000001_phase6_fan_app` | notifications, subscription cancel-at-period-end, `my_purchase_states()`, `post_is_live()`, notify triggers |
 
 ## Integrations
 

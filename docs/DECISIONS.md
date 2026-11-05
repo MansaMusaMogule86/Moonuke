@@ -22,6 +22,7 @@
 | A14 | Profile imports: paste or export file, platform-agnostic; display name, tagline, bio and links; avatars later (needs storage) | Phase 4 session answers |
 | A16 | Next phase after Phase 4: the creator studio | Phase 5 session answer |
 | A17 | After Phase 5c: release hardening | Hardening session answer |
+| A18 | Phase 6, the fan app: dashboard, vault, purchases, memberships with cancellation, notification centre ready for Messaging and Blasts. No payments, no new tracking, no fake transactions | Phase 6 brief |
 | A15 | Defer proposal emails, stalled-stage reminders and AI-drafted tiers or perks | Phase 4 session answers |
 
 ## Built as defaults (confirm or change)
@@ -59,9 +60,27 @@
 | T2 | Tier price changes affect new quotes only | phase-5 doc |
 | T3 | A tier that has had subscribers keeps its kind; it can be switched off but not deleted | phase-5 doc |
 | T4 | At least one tier stays active once a creator has tiers | phase-5 doc |
+| F1 | Cancelling ends a membership at the close of the current period; no immediate cancel, no refunds | phase-6 doc |
+| F2 | The vault excludes free previews and the fan's own posts | phase-6 doc |
+| F3 | Purchases show no amount until payments record one | phase-6 doc |
+| F4 | Notifications are kept indefinitely until retention is decided | phase-6 doc |
+| F5 | Post notifications go to followers and current members; no per-creator mute yet | phase-6 doc |
 | R1 | Housekeeping: rate limits 2 days, reset tokens 7 days, ended sessions 30 days | release-hardening doc |
 | R2 | No pruning of the audit log, outbox, accounts or content until retention is decided | release-hardening doc |
 | C1 | `style-src 'unsafe-inline'` is allowed (React and Motion style attributes); scripts are nonce-locked | phase-3 doc |
+
+## Still unconfirmed: pricing and tier defaults (P1–P3, T1–T4)
+These were built as defaults in Phase 5 and are **not** approved. The fan app doesn't depend on them: it never sets or shows a price paid. They decide what creators may charge once payments exist.
+
+| # | Question for the owner |
+|---|---|
+| P1 | What price range and currencies should apply (now $1–$1,000, USD only)? Should there be free tiers or free PPV? |
+| P2 | Once bought, should a post's access and publish time be locked and deletion blocked (as now)? What happens to a buyer's access if a creator leaves? |
+| P3 | Is a 365-day scheduling horizon right? |
+| T1 | Are 8 tiers and 8 perks per tier the right caps? |
+| T2 | When a price changes, do existing members keep their price (grandfathering)? There's no billing yet, so this is undecided. |
+| T3 | Should a tier with past members stay type-locked and undeletable (as now)? |
+| T4 | Must a creator always keep one tier active? |
 
 ## Open questions (unresolved — do not assume)
 1. **Missing PRD.** The original "MOONUKE PRD" was never supplied. Should it be added to `docs/`?

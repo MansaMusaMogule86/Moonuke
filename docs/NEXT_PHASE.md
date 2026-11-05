@@ -1,14 +1,24 @@
 # Next phase
 
-**Latest work: release hardening** (chosen by the owner); see `docs/release-hardening.md`. Before that: **Phase 5, the creator studio**. Slices 5a (posts), 5b (tiers) and 5c (analytics from existing data) are built; see `docs/phase-5-architecture.md`. Phase 4 (white-glove onboarding, including profile imports) is complete.
+**Latest work: Phase 6, the fan app** (chosen by the owner); see `docs/phase-6-architecture.md`. It covers the library, vault, purchases, memberships with cancel at period end, and the notification centre. Before that: release hardening (`docs/release-hardening.md`) and **Phase 5, the creator studio**. Slices 5a (posts), 5b (tiers) and 5c (analytics from existing data) are built; see `docs/phase-5-architecture.md`. Phase 4 (white-glove onboarding, including profile imports) is complete.
+
+## Phase 6: follow-ups (confirm before building)
+- **Messaging and Blasts.** The notification plumbing is ready (`deliverNotification()`, kinds `message.received` and `blast.received`). **UNKNOWN:**
+  - Are paid messages wanted?
+  - What are the moderation rules for DMs?
+  - Can creators message members first, or only reply?
+  - Which segments can a Blast target?
+- **Notification preferences** (per-creator mute, email digests). **UNKNOWN** whether wanted. Email would use the existing outbox.
+- **Tips and gifting.** Blocked by payments.
+- **Defaults to confirm:** F1–F5 in `docs/DECISIONS.md`.
 
 ## Phase 5: remaining slices (confirm before building)
 - **Analytics, beyond 5c.** **UNKNOWN:** should post views or engagement be recorded? That is new data collection and needs a privacy decision. Should top fans (identities) be shown to creators?
-- **5d Blasts, fan messaging, segmentation, top fans.** These need a messaging system, which belongs to the fan app. **UNKNOWN:** whether to build messaging now.
+- **5d Blasts, fan messaging, segmentation, top fans.** These need the messaging system above.
 - **5e Earnings, payouts, transactions.** Blocked by payments being inactive and fees, payout schedule and currencies being UNKNOWN. An empty, clearly labelled earnings view is possible.
 - **Media uploads.** Blocked: they need approval for object storage plus CSAM/NCII hash-matching.
 - **Exclusive drops.** **UNKNOWN** what they mean.
-- **Defaults to confirm:** P1–P3 and T1–T4 in `docs/DECISIONS.md`.
+- **Defaults to confirm:** P1–P3 and T1–T4. The questions are listed in `docs/DECISIONS.md` → "Still unconfirmed".
 
 ## Phase 4: done (don't rebuild)
 
@@ -41,7 +51,6 @@
 
 ## After Phase 5 (order UNKNOWN; ask the owner)
 Remaining from the original brief:
-- Fan app: vault, messaging, notifications, purchase history, subscription management.
 - Supabase Auth migration (`docs/supabase-auth-migration.md`).
 - Payments, crypto and ledger (not activated).
 - Release hardening.

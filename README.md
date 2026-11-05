@@ -44,7 +44,7 @@ pnpm verify:quick    # typecheck + unit + PostgreSQL security tests only
 4. Production build.
 5. Production env-safety check.
 6. Start a production server.
-7. Reseed the database and run every Playwright browser suite with axe WCAG 2.1 AA checks (Phases 1–5 plus hardening).
+7. Reseed the database and run every Playwright browser suite with axe WCAG 2.1 AA checks (Phases 1–6 plus hardening).
 8. Backup and restore drill.
 
 A dependency audit (`pnpm audit --prod`) also runs. It is reported as skipped when the registry is unreachable.
@@ -80,7 +80,8 @@ Detailed references are linked below.
 - **Deployment:** [`docs/deployment.md`](docs/deployment.md). Covers env rules, migrations, owner bootstrap and the go-live checklist.
 - **Plans awaiting approval:** [`docs/supabase-auth-migration.md`](docs/supabase-auth-migration.md) and [`docs/verification-design.md`](docs/verification-design.md).
 - **Phase 4:** [`docs/phase-4-architecture.md`](docs/phase-4-architecture.md). Covers white-glove onboarding, proposals, socials, imports and the profile assistant.
-- **Phase 5:** [`docs/phase-5-architecture.md`](docs/phase-5-architecture.md). Covers the creator studio: posts and tiers.
+- **Phase 5:** [`docs/phase-5-architecture.md`](docs/phase-5-architecture.md). Covers the creator studio: posts, tiers and analytics.
+- **Phase 6:** [`docs/phase-6-architecture.md`](docs/phase-6-architecture.md). Covers the fan app: library, vault, purchases, memberships and notifications.
 - **Branding:** "Moonuke" is a working name. Everything brand-specific lives in `src/config/brand.ts`.
 
 ```
@@ -109,6 +110,8 @@ src/app/
 | 3 | Security, recovery, owner MFA, blocking/reporting/moderation, creator verification, CSP, CI | **Done** |
 | 4 | White-glove onboarding, profile proposals, social connections, AI-assisted profile prep, approval pipeline | **Done** |
 | 5 | Creator studio: posts (drafts, scheduling), tiers and analytics done; Blasts and earnings pending decisions | **In progress** |
-| 6–7 | Fan app and messaging, storage, Supabase Auth switch, payments and ledger, release | Planned |
+| — | Release hardening: schema lint, error pages, health, logs, maintenance, backup drill | **Done** |
+| 6 | Fan app: library, vault, purchases, memberships, notifications | **Done** |
+| 7+ | Messaging and Blasts, storage, Supabase Auth switch, payments and ledger | Planned |
 
 **Payments are not active.** No payment provider is registered, and checkout always returns an unavailable quote. **Nothing is deployed.**

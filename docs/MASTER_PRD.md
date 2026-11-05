@@ -48,12 +48,12 @@
 | Private profiles and access controls | Done |
 | Reporting and blocking | Done |
 | Account security settings, session management | Done |
-| Private content vault | Planned |
+| Private content vault | **Done** (Phase 6): unlocked posts and signed media, checked by the database |
 | Paid messages | Planned |
 | Tips and gifting | Planned |
-| Notifications | Planned |
-| Purchase history | Planned |
-| Subscription management | Planned |
+| Notifications | **Done** (Phase 6): in-app centre with read/unread; new posts and proposals; ready for Messaging and Blasts. No email or push |
+| Purchase history | **Done** (Phase 6): live entitlement states; no amounts until payments exist |
+| Subscription management | **Done** (Phase 6): status, period end, cancel at period end and keep. No billing or renewal |
 
 ## 4. Creator features (from the Phase 1 brief)
 

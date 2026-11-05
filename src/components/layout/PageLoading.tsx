@@ -1,6 +1,11 @@
 import { Skeleton } from "@/components/ui/Skeleton";
 
-/** Route-level loading state: announced once to screen readers, shimmer respects reduced motion via .mk-sheen. */
+/**
+ * Loading state for client-side Suspense boundaries. NOT used as a route
+ * loading.tsx: a route-level boundary starts streaming with HTTP 200, so
+ * notFound() would no longer send a real 404 — and identical 404s for
+ * missing and forbidden pages are a security property here.
+ * Loading state: announced once to screen readers, shimmer respects reduced motion via .mk-sheen. */
 export function PageLoading({ label = "Loading" }: { label?: string }) {
   return (
     <div className="mx-auto max-w-[1100px] px-5 pb-28 pt-14 md:px-10 md:pt-20" role="status" aria-live="polite">

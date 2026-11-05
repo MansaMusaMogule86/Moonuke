@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ImportPanel } from "@/components/onboarding/ImportPanel";
 import { Stepper } from "@/components/onboarding/Stepper";
 import { Badge } from "@/components/ui/Badge";
+import { Button } from "@/components/ui/Button";
 import { requireViewer } from "@/server/auth/request";
 import { listCategories } from "@/server/services/club";
 import { getOnboarding } from "@/server/services/creatorOnboarding";
@@ -45,6 +46,9 @@ export default async function StudioPage() {
           ? "The house is preparing your room with you. Review anything we draft, connect your socials, then request verification."
           : "Set up your profile and request verification. Members can't see your profile until the house verifies you and publishes it."}
       </p>
+      <div className="mt-6 flex flex-wrap gap-3">
+        <Button href="/studio/posts" variant="outline">Posts</Button>
+      </div>
 
       <section aria-labelledby="progress-h" className="mt-10 rounded-[var(--radius-xl)] border border-line bg-ink-2 p-6 md:p-8">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">

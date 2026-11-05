@@ -45,9 +45,6 @@ BASE=http://localhost:3000 DATABASE_URL=… node scripts/e2e-phase3.mjs   # reco
 
 CI (`.github/workflows/ci.yml`) runs all of the above on every push, against Postgres 16.
 
-```
-```
-
 ## Architecture
 
 - **Phase 2 spec:** [`docs/phase-2-architecture.md`](docs/phase-2-architecture.md). It covers roles, flows, schema, RLS, routes, acceptance criteria and the **decisions that need approval**.

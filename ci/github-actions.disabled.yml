@@ -1,3 +1,7 @@
+# DISABLED — GitHub-hosted CI is paused (no spend on Actions or billing).
+# GitHub only runs workflows located in .github/workflows/, so this file is inert here.
+# Local equivalent:  pnpm verify   (see scripts/verify.mjs)
+# To re-enable later:  git mv ci/github-actions.disabled.yml .github/workflows/ci.yml
 name: CI
 
 on:

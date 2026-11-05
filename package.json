@@ -16,7 +16,9 @@
     "owner:create": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/create-owner.ts",
     "test:server": "vitest run --project server",
     "env:check": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/env-check.ts",
-    "email:drain": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/email-drain.ts"
+    "email:drain": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/email-drain.ts",
+    "verify": "node scripts/verify.mjs",
+    "verify:quick": "node scripts/verify.mjs --quick"
   },
   "dependencies": {
     "clsx": "^2.1.1",

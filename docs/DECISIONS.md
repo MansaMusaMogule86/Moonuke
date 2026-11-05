@@ -1,6 +1,6 @@
 # Decisions
 
-**Approved** means the owner stated it in writing. **Default** means it was built as the default and **still needs confirmation**. Detailed rationale is in the phase docs.
+**Approved** means the owner stated it in writing. **Confirmed defaults** were built as defaults and then confirmed in bulk by the owner on 2026-11-05 ("confirm the 40 defaults"). Detailed rationale is in the phase docs.
 
 ## Approved by the owner
 
@@ -27,7 +27,9 @@
 | A18 | Phase 6, the fan app: dashboard, vault, purchases, memberships with cancellation, notification centre ready for Messaging and Blasts. No payments, no new tracking, no fake transactions | Phase 6 brief |
 | A15 | Defer proposal emails, stalled-stage reminders and AI-drafted tiers or perks | Phase 4 session answers |
 
-## Built as defaults (confirm or change)
+## Confirmed defaults (owner confirmation, 2026-11-05)
+
+All of the defaults below, 52 in total, were confirmed together. They can still be changed by a later owner decision. Confirming them doesn't answer the open legal questions below, such as retention periods and age assurance: defaults that say "until decided" stay that way.
 
 | # | Default | Where |
 |---|---|---|
@@ -69,12 +71,12 @@
 | F5 | Post notifications go to followers and current members; no per-creator mute yet | phase-6 doc |
 | R1 | Housekeeping: rate limits 2 days, reset tokens 7 days, ended sessions 30 days | release-hardening doc |
 | R2 | No pruning of the audit log, outbox, accounts or content until retention is decided | release-hardening doc |
-| M1 | Fans need a current membership to send; creators open with current members and message their audience | phase-7 doc |
-| M2 | Members can message by default | phase-7 doc |
-| M3 | Risk: reject at 100, hold at 60. Rate limits 40 per 10 minutes and 15 per minute per conversation. 5 refusals in an hour pause messaging for 1 hour | phase-7 doc |
-| M4 | Reported-message context: 2 before, 1 after, within 24 hours | phase-7 doc |
-| M5 | Exceptional access: owner only, justification of at least 40 characters, audit-first | phase-7 doc |
-| M6 | Messages are kept indefinitely until retention is decided | phase-7 doc |
+| MSG1 | Fans need a current membership to send; creators open with current members and message their audience | phase-7 doc |
+| MSG2 | Members can message by default | phase-7 doc |
+| MSG3 | Risk: reject at 100, hold at 60. Rate limits 40 per 10 minutes and 15 per minute per conversation. 5 refusals in an hour pause messaging for 1 hour | phase-7 doc |
+| MSG4 | Reported-message context: 2 before, 1 after, within 24 hours | phase-7 doc |
+| MSG5 | Exceptional access: owner only, justification of at least 40 characters, audit-first | phase-7 doc |
+| MSG6 | Messages are kept indefinitely until retention is decided | phase-7 doc |
 | B1 | Blasts: 3 per day, up to 5,000 recipients, up to 30 days ahead, 3 attempts | phase-7 doc |
 | B2 | Custom Blast lists hold members only; followers stay anonymous | phase-7 doc |
 | B3 | Content held in a direct message is refused in a Blast | phase-7 doc |
@@ -84,18 +86,17 @@
 | PAY2 | A purchase stays after a refund or chargeback until decided | phase-8 doc |
 | C1 | `style-src 'unsafe-inline'` is allowed (React and Motion style attributes); scripts are nonce-locked | phase-3 doc |
 
-## Still unconfirmed: pricing and tier defaults (P1–P3, T1–T4)
-These were built as defaults in Phase 5 and are **not** approved. The fan app doesn't depend on them: it never sets or shows a price paid. They decide what creators may charge once payments exist.
+## Pricing and tier defaults (P1–P3, T1–T4): confirmed
+These defaults set what creators may charge once payments exist:
+- Prices are $1–$1,000, in USD only.
+- A bought post is locked.
+- Posts can be scheduled up to 365 days ahead.
+- Creators can have 8 tiers with 8 perks each.
+- A price change applies to new quotes only (no grandfathering mechanism exists yet).
+- A tier that has had subscribers is type-locked.
+- At least one tier stays active.
 
-| # | Question for the owner |
-|---|---|
-| P1 | What price range and currencies should apply (now $1–$1,000, USD only)? Should there be free tiers or free PPV? |
-| P2 | Once bought, should a post's access and publish time be locked and deletion blocked (as now)? What happens to a buyer's access if a creator leaves? |
-| P3 | Is a 365-day scheduling horizon right? |
-| T1 | Are 8 tiers and 8 perks per tier the right caps? |
-| T2 | When a price changes, do existing members keep their price (grandfathering)? There's no billing yet, so this is undecided. |
-| T3 | Should a tier with past members stay type-locked and undeletable (as now)? |
-| T4 | Must a creator always keep one tier active? |
+Still open: the platform fee, payout schedule and currencies beyond USD (open question #6).
 
 ## Phase 8 conflict needing a decision
 - **Visual identity.** The Phase 8 brief asks for an identity "distinct from the competitor's black-and-gold identity". The approved identity (Phase 1, `MASTER_PRD.md` §1) *is* black and gold, with fixed tokens. Changing it is a rebrand, and the brief also says "do not perform a full visual rebrand without approval". **Nothing was changed.** The owner should decide whether to keep the approved palette or commission a new direction.

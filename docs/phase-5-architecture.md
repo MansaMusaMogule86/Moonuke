@@ -77,7 +77,7 @@ The owner chose the creator studio as the next phase. It is built in slices. **P
 - `20261109000002_phase5_creator_tiers.sql`: creator policies on tiers, `tiers_guard`, `tier_has_subscribers()`.
 - `20261109000003_phase5_creator_analytics.sql`: `my_post_unlocks()`.
 
-## Defaults (please confirm)
+## Defaults (confirmed by the owner, 2026-11-05)
 
 | # | Default |
 |---|---|

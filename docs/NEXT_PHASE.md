@@ -20,12 +20,12 @@ Everything that needs no decision is built. **Each remaining item needs the owne
 | Re-enabling CI | The workflow is updated to run `pnpm verify` and stays disabled. It needs approval (A11) and an Actions-enabled account |
 | Visual identity change | Owner decision: the Phase 8 brief conflicts with the approved black-and-gold identity (see DECISIONS) |
 
-Defaults built and awaiting confirmation: see `docs/DECISIONS.md` (D, S, M, V, E, W, C, I, P, T, F, M, B, R).
+All built defaults were **confirmed by the owner on 2026-11-05** (`docs/DECISIONS.md`).
 
 ## Phase 6: follow-ups (confirm before building)
 - **Notification preferences** (per-creator mute, email digests). **UNKNOWN** whether wanted. Email would use the existing outbox.
 - **Tips and gifting.** Blocked by payments.
-- **Defaults to confirm:** F1–F5 in `docs/DECISIONS.md`.
+- Defaults F1–F5: confirmed.
 
 ## Phase 5: remaining slices (confirm before building)
 - **Analytics, beyond 5c.** **UNKNOWN:** should post views or engagement be recorded? That is new data collection and needs a privacy decision. Should top fans (identities) be shown to creators?
@@ -33,7 +33,7 @@ Defaults built and awaiting confirmation: see `docs/DECISIONS.md` (D, S, M, V, E
 - **5e Earnings, payouts, transactions.** Blocked by payments being inactive and fees, payout schedule and currencies being UNKNOWN. An empty, clearly labelled earnings view is possible.
 - **Media uploads.** Blocked: they need approval for object storage plus CSAM/NCII hash-matching.
 - **Exclusive drops.** **UNKNOWN** what they mean.
-- **Defaults to confirm:** P1–P3 and T1–T4. The questions are listed in `docs/DECISIONS.md` → "Still unconfirmed".
+- Defaults P1–P3 and T1–T4: confirmed.
 
 ## Phase 4: done (don't rebuild)
 

@@ -143,16 +143,16 @@ The tables are `messaging_settings`, `conversations`, `messages` and `messaging_
 - The house reviews appeals in `/admin/messaging`. **Overturn** lifts the pause; **uphold** keeps it, optionally with a note the member sees.
 - Every step is audited.
 
-## Defaults (please confirm)
+## Defaults (confirmed by the owner, 2026-11-05)
 
 | # | Default |
 |---|---|
-| M1 | Fans need a current membership to send. Creators can open with current members and message their audience (current or past members and followers) |
-| M2 | Members can message by default (`members_can_message` on) |
-| M3 | Risk thresholds: reject at 100 points, hold at 60. Rate limits: 40 per 10 minutes and 15 per minute per conversation. Automatic pause: 5 refusals in an hour pause messaging for 1 hour |
-| M4 | Reported-message context is 2 before and 1 after, within 24 hours |
-| M5 | Exceptional access needs a justification of at least 40 characters. Owner only (there is no separate moderator role yet) |
-| M6 | Messages are kept indefinitely until legal retention is decided |
+| MSG1 | Fans need a current membership to send. Creators can open with current members and message their audience (current or past members and followers) |
+| MSG2 | Members can message by default (`members_can_message` on) |
+| MSG3 | Risk thresholds: reject at 100 points, hold at 60. Rate limits: 40 per 10 minutes and 15 per minute per conversation. Automatic pause: 5 refusals in an hour pause messaging for 1 hour |
+| MSG4 | Reported-message context is 2 before and 1 after, within 24 hours |
+| MSG5 | Exceptional access needs a justification of at least 40 characters. Owner only (there is no separate moderator role yet) |
+| MSG6 | Messages are kept indefinitely until legal retention is decided |
 | B1 | Blasts: 3 per day, up to 5,000 recipients, scheduling up to 30 days ahead, 3 delivery attempts |
 | B2 | Custom lists contain members only; followers stay anonymous to creators |
 | B3 | Content that would be held in a direct message is refused in a Blast |

@@ -81,7 +81,7 @@ Scope confirmed by the owner: **paste text or upload an export file**, platform-
 | `/admin/onboarding/case/[caseId]`, `/admin/onboarding/creator/[userId]` | Owner: concierge notes, welcome call, proposal composer with the assistant, social review |
 | `/studio` | Active creators: progress, house proposal, profile editor with the assistant, socials, verification |
 
-## Decisions (please confirm)
+## Decisions (confirmed by the owner, 2026-11-05)
 
 | # | Decision | Default |
 |---|---|---|

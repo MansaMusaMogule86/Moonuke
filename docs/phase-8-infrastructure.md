@@ -61,7 +61,7 @@ Every entry point calls `requireFeature()`. Tests reach the engines through an e
 - `src/server/auth/staff.ts`: the moderator capability vocabulary and the owner-only powers. `MODERATOR_ROLE_ENABLED = false`: adding staff needs the owner's decision.
 - `src/server/ops/retention.ts`: every retention period is `null` ("keep"), because it's a legal decision. The queries only measure what a candidate policy would remove; nothing deletes.
 
-## Defaults (please confirm)
+## Defaults (confirmed by the owner, 2026-11-05)
 
 | # | Default |
 |---|---|

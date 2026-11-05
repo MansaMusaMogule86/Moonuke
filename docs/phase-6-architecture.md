@@ -85,7 +85,7 @@ Navigation adds a **Library** item for members and creators, plus a bell with an
   - Proposal notifications; future-kind delivery.
 - **Browser:** `scripts/e2e-phase6.mjs`, 41 checks, including axe at 1440 and 390 px.
 
-## Defaults (please confirm)
+## Defaults (confirmed by the owner, 2026-11-05)
 
 | # | Default |
 |---|---|

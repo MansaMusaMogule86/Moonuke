@@ -26,7 +26,7 @@ The owner chose release hardening after Phase 5c. Everything here is local and f
 
 The lint was checked against deliberate violations (a table without RLS and an unpinned, PUBLIC-executable definer function); both were caught.
 
-## Defaults (please confirm)
+## Defaults (confirmed by the owner, 2026-11-05)
 
 | # | Default |
 |---|---|

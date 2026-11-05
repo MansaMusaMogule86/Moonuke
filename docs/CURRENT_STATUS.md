@@ -1,6 +1,6 @@
 # Current status
 
-**Branch:** `claude/cool-noether-uvf5h7`. **Last code commit:** `3abcf98`. **Deployed:** no. **Payments active:** no.
+**Branch:** `claude/cool-noether-uvf5h7`. **Last code commit:** `07e2002`. **Deployed:** no. **Payments active:** no.
 
 ## Completed phases
 
@@ -34,6 +34,9 @@
 | H | Hardening: maintenance job | `851378f`, `63cac29` |
 | H | Hardening: backup drill and dependency audit in verify | `b08825e` |
 | H | Hardening: docs and runbook | `3abcf98` |
+| 6 | Fan app server: vault, purchases, memberships, notifications (RLS, tests) | `2043552` |
+| 6 | Fan app UI and e2e | `d35abcf` |
+| 6 | Docs | `07e2002` |
 
 What Phase 4 delivered:
 - White-glove cases and the pipeline board.
@@ -59,28 +62,37 @@ Release hardening (details in `docs/release-hardening.md`, operations in `docs/r
 - `pnpm maintenance`.
 - A backup and restore drill, plus a dependency audit, both inside `pnpm verify`.
 
+Phase 6, the fan app (details in `docs/phase-6-architecture.md`):
+- `/library`: overview of memberships, following, the latest vault posts and counts.
+- `/library/vault`: unlocked posts with signed, viewer-bound media, checked by the database.
+- `/library/memberships`: cancel at period end, and keep.
+- `/library/purchases`: live entitlement state; no amounts are shown, because no payments exist.
+- `/notifications`: read and unread, with an unread badge; ready for Messaging and Blasts.
+
 What's still open is in `docs/NEXT_PHASE.md`.
 
-## Test results (last full local run: `pnpm verify` at `3abcf98`, PASS, ~6 min)
+## Test results (last full local run: `pnpm verify` at `07e2002`, PASS, ~7.5 min)
 This was a **local** run. GitHub Actions did not run.
 
 | Step | Result |
 |---|---|
 | TypeScript strict | pass |
 | Dependency audit (`pnpm audit --prod`) | no known vulnerabilities |
-| Vitest: UI and PostgreSQL security tests, including schema lint | 167 / 167 (18 files) |
+| Vitest: UI and PostgreSQL security tests, including schema lint | 183 / 183 (19 files) |
 | Production build, env-safety check | pass |
 | Browser, Phase 1 (homepage and axe) | 17 / 17 |
 | Browser, Phase 2 (access, entitlements, axe) | 70 / 70 |
 | Browser, Phase 3 (recovery, MFA, safety, verification, axe) | 66 / 66 |
 | Browser, Phase 4 (white-glove flow, profile import, axe) | 43 / 43 |
 | Browser, Phase 5 (studio posts, tiers, analytics, axe) | 39 / 39 |
+| Browser, Phase 6 (fan app, signed media, cancellation, notifications, axe) | 41 / 41 |
 | Browser, release hardening (404s, headers, health, leaks, axe) | 21 / 21 |
-| Backup and restore drill | 27 tables, rows, policies, definers and triggers matched |
+| Backup and restore drill | 28 tables, 62 policies, 22 definer functions, 8 triggers matched |
 
 ## Known issues and limitations
 - **Auth:** our own implementation; the Supabase switch is planned, not done. There's no ID-verification vendor; checks are manual.
-- **Studio:** no uploads, Blasts or earnings yet; analytics are counts only. Scheduled posts go live silently, with no notification.
+- **Studio:** no uploads, Blasts or earnings yet; analytics are counts only.
+- **Fan app:** no messaging, tips, notification preferences or email or push notifications. The unread badge updates on navigation, not live. Memberships never renew, because there's no billing. Scheduled posts go live silently, with no notification.
 - **Media:** placeholder SVGs only. No uploads, no object storage, no CSAM/NCII hash-matching (required before real uploads).
 - **Email:** never sent through a real SMTP provider.
 - **AI:** the Claude adapter is typechecked against the official SDK but **never called live** (no key, no cost).

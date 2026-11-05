@@ -53,7 +53,7 @@ scripts/                   migrate, seed, create-owner, env-check, email-drain,
      - `can_view_post()` (preview, members, VIP, PPV, hidden).
      - `is_blocked_between()`, `creator_stats()`, `tier_seats_taken()`.
      - `my_blocks()`, `my_reports()`, `my_onboarding_case()`.
-     - `owns_post()`, `post_has_purchases()`, `tier_has_subscribers()`.
+     - `owns_post()`, `post_has_purchases()`, `tier_has_subscribers()`, `my_post_unlocks()`.
    - **Guard triggers (invoker):**
      - `creators_guard`: only the owner can publish or feature a profile.
      - `socials_guard`: only the owner can change verification status, and editing a link resets it.
@@ -84,6 +84,7 @@ scripts/                   migrate, seed, create-owner, env-check, email-drain,
 | `20261108000001_phase4_profile_imports` | profile_proposals: `import` source, `import_hash` + unique index |
 | `20261109000001_phase5_creator_posts` | posts: drafts/scheduling (nullable `published_at`), creator write policies, `posts_guard` |
 | `20261109000002_phase5_creator_tiers` | tiers: creator write policies, `tiers_guard` |
+| `20261109000003_phase5_creator_analytics` | `my_post_unlocks()` aggregate helper |
 
 ## Integrations
 

@@ -103,7 +103,7 @@ src/app/
 | 2 | Invitation-only access, owner console, discovery, profiles, locked content, payment-ready UI | **Done** (see limitations in the Phase 2 doc) |
 | 3 | Security, recovery, owner MFA, blocking/reporting/moderation, creator verification, CSP, CI | **Done** |
 | 4 | White-glove onboarding, profile proposals, social connections, AI-assisted profile prep, approval pipeline | **Done** |
-| 5 | Creator studio: posts (drafts, scheduling) and tiers done; analytics, Blasts, earnings next | **In progress** |
+| 5 | Creator studio: posts (drafts, scheduling), tiers and analytics done; Blasts and earnings pending decisions | **In progress** |
 | 6–7 | Fan app and messaging, storage, Supabase Auth switch, payments and ledger, release | Planned |
 
 **Payments are not active.** No payment provider is registered, and checkout always returns an unavailable quote. **Nothing is deployed.**

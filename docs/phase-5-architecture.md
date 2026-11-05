@@ -8,7 +8,7 @@ The owner chose the creator studio as the next phase. It is built in slices. **P
 |---|---|---|
 | 5a | Posts: compose, draft, schedule, publish, edit, delete | **Done** |
 | 5b | Tiers: create, edit price, perks and seats, switch off, delete | **Done** |
-| 5c | Analytics from existing data (members, followers, posts by state, tier fill) | Planned. Metrics **UNKNOWN**; confirm first |
+| 5c | Analytics from existing data only (aggregate counts) | **Done**. Further metrics or tracking need approval |
 | 5d | Blasts, fan messaging, segmentation, top fans | Planned. Needs messaging (fan app), so order is **UNKNOWN** |
 | 5e | Earnings, payouts, transactions | Blocked: no payments, fees **UNKNOWN** |
 | — | Media uploads | Blocked: storage plus CSAM/NCII hash-matching not approved |
@@ -56,9 +56,26 @@ The owner chose the creator studio as the next phase. It is built in slices. **P
 - **RLS:** creators insert, update and delete only their own tiers. The owner has no write policy on tiers.
 - **Audit:** `tier.create`, `tier.update` (price from and to, active) and `tier.delete`.
 
+## 5c: Analytics
+- **Route:** `/studio/analytics`.
+- **Counts only, from data that already exists:**
+  - Active and VIP members, plus new members in the last 30 days.
+  - Followers, plus new followers in the last 30 days.
+  - New members and followers per week over 8 weeks.
+  - Members per tier against seats.
+  - Posts by state and by access.
+  - Unlocks per pay-per-view post.
+- **Not collected or shown:**
+  - No view or engagement tracking was added.
+  - No fan identities are shown (top fans are deferred).
+  - No money figures: payments are inactive, so revenue numbers would be fiction.
+- **Purchases** stay unreadable to creators under RLS. Unlock counts come from `my_post_unlocks()` (SECURITY DEFINER, aggregate-only, the caller's own posts).
+- Weekly rows use Monday-start weeks in the database time zone (UTC).
+
 ## Migrations
 - `20261109000001_phase5_creator_posts.sql`: nullable `published_at`, `created_at`, `updated_at`; the new `posts_select` and `can_view_post`; creator insert, update and delete policies on posts and post_content; `posts_guard`; the helpers.
 - `20261109000002_phase5_creator_tiers.sql`: creator policies on tiers, `tiers_guard`, `tier_has_subscribers()`.
+- `20261109000003_phase5_creator_analytics.sql`: `my_post_unlocks()`.
 
 ## Defaults (please confirm)
 
@@ -75,5 +92,5 @@ The owner chose the creator studio as the next phase. It is built in slices. **P
 ## Known limitations
 - No uploads, so posts show placeholder studies.
 - There's no notification when a scheduled post goes live; notifications don't exist yet.
-- No post analytics (views, unlocks) are recorded yet.
+- Analytics show no views or engagement, because none is tracked (that would be new data collection and needs approval).
 - Tier reordering isn't exposed in the UI; new tiers sort last.

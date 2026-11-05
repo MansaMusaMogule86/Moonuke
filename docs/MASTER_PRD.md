@@ -69,7 +69,7 @@
 | Tier and VIP management, locked content, exclusive drops | **Partial** (Phase 5b): tiers editor, locked/VIP/PPV posts. Exclusive drops UNKNOWN |
 | Blasts campaigns, fan messaging, audience segmentation, top fans | Planned |
 | Referrals | Partial: invitation referrals exist; creator referral programme UNKNOWN |
-| Earnings dashboard, revenue analytics, payout requests, transaction history | Planned |
+| Earnings dashboard, revenue analytics, payout requests, transaction history | **Partial** (Phase 5c): audience and post analytics from existing data. Earnings blocked (payments inactive) |
 | Creator security, content protection controls | Partial: MFA, sessions, signed media; watermarking and geo-blocking UNKNOWN |
 
 ## 5. Payments (confirmed constraints; none active)

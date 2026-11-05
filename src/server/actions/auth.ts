@@ -3,9 +3,10 @@
 import { redirect } from "next/navigation";
 import type { FormState } from "@/lib/forms";
 import { clearSession, requestMeta, setSessionCookie } from "@/server/auth/request";
+import { bucketKey } from "@/server/auth/crypto";
 import { isAppError } from "@/server/errors";
 import { redeemInvitation, signIn } from "@/server/services/accounts";
-import { hit, LIMITS } from "@/server/services/rateLimit";
+import { hit, hitIp, LIMITS } from "@/server/services/rateLimit";
 import { applySchema, fieldErrors, signinSchema } from "@/server/validation";
 
 const str = (fd: FormData, k: string) => (typeof fd.get(k) === "string" ? (fd.get(k) as string) : "");
@@ -18,8 +19,8 @@ export async function signInAction(_prev: FormState, fd: FormData): Promise<Form
   const meta = await requestMeta();
   let status: string;
   try {
-    await hit(`signin:ip:${meta.ipHash ?? "unknown"}`, LIMITS.signinIp);
-    await hit(`signin:email:${parsed.data.email}`, LIMITS.signinEmail);
+    await hitIp("signin", meta.ipHash, LIMITS.signinIp);
+    await hit(`signin:email:${bucketKey("email", parsed.data.email)}`, LIMITS.signinEmail);
     const r = await signIn(parsed.data.email, parsed.data.password, meta);
     await setSessionCookie(r.sessionToken);
     status = r.viewer.status;
@@ -43,7 +44,8 @@ export async function applyAction(token: string, _prev: FormState, fd: FormData)
 
   const meta = await requestMeta();
   try {
-    await hit(`apply:ip:${meta.ipHash ?? "unknown"}`, LIMITS.applySubmit);
+    await hitIp("apply", meta.ipHash, LIMITS.applySubmit);
+    await hit(`apply:token:${bucketKey("invite", token)}`, LIMITS.applySubmit);
     const r = await redeemInvitation(token, parsed.data, meta);
     await setSessionCookie(r.sessionToken);
   } catch (e) {

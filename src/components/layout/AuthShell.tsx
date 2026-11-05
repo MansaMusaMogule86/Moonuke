@@ -1,3 +1,4 @@
+import { brand } from "@/config/brand";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { Symbol } from "@/components/brand/Symbol";
@@ -25,7 +26,7 @@ export function AuthShell({
     <div className="relative min-h-[100svh] overflow-hidden">
       <header className="absolute inset-x-0 top-0 z-10 mx-auto flex h-[72px] max-w-[1600px] items-center px-5 md:px-10">
         <Link href="/" className="flex items-center gap-3 rounded-md">
-            <span className="sr-only">Moonuke home</span>
+            <span className="sr-only">{`${brand.name} home`}</span>
           <Symbol size={30} />
           <Wordmark decorative className="text-[15px]" />
         </Link>

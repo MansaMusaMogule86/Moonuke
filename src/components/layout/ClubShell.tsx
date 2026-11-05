@@ -1,3 +1,4 @@
+import { brand } from "@/config/brand";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { Symbol } from "@/components/brand/Symbol";
@@ -21,7 +22,7 @@ export function ClubShell({ viewer, children }: { viewer: Viewer; children: Reac
       <header className="sticky top-0 z-50 border-b border-line bg-ink/85 backdrop-blur-md">
         <div className="mx-auto flex h-[68px] max-w-[1600px] items-center justify-between gap-6 px-5 md:px-10">
           <Link href="/discover" className="flex items-center gap-3 rounded-md">
-            <span className="sr-only">Moonuke — Discover</span>
+            <span className="sr-only">{`${brand.name} — Discover`}</span>
             <Symbol size={28} />
             <Wordmark decorative className="hidden text-[14px] sm:inline-flex" />
           </Link>

@@ -1,3 +1,4 @@
+import { brand } from "@/config/brand";
 import Link from "next/link";
 import { Wordmark } from "@/components/brand/Wordmark";
 
@@ -36,7 +37,7 @@ export function SiteFooter() {
       </div>
       <div className="border-t border-line">
         <div className="mx-auto flex max-w-[1600px] flex-col gap-3 px-5 py-6 text-[12px] text-ash md:flex-row md:items-center md:justify-between md:px-10">
-          <p>© {new Date().getFullYear()} Moonuke. Adults 18+ only. Age-restricted content is available only to verified members.</p>
+          <p>© {new Date().getFullYear()} {brand.name}. Adults 18+ only. Age-restricted content is available only to verified members.</p>
           <p>This public site contains no age-restricted media.</p>
         </div>
       </div>

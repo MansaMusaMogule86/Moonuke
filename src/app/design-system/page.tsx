@@ -1,3 +1,4 @@
+import { brand } from "@/config/brand";
 import type { Metadata } from "next";
 import { Symbol } from "@/components/brand/Symbol";
 import { Wordmark } from "@/components/brand/Wordmark";
@@ -38,12 +39,12 @@ export default function DesignSystemPage() {
       <SiteHeader />
       <main id="main" className="mx-auto max-w-[1400px] px-5 pb-32 pt-36 md:px-10">
         <header className="max-w-3xl">
-          <p className="eyebrow mb-6">Moonuke · Design system v0.1</p>
+          <p className="eyebrow mb-6">{brand.name} · Design system v0.1</p>
           <h1 className="font-display text-[56px] leading-[0.98] tracking-[-0.03em] text-ivory md:text-[104px]">
             Black is the canvas. <em className="text-metal">Gold is a privilege.</em>
           </h1>
           <p className="mt-8 max-w-xl text-[17px] leading-relaxed text-stone">
-            The rules that make every Moonuke screen feel like the same private room. Tokens live in{" "}
+            The rules that make every {brand.name} screen feel like the same private room. Tokens live in{" "}
             <code className="text-gold-soft">src/styles/tokens.css</code>; components in{" "}
             <code className="text-gold-soft">src/components/ui</code>.
           </p>
@@ -70,7 +71,7 @@ export default function DesignSystemPage() {
         <Section n="02" title="Brand marks">
           <div className="grid gap-6 md:grid-cols-2">
             <div className="flex min-h-[320px] flex-col items-center justify-center gap-8 rounded-[var(--radius-xl)] border border-line bg-ink-2 p-10">
-              <Symbol size={120} title="Moonuke symbol — the Diamond Ring" />
+              <Symbol size={120} title={`${brand.name} symbol — the Diamond Ring`} />
               <div className="flex items-end gap-6">
                 <Symbol size={48} />
                 <Symbol size={32} />

@@ -254,6 +254,18 @@ await smp.goto(`${BASE}/signin`);
 await shot(smp, "signin-mobile");
 await axe(smp, "/signin @390");
 
+// ---------------------------------------------------------------- CSP: no violations, hydration works
+{
+  const c = await signIn("nocturne@moonuke.test");
+  const violations = [];
+  c.page.on("console", (m) => /Content Security Policy|Refused to (execute|load|apply)/i.test(m.text()) && violations.push(m.text()));
+  for (const path of ["/", "/design-system", "/discover", "/c/isadora", "/refer"]) {
+    const r = await c.page.goto(`${BASE}${path}`);
+    check(`CSP header on ${path}`, /nonce-/.test(r.headers()["content-security-policy"] ?? ""));
+  }
+  check("no CSP violations in console", violations.length === 0, violations.slice(0, 3).join("\n    "));
+}
+
 await browser.close();
 let failed = 0;
 for (const r of results) {

@@ -14,7 +14,8 @@
     "db:migrate": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/migrate.ts",
     "db:seed": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/seed.ts",
     "owner:create": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/create-owner.ts",
-    "test:server": "vitest run --project server"
+    "test:server": "vitest run --project server",
+    "env:check": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/env-check.ts"
   },
   "dependencies": {
     "clsx": "^2.1.1",

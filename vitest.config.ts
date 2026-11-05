@@ -35,7 +35,7 @@ export default defineConfig({
           env: {
             NODE_ENV: "test",
             DATABASE_URL: process.env.TEST_DATABASE_URL ?? "postgresql://postgres@localhost:54329/moonuke_test",
-            MOONUKE_SECRET: "test-secret-test-secret-test-secret-0000",
+            APP_SECRET: "test-secret-test-secret-test-secret-0000",
           },
         },
       },

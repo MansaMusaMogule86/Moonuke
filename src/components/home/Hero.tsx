@@ -1,5 +1,7 @@
 "use client";
 
+import { brand } from "@/config/brand";
+
 import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/Button";
@@ -9,7 +11,7 @@ import { showcase } from "@/lib/content/creators";
 import { ease } from "@/lib/tokens";
 import { HeroCarousel } from "./HeroCarousel";
 
-const TITLE = "Moonuke";
+const TITLE = brand.name;
 
 export function Hero() {
   const ref = useRef<HTMLElement>(null);
@@ -36,7 +38,7 @@ export function Hero() {
       <div className="mk-stage relative mx-auto w-full max-w-[1600px]" style={{ height: "var(--art-h)" }}>
         {/* Layer 1 — the solid gold title, behind the moon */}
         <motion.div style={{ y: titleY, opacity: fade }} className="absolute inset-0">
-          <h1 id="hero-title" className="mk-title" aria-label="Moonuke — the private creator club">
+          <h1 id="hero-title" className="mk-title" aria-label={`${brand.name} — ${brand.tagline.toLowerCase()}`}>
             {letters.map((l, i) => (
               <span key={i} aria-hidden className="inline-block overflow-hidden pb-[0.12em] align-top">
                 <motion.span

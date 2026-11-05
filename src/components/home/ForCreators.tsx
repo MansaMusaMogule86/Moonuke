@@ -1,5 +1,7 @@
 "use client";
 
+import { brand } from "@/config/brand";
+
 import { motion, useInView } from "motion/react";
 import { useRef } from "react";
 import { Symbol } from "@/components/brand/Symbol";
@@ -79,7 +81,7 @@ function Phone() {
       transition={{ duration: 1.3, ease: ease.out }}
       className="relative mx-auto w-full max-w-[360px]"
       role="img"
-      aria-label="Preview of the Moonuke creator studio on a phone: balance, revenue trend, a Blast in progress, and top fans."
+      aria-label={`Preview of the ${brand.name} creator studio on a phone: balance, revenue trend, a Blast in progress, and top fans.`}
     >
       <div aria-hidden className="absolute -inset-10 rounded-full bg-[radial-gradient(closest-side,rgb(214_181_109/0.14),transparent)]" />
       <div aria-hidden className="relative rounded-[48px] border border-line-strong bg-ink p-3 shadow-[0_60px_120px_-40px_rgb(0_0_0/0.9)]">

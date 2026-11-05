@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import { Bodoni_Moda, Jost } from "next/font/google";
 import { Providers } from "@/components/Providers";
+import { brand, pageTitle } from "@/config/brand";
 import "./globals.css";
 
 const bodoni = Bodoni_Moda({
@@ -19,11 +21,11 @@ const jost = Jost({
 });
 
 export const metadata: Metadata = {
-  title: { default: "Moonuke — The Private Creator Club", template: "%s · Moonuke" },
+  title: { default: pageTitle(), template: `%s · ${brand.name}` },
   description:
-    "Moonuke is an invitation-only club for creators and their most devoted members. Alias-first privacy, VIP rooms, and locked content. Adults 18+.",
+    `${brand.name} is ${brand.description.charAt(0).toLowerCase()}${brand.description.slice(1)}`,
   robots: { index: true, follow: true },
-  openGraph: { title: "Moonuke", description: "The private creator club.", type: "website" },
+  openGraph: { title: brand.name, description: brand.descriptor, type: "website" },
 };
 
 export const viewport: Viewport = {
@@ -34,7 +36,10 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  // Reading request headers makes every page dynamic, which per-request CSP
+  // nonces require. Next.js applies the nonce from the CSP header to its scripts.
+  await headers();
   return (
     <html lang="en" className={`${bodoni.variable} ${jost.variable}`}>
       <body>

@@ -1,3 +1,4 @@
+import { brand } from "@/config/brand";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { AuthShell } from "@/components/layout/AuthShell";
@@ -19,7 +20,7 @@ export default async function SignInPage() {
       }
       lede={
         <p>
-          Moonuke is by invitation only. New here? Open the personal link you were sent — or ask a member to
+          {brand.name} is by invitation only. New here? Open the personal link you were sent — or ask a member to
           request an invitation for you.
         </p>
       }

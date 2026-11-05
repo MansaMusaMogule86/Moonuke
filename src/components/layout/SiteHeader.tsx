@@ -1,5 +1,7 @@
 "use client";
 
+import { brand } from "@/config/brand";
+
 import Link from "next/link";
 import { motion, useMotionValueEvent, useScroll } from "motion/react";
 import { useEffect, useState } from "react";
@@ -67,7 +69,7 @@ export function SiteHeader() {
             )}
           />
           <Link href="/" className="flex items-center gap-3 rounded-md">
-            <span className="sr-only">Moonuke home</span>
+            <span className="sr-only">{`${brand.name} home`}</span>
             <Symbol size={30} />
             <Wordmark decorative className="hidden text-[15px] sm:inline-flex" />
           </Link>
@@ -122,7 +124,7 @@ export function SiteHeader() {
         </div>
       </motion.header>
 
-      <Sheet open={open} onOpenChange={setOpen} title="Moonuke" description="A private creator club. Adults only.">
+      <Sheet open={open} onOpenChange={setOpen} title={brand.name} description={`${brand.tagline}. Adults only.`}>
         <nav aria-label="Mobile">
           <ul className="divide-y divide-line">
             {NAV.map((item, i) => (

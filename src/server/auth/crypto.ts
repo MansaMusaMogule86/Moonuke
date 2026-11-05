@@ -28,6 +28,9 @@ export function safeEqual(a: string, b: string): boolean {
   return x.length === y.length && timingSafeEqual(x, y);
 }
 
+/** Keyed hash for rate-limit buckets so emails/tokens are never stored in plaintext. */
+export const bucketKey = (kind: string, value: string) => hmac(`rl:${kind}:${value}`).slice(0, 22);
+
 /** Keyed hash so audit logs can correlate an IP without storing it. */
 export const hashIp = (ip: string | null) => (ip ? hmac(`ip:${ip}`).slice(0, 22) : null);
 

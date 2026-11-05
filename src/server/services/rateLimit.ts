@@ -14,6 +14,16 @@ export const LIMITS = {
 } satisfies Record<string, Limit>;
 
 /**
+ * Per-IP limit. Skipped when the deployment has no trusted proxy (ipHash is
+ * null) so a shared "unknown" bucket can't lock everyone out; account-keyed
+ * limits still apply in that case.
+ */
+export async function hitIp(prefix: string, ipHash: string | null, lim: Limit): Promise<number | null> {
+  if (!ipHash) return null;
+  return hit(`${prefix}:ip:${ipHash}`, lim);
+}
+
+/**
  * Fixed-window counter stored in Postgres, so limits hold across instances.
  * Returns the remaining allowance; throws `rate_limited` when exceeded.
  */

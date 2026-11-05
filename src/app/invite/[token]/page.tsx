@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/Button";
 import { requestMeta } from "@/server/auth/request";
 import { isAppError } from "@/server/errors";
 import { inspectInvitation } from "@/server/services/accounts";
-import { hit, LIMITS } from "@/server/services/rateLimit";
+import { hitIp, LIMITS } from "@/server/services/rateLimit";
 import { ApplyForm } from "./ApplyForm";
 
 // The token is a credential: never index it, never leak it in a Referer.
@@ -16,7 +16,7 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
 
   let limited = false;
   try {
-    await hit(`invite:view:${meta.ipHash ?? "unknown"}`, LIMITS.inviteView);
+    await hitIp("invite:view", meta.ipHash, LIMITS.inviteView);
   } catch (e) {
     if (!isAppError(e)) throw e;
     limited = true;

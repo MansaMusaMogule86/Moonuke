@@ -3,13 +3,13 @@
 import { revalidatePath } from "next/cache";
 import type { FormState } from "@/lib/forms";
 import { requestMeta, requireViewer } from "@/server/auth/request";
+import { appUrl } from "@/server/env";
 import { isAppError } from "@/server/errors";
 import * as admin from "@/server/services/admin";
 import { hit, LIMITS } from "@/server/services/rateLimit";
 import { createInvitationSchema, decisionSchema, fieldErrors } from "@/server/validation";
 
 const str = (fd: FormData, k: string) => (typeof fd.get(k) === "string" ? (fd.get(k) as string) : "");
-const appUrl = () => process.env.APP_URL ?? "http://localhost:3000";
 
 function fail(e: unknown): FormState {
   if (isAppError(e)) return { status: "error", message: e.message };

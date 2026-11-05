@@ -1,3 +1,4 @@
+import { brand } from "@/config/brand";
 import { Badge } from "@/components/ui/Badge";
 import { Portrait } from "@/components/ui/Portrait";
 import { ImageReveal, Reveal } from "@/components/ui/Reveal";
@@ -29,7 +30,7 @@ export function Circle() {
         </Reveal>
         <Reveal delay={0.15} className="md:col-span-4 md:col-start-9 md:self-end">
           <p className="text-[17px] leading-relaxed text-stone">
-            Every Moonuke creator is invited and approved personally by the house. You won&apos;t find ten
+            Every {brand.name} creator is invited and approved personally by the house. You won&apos;t find ten
             million accounts here — only the ones worth knowing well.
           </p>
         </Reveal>

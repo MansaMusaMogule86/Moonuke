@@ -1,3 +1,4 @@
+import { brand } from "@/config/brand";
 import { Symbol } from "@/components/brand/Symbol";
 import { Button } from "@/components/ui/Button";
 import { Reveal } from "@/components/ui/Reveal";
@@ -13,7 +14,7 @@ export function Closing() {
           The door opens <span className="text-metal">by name.</span>
         </h2>
         <p className="mx-auto mt-8 max-w-md text-[17px] text-stone">
-          Moonuke is invitation-only. Members can ask the house to invite someone they know, and every account is approved personally. Your alias is yours from the first night.
+          {brand.name} is invitation-only. Members can ask the house to invite someone they know, and every account is approved personally. Your alias is yours from the first night.
         </p>
         <div className="mt-12 flex flex-wrap justify-center gap-3">
           <Button href="/signin" size="lg" arrow>

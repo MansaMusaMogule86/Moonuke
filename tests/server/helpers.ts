@@ -11,16 +11,17 @@ export async function resetDb(): Promise<SeedResult> {
 
 export async function viewer(id: string): Promise<Viewer> {
   const v = await system((q) =>
-    q.one<Viewer>(`select id, role, status, alias::text as alias, email::text as email from app.users where id = $1`, [id]),
+    q.one<Omit<Viewer, "aal" | "mfa">>(`select id, role, status, alias::text as alias, email::text as email from app.users where id = $1`, [id]),
   );
   if (!v) throw new Error(`no user ${id}`);
-  return v;
+  // Tests model an owner who has completed two-step sign-in in this session.
+  return { ...v, aal: v.role === "owner" ? 2 : 1, mfa: v.role === "owner" ? "verified" : "none" };
 }
 
 /** Run raw SQL as a given viewer under RLS and return the Postgres error code, if any. */
-export async function rlsError(viewerId: string | null, sql: string, params: unknown[] = []): Promise<string | null> {
+export async function rlsError(viewerId: string | null, sql: string, params: unknown[] = [], aal: 1 | 2 = 2): Promise<string | null> {
   try {
-    await asViewer(viewerId, (q) => q.query(sql, params));
+    await asViewer(viewerId ? { id: viewerId, aal } : null, (q) => q.query(sql, params));
     return null;
   } catch (e) {
     return (e as { code?: string }).code ?? "unknown";

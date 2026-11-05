@@ -11,7 +11,7 @@ export const metadata: Metadata = { title: "Sign in", robots: { index: false } }
 export default async function SignInPage({ searchParams }: { searchParams: Promise<{ reset?: string }> }) {
   const { reset } = await searchParams;
   const viewer = await getViewer();
-  if (viewer) redirect(viewer.status === "active" ? "/discover" : "/pending");
+  if (viewer) redirect(viewer.mfa === "pending" ? "/signin/verify" : viewer.status === "active" ? "/discover" : "/pending");
   return (
     <AuthShell
       eyebrow="Members & creators"

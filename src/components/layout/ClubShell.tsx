@@ -16,6 +16,7 @@ export function ClubShell({ viewer, children }: { viewer: Viewer; children: Reac
   const items: NavItem[] = [{ href: "/discover", label: "Discover", icon: "discover" }];
   if (can(viewer, "referrals.request")) items.push({ href: "/refer", label: "Invite", icon: "invite" });
   if (can(viewer, "applications.review")) items.push({ href: "/admin", label: "House", icon: "house" });
+  items.push({ href: "/account/security", label: "Account", icon: "account" });
 
   return (
     <div className="min-h-[100svh] pb-24 md:pb-0">

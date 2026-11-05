@@ -3,7 +3,7 @@
  *   pnpm db:seed
  */
 import { migrate } from "./migrate";
-import { seed, DEV_PASSWORD } from "@/server/seed";
+import { seed, DEV_PASSWORD, DEV_OWNER_TOTP_SECRET } from "@/server/seed";
 import { closePool } from "@/server/db";
 
 async function main() {
@@ -19,7 +19,8 @@ Seeded MOONUKE (development data — fictional people).
 
   Password for every seeded account: ${DEV_PASSWORD}
 
-  owner     owner@moonuke.test       (The House)
+  owner     owner@moonuke.test       (The House — two-step sign-in required)
+            authenticator secret: ${DEV_OWNER_TOTP_SECRET}  (add to any TOTP app; dev only)
   member    nocturne@moonuke.test    (VIP of Isadora, member of Zara & Orsolya, bought a PPV)
   member    velvet@moonuke.test      (no memberships)
   pending   satellite@moonuke.test   (awaiting approval)

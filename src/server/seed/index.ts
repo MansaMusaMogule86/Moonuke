@@ -1,9 +1,12 @@
 import "server-only";
 import { system } from "@/server/db";
 import { hashPassword, randomToken, sha256 } from "@/server/auth/crypto";
+import { encryptSecret } from "@/server/auth/totp";
 import { categories, creators, memberPerks, postsFor, vipPerks } from "./data";
 
 export const DEV_PASSWORD = "moonuke-dev-password";
+/** Dev-only owner authenticator (base32). Mirrors scripts/lib/totp.mjs. */
+export const DEV_OWNER_TOTP_SECRET = "JBSWY3DPEHPK3PXPMOONUKEDEVSEED22";
 
 export type SeedResult = {
   ownerId: string;
@@ -32,6 +35,7 @@ export async function seed(): Promise<SeedResult> {
       ))!.id;
 
     const ownerId = await user("owner@moonuke.test", "The House", "owner", "active");
+    await q.query(`insert into app.mfa_factors (user_id, secret_enc, confirmed_at) values ($1, $2, now())`, [ownerId, encryptSecret(DEV_OWNER_TOTP_SECRET)]);
     const memberId = await user("nocturne@moonuke.test", "Nocturne", "member", "active");
     const member2Id = await user("velvet@moonuke.test", "Velvet Hour", "member", "active");
 

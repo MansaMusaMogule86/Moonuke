@@ -49,13 +49,22 @@ export const getViewer = cache(async (): Promise<Viewer | null> => {
 /**
  * Server-side gate for every protected page and action.
  * - no session → /signin
+ * - second factor enrolled but not yet verified in this session → /signin/verify
  * - not active → /pending
+ * - owner without an enrolled authenticator → /account/security (mandatory setup)
  * - missing permission → 404 (does not reveal that the route exists)
+ * `allowMfaSetup` is used only by the account-security area itself.
  */
-export async function requireViewer(permission?: Permission): Promise<Viewer> {
+export async function requireViewer(permission?: Permission, opts: { allowMfaSetup?: boolean } = {}): Promise<Viewer> {
   const v = await getViewer();
   if (!v) redirect("/signin");
+  if (v.mfa === "pending") redirect("/signin/verify");
   if (v.status !== "active") redirect("/pending");
+  if (v.role === "owner" && v.mfa === "none" && !opts.allowMfaSetup) redirect("/account/security?setup=required");
   if (permission && !can(v, permission)) notFound();
   return v;
+}
+
+export async function sessionToken(): Promise<string | undefined> {
+  return (await cookies()).get(SESSION_COOKIE)?.value;
 }

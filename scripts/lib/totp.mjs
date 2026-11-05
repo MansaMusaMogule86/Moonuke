@@ -27,3 +27,17 @@ export function totp(secretBase32, at = Date.now(), step = 30) {
   const code = ((h.readUInt32BE(o) & 0x7fffffff) % 1_000_000).toString().padStart(6, "0");
   return code;
 }
+
+// Servers reject a code whose 30 s step was already used (replay protection),
+// so tests that sign in repeatedly must wait for a fresh step.
+const lastStep = new Map();
+export async function freshCode(secret) {
+  for (;;) {
+    const step = Math.floor(Date.now() / 30000);
+    if ((lastStep.get(secret) ?? -1) < step) {
+      lastStep.set(secret, step);
+      return totp(secret);
+    }
+    await new Promise((r) => setTimeout(r, 30000 - (Date.now() % 30000) + 250));
+  }
+}

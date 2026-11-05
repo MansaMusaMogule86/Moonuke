@@ -14,6 +14,10 @@ export const LIMITS = {
   forgotIp: { limit: 10, windowSec: 60 * 60 },
   forgotEmail: { limit: 3, windowSec: 60 * 60 },
   resetSubmit: { limit: 10, windowSec: 60 * 60 },
+  // 6-digit codes: 5 tries per 15 min per account keeps guessing odds negligible.
+  mfaChallenge: { limit: 5, windowSec: 15 * 60 },
+  mfaChallengeIp: { limit: 20, windowSec: 15 * 60 },
+  passwordChange: { limit: 5, windowSec: 60 * 60 },
 } satisfies Record<string, Limit>;
 
 /**

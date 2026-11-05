@@ -8,7 +8,7 @@ const require = createRequire(import.meta.url);
 const { chromium } = require("playwright");
 const { Client } = require("pg");
 const axePath = require.resolve("axe-core/axe.min.js");
-import { totp, DEV_OWNER_TOTP_SECRET } from "./lib/totp.mjs";
+import { totp, freshCode, DEV_OWNER_TOTP_SECRET } from "./lib/totp.mjs";
 
 const BASE = process.env.BASE ?? "http://localhost:3000";
 const SHOTS = process.env.SHOTS;
@@ -50,6 +50,14 @@ async function signIn(email, password = PW, opts = desktop) {
   await page.waitForURL(/\/(discover|pending|signin\/verify|account\/security)/);
   return { ctx, page };
 }
+let ownerSecret = DEV_OWNER_TOTP_SECRET;
+async function ownerSignIn(opts = desktop) {
+  const o = await signIn("owner@moonuke.test", PW, opts);
+  await o.page.getByLabel("Code").fill(await freshCode(ownerSecret));
+  await o.page.getByRole("button", { name: "Verify" }).click();
+  await o.page.waitForURL(/\/admin/);
+  return o;
+}
 
 // ================================================================ password recovery
 {
@@ -89,6 +97,106 @@ async function signIn(email, password = PW, opts = desktop) {
 }
 
 // ---- (later sections are appended by subsequent Phase 3 commits) ----
+// ================================================================ MFA: owner challenge
+{
+  const o = await signIn("owner@moonuke.test");
+  check("owner sign-in → two-step challenge", o.page.url().endsWith("/signin/verify"));
+  await shot(o.page, "mfa-verify-desktop");
+  await axe(o.page, "/signin/verify @1440");
+  const blocked = await o.page.goto(`${BASE}/admin`);
+  check("owner pre-MFA: /admin redirects to challenge", o.page.url().endsWith("/signin/verify"), o.page.url());
+  await o.page.getByLabel("Code").fill("000000");
+  await o.page.getByRole("button", { name: "Verify" }).click();
+  await formAlert(o.page).waitFor();
+  check("wrong code rejected", (await formAlert(o.page).textContent()).includes("didn't work"));
+  await o.page.getByLabel("Code").fill(await freshCode(ownerSecret));
+  await o.page.getByRole("button", { name: "Verify" }).click();
+  await o.page.waitForURL(/\/admin/);
+  check("correct code → /admin", o.page.url().endsWith("/admin"));
+  const owner = await db.query(`select count(*)::int as n from app.email_outbox where template = 'security_owner_signin'`);
+  check("owner sign-in security notice queued", owner.rows[0].n >= 1);
+  await o.ctx.close();
+}
+
+// ================================================================ MFA: mandatory owner enrolment
+{
+  await db.query(`delete from app.mfa_factors where user_id = (select id from app.users where role = 'owner')`);
+  const o = await signIn("owner@moonuke.test");
+  check("owner without MFA → forced setup", /\/account\/security\?setup=required/.test(o.page.url()), o.page.url());
+  for (const p of ["/admin", "/admin/invitations", "/discover"]) {
+    await o.page.goto(`${BASE}${p}`);
+    check(`owner without MFA: ${p} blocked`, /\/account\/security/.test(o.page.url()), o.page.url());
+  }
+  check("setup banner explains requirement", await o.page.getByRole("alert").filter({ hasText: "required for the owner" }).isVisible());
+  await o.page.getByRole("button", { name: "Set up two-step sign-in" }).click();
+  const secretEl = o.page.getByTestId("mfa-secret");
+  await secretEl.waitFor();
+  ownerSecret = (await secretEl.textContent()).trim();
+  check("QR code rendered", (await o.page.locator('[aria-label="QR code for your authenticator app"] svg').count()) === 1);
+  await shot(o.page, "mfa-setup-desktop");
+  await axe(o.page, "/account/security (setup) @1440");
+  await o.page.getByLabel("Code from your app").fill(await freshCode(ownerSecret));
+  await o.page.getByRole("button", { name: "Turn on two-step sign-in" }).click();
+  await o.page.getByTestId("recovery-codes").waitFor();
+  const codes = (await o.page.getByTestId("recovery-codes").textContent()).trim().split(/\s+/);
+  check("10 recovery codes shown once", codes.length === 10, String(codes.length));
+  await o.page.goto(`${BASE}/admin`);
+  check("after enrolment the House opens", o.page.url().endsWith("/admin"));
+  await o.ctx.close();
+}
+
+// ================================================================ member: optional MFA, recovery code, sessions, password
+{
+  const a = await signIn("nocturne@moonuke.test");
+  const b = await signIn("nocturne@moonuke.test");
+  await a.page.goto(`${BASE}/account/security`);
+  await axe(a.page, "/account/security @1440");
+  check("sessions list shows both sessions", (await a.page.getByText(/Signed in .* last active/).count()) === 2);
+  await a.page.getByRole("button", { name: "Sign out all other sessions" }).click();
+  await a.page.getByText("Signed out 1 other session").waitFor();
+  await b.page.goto(`${BASE}/discover`);
+  check("revoked session is signed out", b.page.url().endsWith("/signin"));
+
+  await a.page.getByRole("button", { name: "Set up two-step sign-in" }).click();
+  await a.page.getByTestId("mfa-secret").waitFor();
+  const secret = (await a.page.getByTestId("mfa-secret").textContent()).trim();
+  await a.page.getByLabel("Code from your app").fill(await freshCode(secret));
+  await a.page.getByRole("button", { name: "Turn on two-step sign-in" }).click();
+  await a.page.getByTestId("recovery-codes").waitFor();
+  const codes = (await a.page.getByTestId("recovery-codes").textContent()).trim().split(/\s+/);
+  await shot(a.page, "mfa-codes-desktop");
+
+  const c = await signIn("nocturne@moonuke.test");
+  check("member with MFA → challenge", c.page.url().endsWith("/signin/verify"));
+  await c.page.getByLabel("Code").fill(codes[0]);
+  await c.page.getByRole("button", { name: "Verify" }).click();
+  await c.page.waitForURL(/\/discover/);
+  check("recovery code signs in", c.page.url().endsWith("/discover"));
+  const d = await signIn("nocturne@moonuke.test");
+  await d.page.getByLabel("Code").fill(codes[0]);
+  await d.page.getByRole("button", { name: "Verify" }).click();
+  await formAlert(d.page).waitFor();
+  check("recovery code is single-use", (await formAlert(d.page).textContent()).includes("didn't work"));
+
+  await a.page.goto(`${BASE}/account/security`);
+  await a.page.getByLabel("Current password").fill("wrong-password-x");
+  await a.page.getByLabel("New password", { exact: true }).fill("nocturne-new-pass-1");
+  await a.page.getByLabel("Confirm new password").fill("nocturne-new-pass-1");
+  await a.page.getByRole("button", { name: "Change password" }).click();
+  await a.page.getByText("Your current password is incorrect").first().waitFor();
+  check("password change requires current password", true);
+  await a.page.getByLabel("Current password").fill(PW);
+  await a.page.getByLabel("New password", { exact: true }).fill("nocturne-new-pass-1");
+  await a.page.getByLabel("Confirm new password").fill("nocturne-new-pass-1");
+  await a.page.getByRole("button", { name: "Change password" }).click();
+  await a.page.getByText("Password changed").waitFor();
+  await c.page.goto(`${BASE}/discover`);
+  check("password change signs out other sessions", c.page.url().endsWith("/signin"));
+  await a.page.goto(`${BASE}/discover`);
+  check("current session survives password change", a.page.url().endsWith("/discover"));
+  for (const x of [a, b, c, d]) await x.ctx.close();
+}
+
 //@@SECTIONS@@
 
 await browser.close();

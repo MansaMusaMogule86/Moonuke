@@ -20,7 +20,7 @@ export async function requestReferral(viewer: Viewer, input: ReferralInput, meta
   if (input.inviteeEmail.toLowerCase() === viewer.email.toLowerCase()) {
     throw new AppError("validation", "That's your own email address.", "inviteeEmail");
   }
-  return asViewer(viewer.id, async (q) => {
+  return asViewer(viewer, async (q) => {
     try {
       const row = await q.one<{ id: string }>(
         `insert into app.referral_requests (requester_id, invitee_name, invitee_email, intended_role, relationship)
@@ -57,7 +57,7 @@ export type MyReferral = {
 export async function myReferrals(viewer: Viewer): Promise<MyReferral[]> {
   if (!can(viewer, "referrals.request")) throw new AppError("forbidden", "Not allowed.");
   // Deliberately never selects invitation_id or anything that leads to a token.
-  return asViewer(viewer.id, (q) =>
+  return asViewer(viewer, (q) =>
     q.query<MyReferral>(
       `select id, invitee_name, invitee_email::text as invitee_email, intended_role, status, created_at
          from app.referral_requests where requester_id = $1 order by created_at desc limit 50`,

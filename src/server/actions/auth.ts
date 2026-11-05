@@ -21,16 +21,22 @@ export async function signInAction(_prev: FormState, fd: FormData): Promise<Form
 
   const meta = await requestMeta();
   let status: string;
+  let mfa: string;
+  let role: string;
   try {
     await hitIp("signin", meta.ipHash, LIMITS.signinIp);
     await hit(`signin:email:${bucketKey("email", parsed.data.email)}`, LIMITS.signinEmail);
     const r = await signIn(parsed.data.email, parsed.data.password, meta);
     await setSessionCookie(r.sessionToken);
     status = r.viewer.status;
+    mfa = r.viewer.mfa;
+    role = r.viewer.role;
   } catch (e) {
     if (isAppError(e)) return { status: "error", message: e.message, values };
     throw e;
   }
+  if (mfa === "pending") redirect("/signin/verify");
+  if (role === "owner" && mfa === "none") redirect("/account/security?setup=required");
   redirect(status === "active" ? "/discover" : "/pending");
 }
 

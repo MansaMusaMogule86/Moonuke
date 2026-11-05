@@ -56,10 +56,12 @@ async function tx<T>(setup: (c: PoolClient) => Promise<void>, fn: (q: Q) => Prom
  * viewer id bound, so every statement is filtered by row-level security.
  * Pass `null` for an anonymous viewer (RLS then denies almost everything).
  */
-export function asViewer<T>(viewerId: string | null, fn: (q: Q) => Promise<T>): Promise<T> {
+export function asViewer<T>(viewer: string | { id: string; aal?: 1 | 2 } | null, fn: (q: Q) => Promise<T>): Promise<T> {
+  const id = typeof viewer === "string" ? viewer : viewer?.id ?? "";
+  const aal = typeof viewer === "object" && viewer?.aal === 2 ? "2" : "1";
   return tx(async (c) => {
     await c.query("set local role mk_app");
-    await c.query("select set_config('app.user_id', $1, true)", [viewerId ?? ""]);
+    await c.query("select set_config('app.user_id', $1, true), set_config('app.aal', $2, true)", [id, aal]);
   }, fn);
 }
 

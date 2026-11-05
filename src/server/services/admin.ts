@@ -59,7 +59,7 @@ async function insertInvitation(q: Q, viewer: Viewer, input: NewInvitation, meta
 /** Returns the raw token exactly once. Only its hash is stored. */
 export async function createInvitation(viewer: Viewer, input: NewInvitation, meta: Meta = {}) {
   assert(viewer, "invitations.manage");
-  return asViewer(viewer.id, (q) => insertInvitation(q, viewer, input, meta));
+  return asViewer(viewer, (q) => insertInvitation(q, viewer, input, meta));
 }
 
 export type InvitationRow = {
@@ -77,7 +77,7 @@ export type InvitationRow = {
 
 export async function listInvitations(viewer: Viewer): Promise<InvitationRow[]> {
   assert(viewer, "invitations.manage");
-  return asViewer(viewer.id, (q) =>
+  return asViewer(viewer, (q) =>
     q.query<InvitationRow>(
       `select id, intended_role, email::text as email, max_uses, use_count, expires_at, revoked_at, note, created_at,
               case when revoked_at is not null then 'revoked'
@@ -91,7 +91,7 @@ export async function listInvitations(viewer: Viewer): Promise<InvitationRow[]> 
 
 export async function revokeInvitation(viewer: Viewer, id: string, meta: Meta = {}) {
   assert(viewer, "invitations.manage");
-  return asViewer(viewer.id, async (q) => {
+  return asViewer(viewer, async (q) => {
     const row = await q.one(
       `update app.invitations set revoked_at = now(), revoked_by = $2 where id = $1 and revoked_at is null returning id`,
       [id, viewer.id],
@@ -117,7 +117,7 @@ export type ApplicationRow = {
 
 export async function listApplications(viewer: Viewer, status: "pending" | "all" = "pending"): Promise<ApplicationRow[]> {
   assert(viewer, "applications.review");
-  return asViewer(viewer.id, (q) =>
+  return asViewer(viewer, (q) =>
     q.query<ApplicationRow>(
       `select a.id, a.user_id, u.alias::text as alias, u.email::text as email, u.role, a.status, a.submitted_at,
               i.note as invitation_note, ru.alias::text as referred_by
@@ -142,7 +142,7 @@ export async function decideApplication(
 ) {
   assert(viewer, "applications.review");
   let approvedEmail: { to: string; alias: string } | null = null;
-  const userId = await asViewer(viewer.id, async (q) => {
+  const userId = await asViewer(viewer, async (q) => {
     const app = await q.one<{ user_id: string }>(
       `update app.applications set status = $2, decided_at = now(), decided_by = $3, decision_note = $4
         where id = $1 and status = 'pending' returning user_id`,
@@ -192,7 +192,7 @@ export type ReferralRow = {
 
 export async function listReferrals(viewer: Viewer): Promise<ReferralRow[]> {
   assert(viewer, "referrals.review");
-  return asViewer(viewer.id, (q) =>
+  return asViewer(viewer, (q) =>
     q.query<ReferralRow>(
       `select r.id, u.alias::text as requester_alias, u.role as requester_role, r.invitee_name, r.invitee_email::text as invitee_email,
               r.intended_role, r.relationship, r.status, r.created_at
@@ -212,7 +212,7 @@ export async function decideReferral(
   opts: { sendEmail?: boolean } = {},
 ): Promise<{ token: string; expiresAt: Date; emailed: boolean } | null> {
   assert(viewer, "referrals.review");
-  return asViewer(viewer.id, async (q) => {
+  return asViewer(viewer, async (q) => {
     const ref = await q.one<{ id: string; invitee_email: string; intended_role: "member" | "creator"; requester_id: string }>(
       `select id, invitee_email::text as invitee_email, intended_role, requester_id
          from app.referral_requests where id = $1 and status = 'pending' for update`,
@@ -257,7 +257,7 @@ export type MemberRow = {
 
 export async function listMembers(viewer: Viewer): Promise<MemberRow[]> {
   assert(viewer, "accounts.suspend");
-  return asViewer(viewer.id, (q) =>
+  return asViewer(viewer, (q) =>
     q.query<MemberRow>(
       `select id, alias::text as alias, email::text as email, role, status, created_at, suspended_reason
          from app.users order by (role = 'owner') desc, created_at desc limit 500`,
@@ -268,7 +268,7 @@ export async function listMembers(viewer: Viewer): Promise<MemberRow[]> {
 export async function setSuspended(viewer: Viewer, userId: string, suspend: boolean, reason: string | undefined, meta: Meta = {}) {
   assert(viewer, "accounts.suspend");
   if (userId === viewer.id) throw new AppError("forbidden", "You can't suspend your own account.");
-  await asViewer(viewer.id, async (q) => {
+  await asViewer(viewer, async (q) => {
     const row = await q.one(
       suspend
         ? `update app.users set status = 'suspended', suspended_at = now(), suspended_reason = $2, updated_at = now()
@@ -296,7 +296,7 @@ export type AuditRow = { id: string; at: Date; actor_alias: string | null; actio
 
 export async function listAudit(viewer: Viewer, limit = 200): Promise<AuditRow[]> {
   assert(viewer, "audit.view");
-  return asViewer(viewer.id, (q) =>
+  return asViewer(viewer, (q) =>
     q.query<AuditRow>(
       `select l.id::text, l.at, u.alias::text as actor_alias, l.action, l.target_type, l.target_id, l.metadata
          from app.audit_log l left join app.users u on u.id = l.actor_id
@@ -308,7 +308,7 @@ export async function listAudit(viewer: Viewer, limit = 200): Promise<AuditRow[]
 
 export async function overview(viewer: Viewer) {
   assert(viewer, "applications.review");
-  return asViewer(viewer.id, async (q) => {
+  return asViewer(viewer, async (q) => {
     const r = await q.one<{ pending_apps: number; pending_refs: number; active_invites: number; active_members: number; creators: number }>(
       `select
          (select count(*)::int from app.applications where status = 'pending') as pending_apps,
@@ -328,7 +328,7 @@ export type EmailRow = { id: string; to_email: string; template: string; subject
 /** Delivery metadata only — bodies (which may hold one-time links) are never selectable by mk_app. */
 export async function listEmailLog(viewer: Viewer, limit = 100): Promise<EmailRow[]> {
   assert(viewer, "audit.view");
-  return asViewer(viewer.id, (q) =>
+  return asViewer(viewer, (q) =>
     q.query<EmailRow>(
       `select id, to_email::text as to_email, template, subject, status, attempts, last_error, created_at, sent_at
          from app.email_outbox order by created_at desc limit $1`,

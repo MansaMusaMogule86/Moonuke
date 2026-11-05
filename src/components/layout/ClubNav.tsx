@@ -5,12 +5,13 @@ import { motion } from "motion/react";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
 
-export type NavItem = { href: string; label: string; icon: "discover" | "invite" | "house" };
+export type NavItem = { href: string; label: string; icon: "discover" | "invite" | "house" | "account" };
 
 const icons: Record<NavItem["icon"], React.ReactNode> = {
   discover: <path d="M10 2.5a7.5 7.5 0 1 0 0 15 7.5 7.5 0 0 0 0-15Zm3 4.5-1.8 4.2L7 13l1.8-4.2L13 7Z" />,
   invite: <path d="M3 5.5h14v9H3zM3.5 6l6.5 5 6.5-5" />,
   house: <path d="M10 2.5 3 6.5v1h14v-1L10 2.5ZM4.5 8.5v6M8 8.5v6M12 8.5v6M15.5 8.5v6M3 16h14" />,
+  account: <path d="M10 2.5 4 5v4.5c0 3.6 2.6 6.6 6 8 3.4-1.4 6-4.4 6-8V5l-6-2.5Zm-2.5 7.5 2 2 3.5-4" />,
 };
 
 export function ClubNav({ items, variant }: { items: NavItem[]; variant: "top" | "bottom" }) {

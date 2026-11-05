@@ -23,18 +23,30 @@ export async function createSession(userId: string, userAgent: string | null, q?
 export async function resolveSession(token: string | undefined | null): Promise<Viewer | null> {
   if (!token || token.length > 100) return null;
   return system(async (q) => {
-    const row = await q.one<Viewer & { last_seen_at: Date }>(
-      `select u.id, u.role, u.status, u.alias::text as alias, u.email::text as email, s.last_seen_at
+    const row = await q.one<Omit<Viewer, "aal" | "mfa"> & { last_seen_at: Date; has_factor: boolean; mfa_verified: boolean; public_id: string }>(
+      `select u.id, u.role, u.status, u.alias::text as alias, u.email::text as email, s.last_seen_at, s.public_id,
+              (f.confirmed_at is not null) as has_factor, (s.mfa_verified_at is not null) as mfa_verified
          from app.sessions s join app.users u on u.id = s.user_id
+         left join app.mfa_factors f on f.user_id = u.id
         where s.id_hash = $1 and s.revoked_at is null and s.expires_at > now()
           and u.status in ('pending', 'active')`,
       [sha256(token)],
     );
     if (!row) return null;
+    const mfa = row.has_factor ? (row.mfa_verified ? "verified" : "pending") : "none";
     if (Date.now() - new Date(row.last_seen_at).getTime() > 5 * 60_000) {
       await q.query(`update app.sessions set last_seen_at = now() where id_hash = $1`, [sha256(token)]);
     }
-    return { id: row.id, role: row.role, status: row.status, alias: row.alias, email: row.email };
+    return {
+      id: row.id,
+      role: row.role,
+      status: row.status,
+      alias: row.alias,
+      email: row.email,
+      mfa,
+      aal: mfa === "verified" ? 2 : 1,
+      sessionId: row.public_id,
+    };
   });
 }
 

@@ -7,6 +7,7 @@ import fs from "node:fs";
 const require = createRequire(import.meta.url);
 const { chromium } = require("playwright");
 const axePath = require.resolve("axe-core/axe.min.js");
+import { freshCode, DEV_OWNER_TOTP_SECRET } from "./lib/totp.mjs";
 
 const BASE = process.env.BASE ?? "http://localhost:3000";
 const SHOTS = process.env.SHOTS;
@@ -26,7 +27,13 @@ async function signIn(email, opts = desktop) {
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(PW);
   await page.getByRole("button", { name: "Sign in" }).click();
-  await page.waitForURL(/\/(discover|pending)/);
+  await page.waitForURL(/\/(discover|pending|signin\/verify)/);
+  if (page.url().endsWith("/signin/verify")) {
+    await page.getByLabel("Code").fill(await freshCode(DEV_OWNER_TOTP_SECRET));
+    await page.getByRole("button", { name: "Verify" }).click();
+    await page.waitForURL(/\/(admin|discover)/);
+    await page.goto(`${BASE}/discover`);
+  }
   return { ctx, page };
 }
 

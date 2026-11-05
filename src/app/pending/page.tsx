@@ -10,6 +10,7 @@ export const metadata: Metadata = { title: "Awaiting approval", robots: { index:
 export default async function PendingPage() {
   const viewer = await getViewer();
   if (!viewer) redirect("/signin");
+  if (viewer.mfa === "pending") redirect("/signin/verify");
   if (viewer.status === "active") redirect("/discover");
 
   return (

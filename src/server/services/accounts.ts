@@ -94,8 +94,10 @@ export async function signIn(
 ): Promise<{ sessionToken: string; viewer: Viewer }> {
   const fail = new AppError("invalid_credentials", "That email and password don't match an account.");
   const row = await system((q) =>
-    q.one<Viewer & { password_hash: string }>(
-      `select id, role, status, alias::text as alias, email::text as email, password_hash from app.users where email = $1`,
+    q.one<Omit<Viewer, "aal" | "mfa"> & { password_hash: string; has_factor: boolean }>(
+      `select u.id, u.role, u.status, u.alias::text as alias, u.email::text as email, u.password_hash,
+              exists (select 1 from app.mfa_factors f where f.user_id = u.id and f.confirmed_at is not null) as has_factor
+         from app.users u where u.email = $1`,
       [email],
     ),
   );
@@ -111,7 +113,8 @@ export async function signIn(
   return system(async (q) => {
     const sessionToken = await createSession(row.id, meta.userAgent, q);
     await audit(q, { actorId: row.id, action: "auth.signin", ipHash: meta.ipHash });
-    const { password_hash: _ph, ...viewer } = row;
+    const { password_hash: _ph, has_factor, ...rest } = row;
+    const viewer: Viewer = { ...rest, mfa: has_factor ? "pending" : "none", aal: 1 };
     return { sessionToken, viewer };
   });
 }

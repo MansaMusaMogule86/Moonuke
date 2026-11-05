@@ -34,7 +34,7 @@ export type Category = { slug: string; label: string };
 
 export async function listCategories(viewer: Viewer): Promise<Category[]> {
   assertClub(viewer);
-  return asViewer(viewer.id, (q) => q.query<Category>(`select slug, label from app.categories order by sort, label`));
+  return asViewer(viewer, (q) => q.query<Category>(`select slug, label from app.categories order by sort, label`));
 }
 
 /** Only `listed` creators appear — discreet and private profiles are never discoverable. */
@@ -45,7 +45,7 @@ export async function discover(
   assertClub(viewer);
   const order =
     opts.sort === "newest" ? "c.created_at desc" : opts.sort === "members" ? "members desc, c.display_name" : "c.featured desc, members desc, c.display_name";
-  return asViewer(viewer.id, (q) =>
+  return asViewer(viewer, (q) =>
     q.query<CreatorCard>(
       `select * from (
          select c.user_id as id, c.handle::text as handle, c.display_name, c.discipline, c.category, c.city, c.tagline,
@@ -113,7 +113,7 @@ export type Profile = {
 export async function getProfile(viewer: Viewer, handle: string): Promise<Profile | null> {
   assertClub(viewer);
   if (!/^[a-z0-9_]{2,24}$/i.test(handle)) return null;
-  return asViewer(viewer.id, async (q) => {
+  return asViewer(viewer, async (q) => {
     const c = await q.one<{
       user_id: string; handle: string; display_name: string; discipline: string; category: string; city: string | null;
       tagline: string | null; bio: string | null; visibility: Profile["visibility"]; cover: PortraitStudy;
@@ -183,7 +183,7 @@ export async function getProfile(viewer: Viewer, handle: string): Promise<Profil
 /** Media lookup for the signed media route — re-checked under RLS. */
 export async function getEntitledMedia(viewer: Viewer, postId: string, index: number): Promise<PortraitStudy | null> {
   if (!can(viewer, "club.discover")) return null;
-  return asViewer(viewer.id, async (q) => {
+  return asViewer(viewer, async (q) => {
     const row = await q.one<{ media: { study: PortraitStudy }[] }>(`select media from app.post_content where post_id = $1`, [postId]);
     return row?.media?.[index]?.study ?? null;
   });
@@ -193,7 +193,7 @@ export async function getEntitledMedia(viewer: Viewer, postId: string, index: nu
 
 export async function setFollow(viewer: Viewer, creatorId: string, follow: boolean) {
   if (!can(viewer, "club.follow")) throw new AppError("forbidden", "Not allowed.");
-  return asViewer(viewer.id, async (q) => {
+  return asViewer(viewer, async (q) => {
     if (follow) {
       try {
         await q.query(`insert into app.follows (fan_id, creator_id) values ($1, $2) on conflict do nothing`, [viewer.id, creatorId]);
@@ -227,7 +227,7 @@ export type Quote = {
  */
 export async function quote(viewer: Viewer, target: { kind: "tier" | "post"; id: string }): Promise<Quote> {
   assertClub(viewer);
-  return asViewer(viewer.id, async (q) => {
+  return asViewer(viewer, async (q) => {
     if (target.kind === "tier") {
       const t = await q.one<{ id: string; kind: string; name: string; price_cents: number; currency: string; seat_limit: number | null; seats_taken: number | null; display_name: string; creator_id: string }>(
         `select t.id, t.kind, t.name, t.price_cents, t.currency, t.seat_limit, app.tier_seats_taken(t.id) as seats_taken, c.display_name, c.user_id as creator_id

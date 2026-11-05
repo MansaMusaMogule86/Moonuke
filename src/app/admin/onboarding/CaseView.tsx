@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ImportPanel } from "@/components/onboarding/ImportPanel";
 import { Stepper } from "@/components/onboarding/Stepper";
 import { Badge } from "@/components/ui/Badge";
 import { requireViewer } from "@/server/auth/request";
@@ -49,6 +50,13 @@ export async function CaseView({ caseId, userId }: { caseId?: string; userId?: s
             ) : (
               <p className="mt-6 text-[14px] text-ash">Available once their account is approved.</p>
             )}
+            {d.user && d.user.status === "active" && (
+              <div className="mt-8 border-t border-line pt-6">
+                <h3 className="font-display text-[22px] text-ivory">Or import details they shared</h3>
+                <p className="mt-2 text-[13px] leading-relaxed text-stone">Paste what the creator sent you, or their export file. It becomes a draft for them to accept.</p>
+                <div className="mt-5"><ImportPanel targetUserId={d.user.id} audience="owner" /></div>
+              </div>
+            )}
             {d.proposals.length > 0 && (
               <div className="mt-8 border-t border-line pt-6">
                 <h3 className="eyebrow mb-3 text-stone">Draft history</h3>
@@ -57,6 +65,7 @@ export async function CaseView({ caseId, userId }: { caseId?: string; userId?: s
                     <li key={p.id} className="flex flex-wrap items-center gap-2">
                       <Badge tone={p.status === "accepted" ? "vip" : p.status === "proposed" ? "member" : "locked"}>{p.status}</Badge>
                       <span className="text-stone">{Object.keys(p.fields).join(", ")}</span>
+                      {p.source === "import" && <span className="text-ash">· import</span>}
                       {p.ai_assisted && <span className="text-ash">· assistant</span>}
                       <span className="text-ash">· {new Date(p.created_at).toLocaleDateString("en-GB")}</span>
                     </li>

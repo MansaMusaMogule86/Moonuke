@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
+import { ImportPanel } from "@/components/onboarding/ImportPanel";
 import { Stepper } from "@/components/onboarding/Stepper";
 import { Badge } from "@/components/ui/Badge";
 import { requireViewer } from "@/server/auth/request";
@@ -74,6 +75,16 @@ export default async function StudioPage() {
         </section>
 
         <div className="space-y-6 lg:col-span-5">
+          <section aria-labelledby="import-h" className="rounded-[var(--radius-xl)] border border-line bg-ink-2 p-6 md:p-9">
+            <h2 id="import-h" className="font-display text-[30px] text-ivory">Import a profile</h2>
+            <p className="mt-3 text-[14px] leading-relaxed text-stone">
+              Bring your name, bio and links from another platform by pasting them or choosing an export file. You&apos;ll review everything before it&apos;s used.
+            </p>
+            <div className="mt-6">
+              {open ? <p className="text-[14px] text-ash">Answer the proposal above first, then you can import.</p> : <ImportPanel targetUserId={viewer.id} audience="creator" />}
+            </div>
+          </section>
+
           <section aria-labelledby="socials-h" className="rounded-[var(--radius-xl)] border border-line bg-ink-2 p-6 md:p-9">
             <h2 id="socials-h" className="font-display text-[30px] text-ivory">Social profiles</h2>
             <p className="mt-3 text-[14px] leading-relaxed text-stone">

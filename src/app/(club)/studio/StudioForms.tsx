@@ -68,11 +68,14 @@ export function ProposalCard({ p, current }: { p: ProposalRow; current: Partial<
   const [state, action] = useActionState(decideProposalAction, idle);
   const router = useRouter();
   const decided = state.data?.decided;
-  const entries = Object.entries(p.fields) as [keyof ProfileInput, string][];
+  const { links = [], ...profileFields } = p.fields;
+  const entries = Object.entries(profileFields) as [keyof ProfileInput, string][];
+  const imported = p.source === "import";
   return (
-    <article aria-label="Profile proposal from the house" className="rounded-[var(--radius-xl)] border border-gold/40 bg-ink-3 p-6 md:p-8">
+    <article aria-label={imported ? "Imported profile proposal" : "Profile proposal from the house"} className="rounded-[var(--radius-xl)] border border-gold/40 bg-ink-3 p-6 md:p-8">
       <div className="flex flex-wrap items-center gap-2">
-        <h3 className="font-display text-[26px] text-ivory">The house prepared a draft</h3>
+        <h3 className="font-display text-[26px] text-ivory">{imported ? "Imported details to review" : "The house prepared a draft"}</h3>
+        {imported && <Badge tone="neutral">Import</Badge>}
         {p.ai_assisted && <Badge tone="neutral">Assistant-drafted</Badge>}
         {decided && <Badge tone={decided === "accepted" ? "vip" : "locked"}>{decided}</Badge>}
       </div>
@@ -87,11 +90,26 @@ export function ProposalCard({ p, current }: { p: ProposalRow; current: Partial<
             </dd>
           </div>
         ))}
+        {links.length > 0 && (
+          <div className="grid gap-1 py-3 sm:grid-cols-4">
+            <dt className="text-[12px] uppercase tracking-[0.16em] text-ash">Social profiles</dt>
+            <dd className="sm:col-span-3">
+              <ul className="space-y-1">
+                {links.map((l) => (
+                  <li key={`${l.platform}:${l.handle}`} className="break-all text-[14px] text-ivory">
+                    {PLATFORM_OPTIONS.find(([v]) => v === l.platform)?.[1] ?? l.platform} · {l.platform === "website" ? l.url : `@${l.handle}`}
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-1 text-[12px] text-ash">Added as unverified — you&apos;ll still place a proof code in each bio.</p>
+            </dd>
+          </div>
+        )}
       </dl>
       {!decided ? (
         <form action={action} className="mt-6 flex flex-wrap gap-3">
           <input type="hidden" name="id" value={p.id} />
-          <Submit name="decision" value="accept">Accept and update my draft</Submit>
+          <Submit name="decision" value="accept">{entries.length ? "Accept and update my draft" : "Accept and add these profiles"}</Submit>
           <Submit name="decision" value="decline" variant="outline">Decline</Submit>
         </form>
       ) : (

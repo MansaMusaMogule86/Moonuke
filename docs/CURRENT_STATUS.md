@@ -1,6 +1,6 @@
 # Current status
 
-**Branch:** `claude/cool-noether-uvf5h7`. **Last code commit:** `43faf7f`. **Deployed:** no. **Payments active:** no.
+**Branch:** `claude/cool-noether-uvf5h7`. **Last code commit:** `738d683`. **Deployed:** no. **Payments active:** no.
 
 ## Completed phases
 
@@ -20,6 +20,9 @@
 | 4 | Onboarding server: cases, proposals, socials, AI assistant | `be7b342` |
 | 4 | Onboarding UI and e2e tests | `0513865` |
 | 4 | Studio fix, full verify passing | `43faf7f` |
+| 4 | Profile imports: parser, service, migration, RLS, server tests | `1abb412` |
+| 4 | Profile imports UI (studio, owner case page) | `aa94a7f` |
+| 4 | Profile imports e2e and docs | `fd93768`, `738d683` |
 
 What Phase 4 delivered:
 - White-glove cases and the pipeline board.
@@ -27,21 +30,22 @@ What Phase 4 delivered:
 - Social connections verified by proof code.
 - The AI profile assistant: local template, with Claude as an opt-in.
 - Verified socials on profiles.
+- Profile imports: paste text or upload a `.txt`/`.json` export. It's parsed locally into name, tagline, bio and links, always filed as a proposal, duplicate-proof, and the raw text is never stored.
 
 What's still open is in `docs/NEXT_PHASE.md`.
 
-## Test results (last full local run: `pnpm verify` at `43faf7f`, PASS, ~5 min)
+## Test results (last full local run: `pnpm verify` at `738d683`, PASS, ~5 min)
 This was a **local** run. GitHub Actions did not run.
 
 | Step | Result |
 |---|---|
 | TypeScript strict | pass |
-| Vitest: UI and PostgreSQL security tests | 127 / 127 (11 files) |
+| Vitest: UI and PostgreSQL security tests | 141 / 141 (12 files) |
 | Production build, env-safety check | pass |
 | Browser, Phase 1 (homepage and axe) | 17 / 17 |
 | Browser, Phase 2 (access, entitlements, axe) | 70 / 70 |
 | Browser, Phase 3 (recovery, MFA, safety, verification, axe) | 66 / 66 |
-| Browser, Phase 4 (white-glove flow, axe) | 34 / 34 |
+| Browser, Phase 4 (white-glove flow, profile import, axe) | 43 / 43 |
 
 ## Known issues and limitations
 - **Auth:** our own implementation; the Supabase switch is planned, not done. There's no ID-verification vendor; checks are manual.
@@ -50,6 +54,7 @@ This was a **local** run. GitHub Actions did not run.
 - **AI:** the Claude adapter is typechecked against the official SDK but **never called live** (no key, no cost).
 - **Safety filter:** pattern-based, not a classifier.
 - **Social verification:** manual; there are no platform APIs.
+- **Imports:** generic parsing only, with no per-platform adapters or OAuth. No avatar or image import, because there's no storage yet.
 - **Escalation:** recorded only, not wired to outside reporting bodies.
 - **CSP:** allows inline styles.
 - **Rate limits:** depend on a correctly set `TRUSTED_PROXY`.

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Badge } from "@/components/ui/Badge";
 import { requireViewer } from "@/server/auth/request";
 import { listApplications, overview } from "@/server/services/admin";
-import { DecisionForm } from "./ActionForms";
+import { DecisionRow } from "./ActionForms";
 
 export const metadata: Metadata = { title: "Applications" };
 
@@ -40,22 +40,19 @@ export default async function AdminHome() {
         ) : (
           <ul className="mt-8 space-y-4">
             {apps.map((a) => (
-              <li key={a.id} className="grid gap-5 rounded-[var(--radius-lg)] border border-line bg-ink-2 p-5 md:grid-cols-12 md:items-center md:p-6">
-                <div className="md:col-span-5">
+              <li key={a.id} className="rounded-[var(--radius-lg)] border border-line bg-ink-2 p-5 md:p-6">
+                <DecisionRow id={a.id} kind="application" label={a.alias} initialStatus={a.status}>
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="font-display text-[24px] text-ivory">{a.alias}</p>
                     <Badge tone={a.role === "creator" ? "vip" : "member"}>{a.role}</Badge>
                   </div>
                   <p className="mt-1 break-all text-[13px] text-stone">{a.email}</p>
-                </div>
-                <div className="text-[13px] text-stone md:col-span-3">
-                  <p>Applied {when(a.submitted_at)}</p>
-                  {a.referred_by && <p>Vouched for by <span className="text-ivory">{a.referred_by}</span></p>}
-                  {a.invitation_note && <p className="truncate">Invite note: {a.invitation_note}</p>}
-                </div>
-                <div className="md:col-span-4 md:justify-self-end">
-                  <DecisionForm id={a.id} kind="application" label={a.alias} />
-                </div>
+                  <div className="mt-2 text-[13px] text-stone">
+                    <p>Applied {when(a.submitted_at)}</p>
+                    {a.referred_by && <p>Vouched for by <span className="text-ivory">{a.referred_by}</span></p>}
+                    {a.invitation_note && <p className="truncate">Invite note: {a.invitation_note}</p>}
+                  </div>
+                </DecisionRow>
               </li>
             ))}
           </ul>

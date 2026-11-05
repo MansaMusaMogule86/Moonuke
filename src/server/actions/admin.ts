@@ -71,7 +71,11 @@ export async function decideApplicationAction(_prev: FormState, fd: FormData): P
     const r = await admin.decideApplication(viewer, parsed.data.id, decision, parsed.data.note, await requestMeta());
     if (r.emailed) after(() => deliverPending().catch(() => {}));
     // No revalidate: the decided row stays visible with its confirmation until the next visit.
-    return { status: "success", message: decision === "approve" ? "Approved. The account is now active." : "Application declined." };
+    return {
+      status: "success",
+      message: decision === "approve" ? "Approved. The account is now active." : "Application declined.",
+      data: { decided: decision === "approve" ? "approved" : "rejected" },
+    };
   } catch (e) {
     return fail(e);
   }
@@ -92,10 +96,10 @@ export async function decideReferralAction(_prev: FormState, fd: FormData): Prom
         message: issued.emailed
           ? "Invitation issued and queued for email — single use, locked to their email, valid 7 days. The link is also shown once below."
           : "Invitation issued — single use, locked to their email, valid 7 days. Copy it now.",
-        data: { link: `${appUrl()}/invite/${issued.token}`, expiresAt: issued.expiresAt.toISOString() },
+        data: { link: `${appUrl()}/invite/${issued.token}`, expiresAt: issued.expiresAt.toISOString(), decided: "approved" },
       };
     }
-    return { status: "success", message: "Request declined." };
+    return { status: "success", message: "Request declined.", data: { decided: "declined" } };
   } catch (e) {
     return fail(e);
   }

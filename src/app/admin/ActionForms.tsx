@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useActionState, useState } from "react";
 import { Check, FormMessage, Select, Submit, TextArea } from "@/components/forms";
 import { Button } from "@/components/ui/Button";
@@ -75,18 +76,73 @@ export function RevokeForm({ id }: { id: string }) {
   );
 }
 
-export function DecisionForm({ id, kind, label, emailEnabled = false }: { id: string; kind: "application" | "referral"; label: string; emailEnabled?: boolean }) {
+/**
+ * Decision row: owns the row's status so the badge, buttons and confirmation
+ * all update the moment the server responds. Nothing is revalidated until the
+ * owner presses "Done" (so a one-time invitation link is never unmounted).
+ */
+export function DecisionRow({
+  id,
+  kind,
+  label,
+  initialStatus,
+  emailEnabled = false,
+  children,
+}: {
+  id: string;
+  kind: "application" | "referral";
+  label: string;
+  initialStatus: string;
+  emailEnabled?: boolean;
+  children: React.ReactNode;
+}) {
   const [state, action] = useActionState(kind === "application" ? decideApplicationAction : decideReferralAction, idle);
+  const router = useRouter();
+  const status = state.data?.decided ?? initialStatus;
+  const tone = status === "approved" ? "vip" : status === "pending" ? "neutral" : "locked";
+  return (
+    <div className="grid gap-5 md:grid-cols-12 md:items-start">
+      <div className="md:col-span-7">
+        <div className="mb-2"><StatusBadge tone={tone}>{status}</StatusBadge></div>
+        {children}
+      </div>
+      <div className="md:col-span-5 md:justify-self-end">
+        {status === "pending" ? (
+          <DecisionControls id={id} kind={kind} label={label} emailEnabled={emailEnabled} action={action} state={state} />
+        ) : state.status === "success" ? (
+          <div className="space-y-3">
+            <FormMessage state={state} />
+            <IssuedLink state={state} />
+            <Button size="sm" variant="outline" onClick={() => router.refresh()}>Done</Button>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function StatusBadge({ tone, children }: { tone: "vip" | "neutral" | "locked"; children: React.ReactNode }) {
+  const cls = { vip: "border-gold/60 text-gold-soft bg-gold/[0.08]", neutral: "border-line text-stone", locked: "border-line-strong text-stone bg-ink/60" }[tone];
+  return <span data-testid="row-status" className={`inline-flex h-6 items-center rounded-full border px-2.5 text-[10.5px] font-medium uppercase tracking-[0.18em] ${cls}`}>{children}</span>;
+}
+
+function DecisionControls({
+  id,
+  kind,
+  label,
+  emailEnabled,
+  action,
+  state,
+}: {
+  id: string;
+  kind: "application" | "referral";
+  label: string;
+  emailEnabled: boolean;
+  action: (fd: FormData) => void;
+  state: FormState;
+}) {
   const [noteOpen, setNoteOpen] = useState(false);
   const no = kind === "application" ? "reject" : "decline";
-  if (state.status === "success") {
-    return (
-      <div className="space-y-3">
-        <FormMessage state={state} />
-        <IssuedLink state={state} />
-      </div>
-    );
-  }
   return (
     <form action={action} className="space-y-3" aria-label={`Decide on ${label}`}>
       <input type="hidden" name="id" value={id} />
@@ -108,6 +164,11 @@ export function DecisionForm({ id, kind, label, emailEnabled = false }: { id: st
       <FormMessage state={state} />
     </form>
   );
+}
+
+/** @deprecated kept for compatibility; use DecisionRow. */
+export function DecisionForm(props: { id: string; kind: "application" | "referral"; label: string; emailEnabled?: boolean }) {
+  return <DecisionRow {...props} initialStatus="pending">{null}</DecisionRow>;
 }
 
 export function SuspendForm({ id, suspended, alias }: { id: string; suspended: boolean; alias: string }) {

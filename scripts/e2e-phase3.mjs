@@ -314,6 +314,33 @@ async function ownerSignIn(opts = desktop) {
   for (const x of [m, r, o]) await x.ctx.close();
 }
 
+// ================================================================ admin rows update in place (stale-status fix)
+{
+  const o = await ownerSignIn();
+  await o.page.goto(`${BASE}/admin`);
+  const row = o.page.getByRole("listitem").filter({ hasText: "satellite@moonuke.test" });
+  check("application row starts pending", (await row.getByTestId("row-status").textContent()).trim() === "pending");
+  await row.getByRole("button", { name: "Approve" }).click();
+  await row.getByText("Approved. The account is now active.").waitFor();
+  check("status badge flips to approved immediately", (await row.getByTestId("row-status").textContent()).trim() === "approved");
+  check("decision buttons removed after decision", (await row.getByRole("button", { name: "Approve" }).count()) === 0);
+  await row.getByRole("button", { name: "Done" }).click();
+  await o.page.waitForTimeout(1200);
+  check("Done refreshes: decided application leaves the queue", (await o.page.getByRole("listitem").filter({ hasText: "satellite@moonuke.test" }).count()) === 0);
+
+  await o.page.goto(`${BASE}/admin/referrals`);
+  const ref = o.page.getByRole("listitem").filter({ hasText: "celeste@example.com" });
+  await ref.getByRole("button", { name: /Approve & issue/ }).click();
+  await ref.getByTestId("invite-link").waitFor();
+  check("referral badge flips to approved with link still visible", (await ref.getByTestId("row-status").textContent()).trim() === "approved");
+  await shot(o.page, "admin-referral-decided-desktop");
+  await ref.getByRole("button", { name: "Done" }).click();
+  await o.page.waitForTimeout(1200);
+  const after = o.page.getByRole("listitem").filter({ hasText: "celeste@example.com" });
+  check("after refresh the persisted status is approved", (await after.getByTestId("row-status").textContent()).trim() === "approved");
+  await o.ctx.close();
+}
+
 //@@SECTIONS@@
 
 await browser.close();

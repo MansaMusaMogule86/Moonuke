@@ -205,3 +205,128 @@ export async function deletePost(creator: Viewer, id: string): Promise<void> {
     await audit(q, { actorId: creator.id, action: "post.delete", targetType: "post", targetId: id });
   });
 }
+
+// =====================================================================
+// Creator studio — membership tiers. Prices are quoted, never charged.
+// =====================================================================
+export const TIER_LIMITS = { name: 40, perks: 8, perk: 80, priceMin: 100, priceMax: 100_000, maxTiers: 8, seatMax: 100_000 } as const;
+
+export type StudioTier = {
+  id: string;
+  kind: "member" | "vip";
+  name: string;
+  priceCents: number;
+  perks: string[];
+  seatLimit: number | null;
+  seatsTaken: number;
+  active: boolean;
+  sort: number;
+  hasSubscribers: boolean;
+};
+export type TierInput = { kind: "member" | "vip"; name: string; priceCents: number; perks: string[]; seatLimit: number | null; active: boolean };
+
+export function normalizeTier(input: TierInput): TierInput {
+  const name = input.name?.trim().replace(/\s+/g, " ") ?? "";
+  if (!name) throw new AppError("validation", "Name the tier.", "name");
+  if (name.length > TIER_LIMITS.name) throw new AppError("validation", `Keep the name under ${TIER_LIMITS.name} characters.`, "name");
+  if (!["member", "vip"].includes(input.kind)) throw new AppError("validation", "Choose a tier type.", "kind");
+  const p = input.priceCents;
+  if (!Number.isInteger(p) || p < TIER_LIMITS.priceMin || p > TIER_LIMITS.priceMax) {
+    throw new AppError("validation", `Set a monthly price between $${TIER_LIMITS.priceMin / 100} and $${(TIER_LIMITS.priceMax / 100).toLocaleString("en")}.`, "price");
+  }
+  const perks = (input.perks ?? []).map((x) => x.trim().replace(/\s+/g, " ")).filter(Boolean);
+  if (perks.length > TIER_LIMITS.perks) throw new AppError("validation", `Up to ${TIER_LIMITS.perks} perks.`, "perks");
+  if (perks.some((x) => x.length > TIER_LIMITS.perk)) throw new AppError("validation", `Keep each perk under ${TIER_LIMITS.perk} characters.`, "perks");
+  if (new Set(perks.map((x) => x.toLowerCase())).size !== perks.length) throw new AppError("validation", "Each perk should be different.", "perks");
+  const seat = input.seatLimit;
+  if (seat != null && (!Number.isInteger(seat) || seat < 1 || seat > TIER_LIMITS.seatMax)) {
+    throw new AppError("validation", "Seats must be a whole number of 1 or more, or left empty for unlimited.", "seatLimit");
+  }
+  const verdict = checkText(name, ...perks);
+  if (!verdict.ok) throw new AppError("validation", "That copy can't be used here. Remove any reference to minors, youth or non-consent.", "name");
+  return { kind: input.kind, name, priceCents: p, perks, seatLimit: seat ?? null, active: !!input.active };
+}
+
+type TierRow = { id: string; kind: "member" | "vip"; name: string; price_cents: number; perks: string[]; seat_limit: number | null; seats_taken: number | null; active: boolean; sort: number; has_subscribers: boolean };
+
+export async function myTiers(creator: Viewer): Promise<StudioTier[]> {
+  assertCreator(creator);
+  return asViewer(creator, async (q) =>
+    (
+      await q.query<TierRow>(
+        `select id, kind, name, price_cents, perks, seat_limit, app.tier_seats_taken(id) as seats_taken, active, sort,
+                app.tier_has_subscribers(id) as has_subscribers
+           from app.tiers where creator_id = $1 order by kind, sort, price_cents`,
+        [creator.id],
+      )
+    ).map((r) => ({
+      id: r.id, kind: r.kind, name: r.name, priceCents: r.price_cents, perks: r.perks, seatLimit: r.seat_limit,
+      seatsTaken: r.seats_taken ?? 0, active: r.active, sort: r.sort, hasSubscribers: r.has_subscribers,
+    })),
+  );
+}
+
+const tierDbError = (e: unknown): never => {
+  const err = e as { code?: string; message?: string };
+  if (err.code === "23505") throw new AppError("conflict", "You already have a tier with that name.", "name");
+  if (err.code === "23514" && /seat/.test(err.message ?? "")) throw new AppError("validation", "That's fewer seats than current members.", "seatLimit");
+  if (err.code === "42501") throw new AppError("conflict", "This tier has members, so its type is fixed.", "kind");
+  if (err.code === "23503") throw new AppError("validation", "Save your profile first.");
+  throw e;
+};
+
+async function otherActiveTiers(q: { one: <R>(t: string, p?: unknown[]) => Promise<R | undefined> }, creatorId: string, id: string) {
+  const r = await q.one<{ n: number }>(`select count(*)::int as n from app.tiers where creator_id = $1 and active and id <> $2`, [creatorId, id]);
+  return r?.n ?? 0;
+}
+
+export async function createTier(creator: Viewer, input: TierInput): Promise<string> {
+  assertCreator(creator);
+  const t = normalizeTier(input);
+  return asViewer(creator, async (q) => {
+    const profile = await q.one(`select 1 from app.creators where user_id = $1`, [creator.id]);
+    if (!profile) throw new AppError("validation", "Save your profile first.");
+    const n = await q.one<{ n: number }>(`select count(*)::int as n from app.tiers where creator_id = $1`, [creator.id]);
+    if ((n?.n ?? 0) >= TIER_LIMITS.maxTiers) throw new AppError("conflict", `You can have up to ${TIER_LIMITS.maxTiers} tiers. Edit or remove one first.`);
+    const row = await q
+      .one<{ id: string }>(
+        `insert into app.tiers (creator_id, kind, name, price_cents, perks, seat_limit, active, sort)
+         values ($1, $2, $3, $4, $5, $6, $7, coalesce((select max(sort) + 1 from app.tiers where creator_id = $1), 1)) returning id`,
+        [creator.id, t.kind, t.name, t.priceCents, t.perks, t.seatLimit, t.active],
+      )
+      .catch(tierDbError);
+    await audit(q, { actorId: creator.id, action: "tier.create", targetType: "tier", targetId: row!.id, metadata: { kind: t.kind, priceCents: t.priceCents } });
+    return row!.id;
+  });
+}
+
+export async function updateTier(creator: Viewer, id: string, input: TierInput): Promise<void> {
+  assertCreator(creator);
+  const t = normalizeTier(input);
+  await asViewer(creator, async (q) => {
+    const cur = await q.one<{ price_cents: number; active: boolean }>(`select price_cents, active from app.tiers where id = $1 and creator_id = $2`, [id, creator.id]);
+    if (!cur) throw new AppError("not_found", "Tier not found.");
+    if (cur.active && !t.active && !(await otherActiveTiers(q, creator.id, id))) {
+      throw new AppError("validation", "Keep at least one tier active so members can join.", "active");
+    }
+    await q
+      .query(`update app.tiers set kind = $3, name = $4, price_cents = $5, perks = $6, seat_limit = $7, active = $8 where id = $1 and creator_id = $2`, [
+        id, creator.id, t.kind, t.name, t.priceCents, t.perks, t.seatLimit, t.active,
+      ])
+      .catch(tierDbError);
+    await audit(q, { actorId: creator.id, action: "tier.update", targetType: "tier", targetId: id, metadata: { priceFrom: cur.price_cents, priceTo: t.priceCents, active: t.active } });
+  });
+}
+
+export async function deleteTier(creator: Viewer, id: string): Promise<void> {
+  assertCreator(creator);
+  await asViewer(creator, async (q) => {
+    const cur = await q.one<{ has: boolean; active: boolean }>(`select app.tier_has_subscribers(id) as has, active from app.tiers where id = $1 and creator_id = $2`, [id, creator.id]);
+    if (!cur) throw new AppError("not_found", "Tier not found.");
+    if (cur.has) throw new AppError("conflict", "This tier has had members, so it can't be deleted. Turn it off instead.");
+    if (cur.active && !(await otherActiveTiers(q, creator.id, id))) throw new AppError("validation", "Keep at least one tier active so members can join.");
+    const r = await q.one(`delete from app.tiers where id = $1 and creator_id = $2 returning 1`, [id, creator.id]);
+    if (!r) throw new AppError("not_found", "Tier not found.");
+    await audit(q, { actorId: creator.id, action: "tier.delete", targetType: "tier", targetId: id });
+  });
+}

@@ -197,6 +197,88 @@ async function ownerSignIn(opts = desktop) {
   for (const x of [a, b, c, d]) await x.ctx.close();
 }
 
+// ================================================================ safety: report, auto-hide, moderation, blocking
+{
+  const v = await signIn("velvet@moonuke.test", "velvet-new-password-1");
+  await v.page.goto(`${BASE}/c/isadora`);
+  await v.page.getByRole("button", { name: "Report", exact: true }).click();
+  const sheet = v.page.getByRole("dialog");
+  await sheet.getByRole("button", { name: "Send report" }).click();
+  await sheet.locator("[role=alert]").first().waitFor();
+  check("report requires a reason", true);
+  await shot(v.page, "report-sheet-desktop");
+  await axe(v.page, "report sheet @1440");
+  await sheet.getByLabel("Impersonation or fake identity").check();
+  await sheet.getByLabel("Details (optional)").fill("Profile photos appear to be someone else.");
+  await sheet.getByRole("button", { name: "Send report" }).click();
+  await sheet.getByText("The house will review your report").waitFor();
+  check("creator report filed", true);
+  await v.page.keyboard.press("Escape");
+
+  // Critical report on a visible post → hidden for everyone but the owner/creator
+  const teaser = "Studio, 6 a.m.";
+  const article = v.page.locator("article").filter({ hasText: teaser }).first();
+  await article.getByRole("button", { name: /Report/ }).click();
+  const s2 = v.page.getByRole("dialog");
+  await s2.getByLabel("Shared without consent").check();
+  await s2.getByRole("button", { name: "Send report" }).click();
+  await s2.getByText("flagged as urgent").waitFor();
+  check("critical report acknowledged as urgent", true);
+  await v.page.keyboard.press("Escape");
+  await v.page.reload();
+  check("critically reported post hidden immediately", (await v.page.locator("article").filter({ hasText: teaser }).count()) === 0);
+
+  // Block from profile → leaves the profile, shows confirmation, profile now 404
+  await v.page.goto(`${BASE}/c/valentin`);
+  await v.page.getByRole("button", { name: "Block", exact: true }).click();
+  await v.page.getByRole("dialog").getByRole("button", { name: /Block Valentin/ }).click();
+  await v.page.waitForURL(/\/discover\?blocked=1/);
+  check("block → back to discovery with notice", await v.page.getByRole("status").filter({ hasText: "Blocked" }).isVisible());
+  check("blocked creator gone from discovery", (await v.page.locator('a[href="/c/valentin"]').count()) === 0);
+  const gone = await v.page.goto(`${BASE}/c/valentin`);
+  check("blocked creator profile 404", gone.status() === 404);
+  await v.page.goto(`${BASE}/account/privacy`);
+  await shot(v.page, "privacy-desktop");
+  await axe(v.page, "/account/privacy @1440");
+  check("privacy lists report statuses", (await v.page.getByText("Received").count()) >= 1);
+  await v.page.getByRole("button", { name: "Unblock Valentin Ash" }).click();
+  await v.page.getByText("Unblocked").waitFor();
+  const back = await v.page.goto(`${BASE}/c/valentin`);
+  check("unblock restores profile", back.status() === 200);
+
+  // Owner: critical report on top; restore post; state updates in place
+  const o = await ownerSignIn();
+  await o.page.goto(`${BASE}/admin/moderation`);
+  await shot(o.page, "moderation-desktop");
+  await axe(o.page, "/admin/moderation @1440");
+  const first = o.page.locator("article").first();
+  check("critical report first in queue", (await first.getAttribute("aria-label")).startsWith("Critical"));
+  check("auto-hidden badge shown", await first.getByText("Post hidden").isVisible());
+  await first.getByRole("button", { name: "Restore post" }).click();
+  await first.getByText("Post restored").waitFor();
+  check("card reflects decision without reload", (await first.getByText("dismissed").count()) >= 1 && (await first.getByRole("button", { name: "Hide post" }).count()) === 1);
+  await v.page.goto(`${BASE}/c/isadora`);
+  check("restored post visible again", (await v.page.locator("article").filter({ hasText: teaser }).count()) === 1);
+
+  // Escalation needs a reference
+  await o.page.reload();
+  const imp = o.page.locator("article").filter({ hasText: "Impersonation" }).first();
+  await imp.getByRole("button", { name: "Escalate…" }).click();
+  await imp.getByRole("button", { name: "Record escalation" }).click();
+  await imp.locator("[role=alert]").first().waitFor();
+  check("escalation requires external reference", true);
+  await imp.getByLabel("External reference").fill("EXT-2026-001");
+  await imp.getByRole("button", { name: "Record escalation" }).click();
+  await imp.getByText("Escalation recorded").waitFor();
+  check("escalation recorded", true);
+
+  // Members can't reach moderation
+  const mod = await v.page.goto(`${BASE}/admin/moderation`);
+  check("member /admin/moderation → 404", mod.status() === 404);
+  await v.ctx.close();
+  await o.ctx.close();
+}
+
 //@@SECTIONS@@
 
 await browser.close();

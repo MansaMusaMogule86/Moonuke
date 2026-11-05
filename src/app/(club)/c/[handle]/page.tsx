@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { CheckoutButton } from "@/components/club/CheckoutButton";
 import { FollowButton } from "@/components/club/FollowButton";
 import { PostTile } from "@/components/club/PostTile";
+import { BlockButton, ReportButton } from "@/components/club/SafetyButtons";
 import { Badge } from "@/components/ui/Badge";
 import { Portrait } from "@/components/ui/Portrait";
 import { ImageReveal, Reveal } from "@/components/ui/Reveal";
@@ -74,6 +75,12 @@ export default async function CreatorPage({ params }: { params: Promise<{ handle
                 <FollowButton creatorId={p.id} handle={p.handle} following={p.viewer.following} />
               </div>
             )}
+            {!p.viewer.isSelf && viewer.role !== "owner" && (
+              <div className="mt-4 flex gap-1">
+                <ReportButton targetType="creator" targetId={p.id} label={p.displayName} />
+                <BlockButton targetUserId={p.id} name={p.displayName} />
+              </div>
+            )}
           </Reveal>
         </div>
       </section>
@@ -142,7 +149,7 @@ export default async function CreatorPage({ params }: { params: Promise<{ handle
         <ul className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {p.posts.map((post) => (
             <li key={post.id}>
-              <PostTile post={post} vipTierId={p.viewer.isSelf ? undefined : vip?.id} memberTierId={p.viewer.isSelf ? undefined : member?.id} />
+              <PostTile post={post} vipTierId={p.viewer.isSelf ? undefined : vip?.id} memberTierId={p.viewer.isSelf ? undefined : member?.id} canReport={!p.viewer.isSelf && viewer.role !== "owner"} />
             </li>
           ))}
         </ul>

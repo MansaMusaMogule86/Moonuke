@@ -1,6 +1,7 @@
 import { Badge, LockGlyph } from "@/components/ui/Badge";
 import type { PostView } from "@/server/services/club";
 import { CheckoutButton } from "./CheckoutButton";
+import { ReportButton } from "./SafetyButtons";
 
 const accessLabel = { preview: "Free preview", members: "Members", vip: "VIP", ppv: "Pay-per-view" } as const;
 const kindLabel = (p: PostView) => (p.mediaKind === "set" ? `${p.mediaCount} photos` : p.mediaKind === "video" ? "Video" : "Photo");
@@ -10,7 +11,7 @@ const date = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { day: "
  * Locked posts render from the teaser only — the server never sent their body
  * or media. The veil is a generic gradient, not a blurred copy of the asset.
  */
-export function PostTile({ post, vipTierId, memberTierId }: { post: PostView; vipTierId?: string; memberTierId?: string }) {
+export function PostTile({ post, vipTierId, memberTierId, canReport = false }: { post: PostView; vipTierId?: string; memberTierId?: string; canReport?: boolean }) {
   const locked = !post.unlocked;
   return (
     <article className="group overflow-hidden rounded-[var(--radius-xl)] border border-line bg-ink-2" aria-label={`${accessLabel[post.access]} post: ${post.teaser}`}>
@@ -50,7 +51,10 @@ export function PostTile({ post, vipTierId, memberTierId }: { post: PostView; vi
       <div className="p-4">
         <p className="text-[14px] text-ivory">{post.teaser}</p>
         {!locked && post.body && <p className="mt-2 text-[13px] leading-relaxed text-stone">{post.body}</p>}
-        <p className="mt-2 text-[12px] text-ash">{date(post.publishedAt)} · {kindLabel(post)}</p>
+        <div className="mt-2 flex items-center justify-between gap-3">
+          <p className="text-[12px] text-ash">{date(post.publishedAt)} · {kindLabel(post)}</p>
+          {canReport && <ReportButton targetType="post" targetId={post.id} label={`post: ${post.teaser}`} compact />}
+        </div>
       </div>
     </article>
   );

@@ -22,6 +22,7 @@ export default async function DiscoverPage({ searchParams }: { searchParams: SP 
   const raw = await searchParams;
   const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) || undefined;
   const { q, category, sort = "featured" } = discoverSchema.parse({ q: one(raw.q), category: one(raw.category), sort: one(raw.sort) });
+  const justBlocked = one(raw.blocked) === "1";
 
   const [creators, categories] = await Promise.all([discover(viewer, { q, category, sort }), listCategories(viewer)]);
   const filtered = !!(q || category);
@@ -42,6 +43,12 @@ export default async function DiscoverPage({ searchParams }: { searchParams: SP 
 
   return (
     <div className="mx-auto max-w-[1600px] px-5 pb-28 pt-14 md:px-10 md:pt-20">
+      {justBlocked && (
+        <p role="status" className="mb-10 rounded-[var(--radius-md)] border border-gold/35 bg-gold/[0.06] px-4 py-3 text-[14px] text-gold-soft">
+          Blocked. You won&apos;t see each other anymore. Manage blocks in{" "}
+          <a href="/account/privacy" className="underline underline-offset-4">Account → Privacy</a>.
+        </p>
+      )}
       <Reveal>
         <p className="eyebrow mb-5">The Circle · {viewer.alias}</p>
         <h1 className="font-display text-[56px] leading-[0.95] tracking-[-0.03em] text-ivory md:text-[112px]">

@@ -10,6 +10,9 @@ export const PERMISSIONS = [
   "referrals.review",
   "accounts.suspend",
   "audit.view",
+  "moderation.review",
+  "creators.verify",
+  "club.report",
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number];
 
@@ -22,9 +25,11 @@ const matrix: Record<Role, readonly Permission[]> = {
     "referrals.review",
     "accounts.suspend",
     "audit.view",
+    "moderation.review",
+    "creators.verify",
   ],
-  creator: ["club.discover", "club.follow", "referrals.request"],
-  member: ["club.discover", "club.follow", "referrals.request"],
+  creator: ["club.discover", "club.follow", "referrals.request", "club.report"],
+  member: ["club.discover", "club.follow", "referrals.request", "club.report"],
 };
 
 export type MfaState = "none" | "pending" | "verified";

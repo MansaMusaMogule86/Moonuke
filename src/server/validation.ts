@@ -45,6 +45,20 @@ export const referralSchema = z.object({
 
 export const decisionSchema = z.object({ id: uuid, note });
 
+export const reportSchema = z.object({
+  targetType: z.enum(["creator", "post"]),
+  targetId: uuid,
+  reason: z.enum(["harassment", "impersonation", "spam", "copyright", "other", "underage_concern", "non_consensual", "illegal_content"], { message: "Choose a reason." }),
+  details: z.string().trim().max(2000).optional().transform((v) => (v ? v : undefined)),
+});
+
+export const moderateSchema = z.object({
+  id: uuid,
+  action: z.enum(["in_review", "dismiss", "hide_post", "restore_post", "suspend_user", "escalate", "resolve"]),
+  note,
+  escalationRef: z.string().trim().max(120).optional().transform((v) => (v ? v : undefined)),
+});
+
 export const discoverSchema = z.object({
   q: z.string().trim().max(60).optional().catch(undefined),
   category: z.string().regex(/^[a-z-]{2,32}$/).optional().catch(undefined),

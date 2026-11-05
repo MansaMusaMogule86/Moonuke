@@ -1,0 +1,111 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Typecheck, tests, build, browser tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    # CI-only values. Nothing here is a real secret; production secrets live
+    # in the host's secret manager (see docs/deployment.md).
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/moonuke
+      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/moonuke_test
+      APP_SECRET: ci-only-not-a-secret-ci-only-not-a-secret-00
+      APP_URL: http://localhost:3000
+      TRUSTED_PROXY: none
+      EMAIL_TRANSPORT: dev
+      ALLOW_LOCAL_PRODUCTION: "true"
+      NEXT_TELEMETRY_DISABLED: "1"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Create databases
+        run: |
+          psql "postgresql://postgres:postgres@localhost:5432/postgres" -c "create database moonuke"
+          psql "postgresql://postgres:postgres@localhost:5432/postgres" -c "create database moonuke_test"
+
+      - name: Typecheck
+        run: pnpm lint
+
+      - name: Unit + server security tests (real PostgreSQL)
+        run: pnpm test
+
+      - name: Production build
+        run: pnpm build
+
+      - name: Production env validation rejects unsafe config
+        run: |
+          if NODE_ENV=production ALLOW_LOCAL_PRODUCTION= APP_URL=http://example.com pnpm -s env:check; then
+            echo "env:check should have failed"; exit 1
+          fi
+
+      - name: Install Chromium for Playwright
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Seed and start server
+        run: |
+          pnpm db:seed
+          nohup pnpm start -p 3000 > server.log 2>&1 &
+          for i in $(seq 1 60); do curl -sf http://localhost:3000/ > /dev/null && break; sleep 1; done
+          curl -sf http://localhost:3000/ > /dev/null
+
+      - name: Browser tests — Phase 1 (interactions + axe)
+        run: BASE=http://localhost:3000 OUT=screenshots node scripts/e2e-smoke.mjs
+
+      - name: Browser tests — Phase 2 (invitation, approval, entitlements + axe)
+        run: |
+          pnpm db:seed
+          BASE=http://localhost:3000 SHOTS=screenshots/phase2 node scripts/e2e-phase2.mjs
+
+      - name: Browser tests — Phase 3 (recovery, MFA, safety, verification + axe)
+        run: |
+          pnpm db:seed
+          BASE=http://localhost:3000 SHOTS=screenshots/phase3 node scripts/e2e-phase3.mjs
+
+      - name: Upload screenshots and server log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-test-artifacts
+          path: |
+            screenshots/
+            server.log
+          retention-days: 7

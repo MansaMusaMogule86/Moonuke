@@ -52,6 +52,21 @@ Browser suites reset their database, so `verify` uses a dedicated `<db>_e2e` dat
 
 The disabled workflow is kept at `ci/github-actions.disabled.yml`. To re-enable it, `git mv` it back to `.github/workflows/`.
 
+## Documentation
+
+**Start here (short handoff docs):** [`CLAUDE.md`](CLAUDE.md), then the docs below.
+
+| Doc | What it covers |
+|---|---|
+| [`docs/PROJECT_CONTEXT.md`](docs/PROJECT_CONTEXT.md) | What the product is, in one page |
+| [`docs/CURRENT_STATUS.md`](docs/CURRENT_STATUS.md) | Completed phases, commits, tests, known issues |
+| [`docs/NEXT_PHASE.md`](docs/NEXT_PHASE.md) | What to build next |
+| [`docs/MASTER_PRD.md`](docs/MASTER_PRD.md) | Confirmed requirements, with unknowns marked |
+| [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | System overview |
+| [`docs/DECISIONS.md`](docs/DECISIONS.md) | Approved decisions, defaults and open questions |
+
+Detailed references are linked below.
+
 ## Architecture
 
 - **Phase 2 spec:** [`docs/phase-2-architecture.md`](docs/phase-2-architecture.md). It covers roles, flows, schema, RLS, routes, acceptance criteria and the **decisions that need approval**.

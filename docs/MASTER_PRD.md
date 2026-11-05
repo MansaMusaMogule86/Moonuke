@@ -49,7 +49,7 @@
 | Reporting and blocking | Done |
 | Account security settings, session management | Done |
 | Private content vault | **Done** (Phase 6): unlocked posts and signed media, checked by the database |
-| Paid messages | Planned |
+| Paid messages | **Partial** (Phase 7a): free text messaging with moderation is done; paid messages, attachments and tips are blocked (payments, storage) |
 | Tips and gifting | Planned |
 | Notifications | **Done** (Phase 6): in-app centre with read/unread; new posts and proposals; ready for Messaging and Blasts. No email or push |
 | Purchase history | **Done** (Phase 6): live entitlement states; no amounts until payments exist |
@@ -67,7 +67,7 @@
 | Profile imports | **Done**: paste or export file, platform-agnostic; name, tagline, bio, links; always a proposal. Avatars deferred (needs storage) |
 | Content publishing, media management, scheduled posts | **Partial** (Phase 5a): compose, draft, schedule, publish, edit, delete. No uploads (placeholder media) |
 | Tier and VIP management, locked content, exclusive drops | **Partial** (Phase 5b): tiers editor, locked/VIP/PPV posts. Exclusive drops UNKNOWN |
-| Blasts campaigns, fan messaging, audience segmentation, top fans | Planned |
+| Blasts campaigns, fan messaging, audience segmentation, top fans | **Partial**: fan messaging done (7a); Blasts next (7b) |
 | Referrals | Partial: invitation referrals exist; creator referral programme UNKNOWN |
 | Earnings dashboard, revenue analytics, payout requests, transaction history | **Partial** (Phase 5c): audience and post analytics from existing data. Earnings blocked (payments inactive) |
 | Creator security, content protection controls | Partial: MFA, sessions, signed media; watermarking and geo-blocking UNKNOWN |

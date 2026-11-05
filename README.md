@@ -44,7 +44,7 @@ pnpm verify:quick    # typecheck + unit + PostgreSQL security tests only
 4. Production build.
 5. Production env-safety check.
 6. Start a production server.
-7. Reseed the database and run every Playwright browser suite with axe WCAG 2.1 AA checks (Phases 1–6 plus hardening).
+7. Reseed the database and run every Playwright browser suite with axe WCAG 2.1 AA checks (Phases 1–7 plus hardening).
 8. Backup and restore drill.
 
 A dependency audit (`pnpm audit --prod`) also runs. It is reported as skipped when the registry is unreachable.
@@ -82,6 +82,7 @@ Detailed references are linked below.
 - **Phase 4:** [`docs/phase-4-architecture.md`](docs/phase-4-architecture.md). Covers white-glove onboarding, proposals, socials, imports and the profile assistant.
 - **Phase 5:** [`docs/phase-5-architecture.md`](docs/phase-5-architecture.md). Covers the creator studio: posts, tiers and analytics.
 - **Phase 6:** [`docs/phase-6-architecture.md`](docs/phase-6-architecture.md). Covers the fan app: library, vault, purchases, memberships and notifications.
+- **Phase 7:** [`docs/phase-7-messaging.md`](docs/phase-7-messaging.md). Covers messaging, moderation, and the plan for Blasts, attachments and paid features.
 - **Branding:** "Moonuke" is a working name. Everything brand-specific lives in `src/config/brand.ts`.
 
 ```
@@ -112,6 +113,7 @@ src/app/
 | 5 | Creator studio: posts (drafts, scheduling), tiers and analytics done; Blasts and earnings pending decisions | **In progress** |
 | — | Release hardening: schema lint, error pages, health, logs, maintenance, backup drill | **Done** |
 | 6 | Fan app: library, vault, purchases, memberships, notifications | **Done** |
-| 7+ | Messaging and Blasts, storage, Supabase Auth switch, payments and ledger | Planned |
+| 7 | Messaging: 7a free text DMs with moderation done; Blasts next; attachments and paid features blocked | **In progress** |
+| 8+ | Storage, Supabase Auth switch, payments and ledger | Planned |
 
 **Payments are not active.** No payment provider is registered, and checkout always returns an unavailable quote. **Nothing is deployed.**

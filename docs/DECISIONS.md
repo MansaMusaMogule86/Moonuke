@@ -22,6 +22,7 @@
 | A14 | Profile imports: paste or export file, platform-agnostic; display name, tagline, bio and links; avatars later (needs storage) | Phase 4 session answers |
 | A16 | Next phase after Phase 4: the creator studio | Phase 5 session answer |
 | A17 | After Phase 5c: release hardening | Hardening session answer |
+| A19 | Phase 7 messaging: hybrid creator-controlled DMs, rich media, paid features, Blasts and layered moderation. Paid features stay disabled until a compliant provider is integrated; prioritise secure free messaging | Phase 7 brief |
 | A18 | Phase 6, the fan app: dashboard, vault, purchases, memberships with cancellation, notification centre ready for Messaging and Blasts. No payments, no new tracking, no fake transactions | Phase 6 brief |
 | A15 | Defer proposal emails, stalled-stage reminders and AI-drafted tiers or perks | Phase 4 session answers |
 
@@ -67,6 +68,12 @@
 | F5 | Post notifications go to followers and current members; no per-creator mute yet | phase-6 doc |
 | R1 | Housekeeping: rate limits 2 days, reset tokens 7 days, ended sessions 30 days | release-hardening doc |
 | R2 | No pruning of the audit log, outbox, accounts or content until retention is decided | release-hardening doc |
+| M1 | Fans need a current membership to send; creators open with current members and message their audience | phase-7 doc |
+| M2 | Members can message by default | phase-7 doc |
+| M3 | Risk: reject at 100, hold at 60. Rate limits 40 per 10 minutes and 15 per minute per conversation. 5 refusals in an hour pause messaging for 1 hour | phase-7 doc |
+| M4 | Reported-message context: 2 before, 1 after, within 24 hours | phase-7 doc |
+| M5 | Exceptional access: owner only, justification of at least 40 characters, audit-first | phase-7 doc |
+| M6 | Messages are kept indefinitely until retention is decided | phase-7 doc |
 | C1 | `style-src 'unsafe-inline'` is allowed (React and Motion style attributes); scripts are nonce-locked | phase-3 doc |
 
 ## Still unconfirmed: pricing and tier defaults (P1–P3, T1–T4)

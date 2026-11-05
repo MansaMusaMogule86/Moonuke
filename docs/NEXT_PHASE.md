@@ -1,13 +1,19 @@
 # Next phase
 
-**Latest work: Phase 6, the fan app** (chosen by the owner); see `docs/phase-6-architecture.md`. It covers the library, vault, purchases, memberships with cancel at period end, and the notification centre. Before that: release hardening (`docs/release-hardening.md`) and **Phase 5, the creator studio**. Slices 5a (posts), 5b (tiers) and 5c (analytics from existing data) are built; see `docs/phase-5-architecture.md`. Phase 4 (white-glove onboarding, including profile imports) is complete.
+**Current phase: 7, messaging** (owner brief A19). Slice **7a** is built: free text DMs, permissions, risk rules, moderation and notifications. See `docs/phase-7-messaging.md`. Before that: Phase 6 (fan app), release hardening and Phase 5 (creator studio).
+
+## Phase 7: next slices
+- **7b Blasts (next, no blocker).**
+  - Segments: all members, VIP, followers, expired members, new members, custom lists.
+  - Templates, scheduling, and a background queue with batching, retries and idempotency.
+  - Delivery and read counts, and opt-outs.
+  - Each recipient gets an individual conversation message; no recipient sees the others.
+- **7c Appeals and moderation history (no blocker).**
+- **7d Attachments:** blocked until object storage and CSAM/NCII hash-matching are approved.
+- **7e Paid messages, PPV in messages, tips, paid requests and paid Blasts:** blocked by payments.
+- **Defaults to confirm:** M1–M6 in `docs/DECISIONS.md`. Open question: a separate moderator role?
 
 ## Phase 6: follow-ups (confirm before building)
-- **Messaging and Blasts.** The notification plumbing is ready (`deliverNotification()`, kinds `message.received` and `blast.received`). **UNKNOWN:**
-  - Are paid messages wanted?
-  - What are the moderation rules for DMs?
-  - Can creators message members first, or only reply?
-  - Which segments can a Blast target?
 - **Notification preferences** (per-creator mute, email digests). **UNKNOWN** whether wanted. Email would use the existing outbox.
 - **Tips and gifting.** Blocked by payments.
 - **Defaults to confirm:** F1–F5 in `docs/DECISIONS.md`.

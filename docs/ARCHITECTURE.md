@@ -6,6 +6,7 @@ Detailed references:
 - `docs/phase-4-architecture.md`: onboarding.
 - `docs/phase-5-architecture.md`: creator studio (posts, tiers, analytics).
 - `docs/phase-6-architecture.md`: fan app (library, vault, purchases, memberships, notifications).
+- `docs/phase-7-messaging.md`: messaging (7a built; Blasts, attachments and paid features planned or blocked).
 - `docs/deployment.md`: env and deployment.
 - `docs/runbook.md`: operations (health, logs, jobs, backups, incidents).
 - `docs/release-hardening.md`: hardening checks and what they cover.
@@ -29,11 +30,12 @@ src/server/
   db/                      asViewer() (mk_app + RLS) and system() (privileged)
   auth/                    crypto (scrypt, HMAC), totp, permissions, request guards
   services/                accounts, admin, club, referrals, sessions, mfa, account,
-                           recovery, safety, creatorOnboarding, onboarding, studio, fan, notifications, rateLimit, audit
+                           recovery, safety, creatorOnboarding, onboarding, studio, fan, notifications, messaging, rateLimit, audit
   actions/                 server actions (zod → requireViewer → rate limit → service)
   email/                   outbox + templates (dev | smtp | disabled)
   ai/                      profile assistant: template (default) | anthropic | disabled
   imports/                 profile import parser (local) + social link normalisation
+  messaging/               rule-based message risk scoring
   payments/                PaymentProvider interface, EMPTY registry
   verification/            VerificationProvider interface, EMPTY registry
   media/                   signed URL HMAC + placeholder SVG renderer
@@ -92,6 +94,7 @@ scripts/                   migrate, seed, create-owner, env-check, email-drain,
 | `20261109000001_phase5_creator_posts` | posts: drafts/scheduling (nullable `published_at`), creator write policies, `posts_guard` |
 | `20261109000002_phase5_creator_tiers` | tiers: creator write policies, `tiers_guard` |
 | `20261109000003_phase5_creator_analytics` | `my_post_unlocks()` aggregate helper |
+| `20261111000001..3_phase7_*` | messaging: `message` report target, conversations, messages, messaging_settings, messaging_restrictions, definer helpers, notify trigger |
 | `20261110000001_phase6_fan_app` | notifications, subscription cancel-at-period-end, `my_purchase_states()`, `post_is_live()`, notify triggers |
 
 ## Integrations

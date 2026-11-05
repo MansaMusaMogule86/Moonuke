@@ -20,6 +20,7 @@ export const LIMITS = {
   passwordChange: { limit: 5, windowSec: 60 * 60 },
   reportFile: { limit: 20, windowSec: 24 * 60 * 60 },
   aiAssist: { limit: 30, windowSec: 24 * 60 * 60 },
+  profileImport: { limit: 20, windowSec: 24 * 60 * 60 },
   blockToggle: { limit: 60, windowSec: 60 * 60 },
 } satisfies Record<string, Limit>;
 

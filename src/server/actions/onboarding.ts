@@ -120,6 +120,44 @@ export async function assistAction(_prev: FormState, fd: FormData): Promise<Form
   }
 }
 
+// ---------------------------------------------------------------- shared: profile import
+
+const IMPORT_FILE_MAX = 64 * 1024;
+const IMPORT_TYPES = ["", "text/plain", "application/json", "text/markdown", "text/csv"];
+
+/**
+ * Owner (for a creator) or creator (for themselves) imports profile details
+ * from pasted text or a small .txt/.json export. Always files a proposal.
+ */
+export async function importProfileAction(_prev: FormState, fd: FormData): Promise<FormState> {
+  const viewer = await requireViewer("club.discover");
+  const targetUserId = str(fd, "targetUserId");
+  if (!uuid.safeParse(targetUserId).success) return { status: "error", message: "Invalid request." };
+  let text = typeof fd.get("text") === "string" ? (fd.get("text") as string) : "";
+  const file = fd.get("file");
+  if (file && typeof file !== "string" && file.size > 0) {
+    if (file.size > IMPORT_FILE_MAX) return { status: "error", message: "That file is too large (64 KB max).", fields: { file: "64 KB max." } };
+    if (!IMPORT_TYPES.includes(file.type) || !/\.(txt|json|md|csv)$/i.test(file.name)) {
+      return { status: "error", message: "Choose a .txt or .json file.", fields: { file: "Choose a .txt or .json file." } };
+    }
+    if (text.trim()) return { status: "error", message: "Use either pasted text or a file, not both.", fields: { text: "Use either pasted text or a file." } };
+    text = await file.text();
+  }
+  try {
+    await hit(`import:${viewer.id}`, LIMITS.profileImport);
+    const r = await ob.importProfile(viewer, targetUserId, text);
+    // No revalidate here: the form keeps its confirmation until "Done".
+    return {
+      status: "success",
+      message: viewer.role === "owner" ? "Import sent to the creator as a proposal. Nothing changes until they accept." : "Import ready below as a proposal. Review it, then accept or decline.",
+      data: { fields: r.fields.join(","), links: String(r.links), warnings: r.warnings.join("\n") },
+    };
+  } catch (e) {
+    // Echo pasted text back (not secret) so a fix doesn't mean re-pasting.
+    return fail(e, { text: text.slice(0, 20_000) });
+  }
+}
+
 // ---------------------------------------------------------------- creator
 
 export async function decideProposalAction(_prev: FormState, fd: FormData): Promise<FormState> {

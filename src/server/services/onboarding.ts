@@ -1,5 +1,4 @@
 import "server-only";
-import { randomBytes } from "node:crypto";
 import { asViewer } from "@/server/db";
 import { can, type Viewer } from "@/server/auth/permissions";
 import { AppError } from "@/server/errors";
@@ -8,6 +7,8 @@ import { checkText, sanitizeCopy } from "@/server/ai/safety";
 import { createInvitation } from "./admin";
 import { audit } from "./audit";
 import { saveProfile, type ProfileInput } from "./creatorOnboarding";
+import { importHash, parseImport } from "@/server/imports/parse";
+import { newProofCode, normalizeSocial, type Platform, type SocialLink } from "@/server/imports/social";
 
 // =====================================================================
 // Stages — derived from data, never stored, so they can't drift.
@@ -224,8 +225,8 @@ export async function updateCase(
 // =====================================================================
 // Profile proposals — the house prepares, the creator decides
 // =====================================================================
-export type ProposalFields = Partial<ProfileInput>;
-export type ProposalRow = { id: string; source: "house" | "assistant" | "creator"; fields: ProposalFields; message: string | null; status: string; ai_assisted: boolean; created_at: Date; decided_at: Date | null };
+export type ProposalFields = Partial<ProfileInput> & { links?: SocialLink[] };
+export type ProposalRow = { id: string; source: "house" | "assistant" | "creator" | "import"; fields: ProposalFields; message: string | null; status: string; ai_assisted: boolean; created_at: Date; decided_at: Date | null };
 
 async function listProposalsQ(q: { query: <R>(t: string, p?: unknown[]) => Promise<R[]> }, userId: string) {
   return q.query<ProposalRow>(
@@ -269,28 +270,103 @@ export async function myProposals(creator: Viewer) {
 /**
  * The creator accepts or declines. Accepting merges the proposal into their
  * current profile and saves it AS THE CREATOR (their own consent and RLS).
+ * Imported links become UNVERIFIED social connections (proof code still needed).
  */
 export async function decideProposal(creator: Viewer, proposalId: string, accept: boolean, overrides: ProposalFields = {}) {
   assertCreator(creator);
   const p = await asViewer(creator, (q) =>
-    q.one<{ fields: ProposalFields; status: string }>(`select fields, status from app.profile_proposals where id = $1 and user_id = $2`, [proposalId, creator.id]),
+    q.one<{ fields: ProposalFields; status: string; source: ProposalRow["source"] }>(
+      `select fields, status, source from app.profile_proposals where id = $1 and user_id = $2`,
+      [proposalId, creator.id],
+    ),
   );
   if (!p || p.status !== "proposed") throw new AppError("not_found", "This proposal is no longer open.");
-  if (accept) {
+  const { links = [], ...profileFields } = p.fields;
+  if (accept && Object.keys(profileFields).length) {
     const current = await asViewer(creator, (q) =>
       q.one<{ handle: string; display_name: string; discipline: string; category: string; city: string | null; tagline: string | null; bio: string | null; visibility: ProfileInput["visibility"] }>(
         `select handle::text as handle, display_name, discipline, category, city, tagline, bio, visibility from app.creators where user_id = $1`,
         [creator.id],
       ),
     );
-    const merged = { ...(current ? toProfile({ ...current, published_at: null }) : {}), ...p.fields, ...cleanFields(overrides) } as Partial<ProfileInput>;
+    const merged = { ...(current ? toProfile({ ...current, published_at: null }) : {}), ...profileFields, ...cleanFields(overrides) } as Partial<ProfileInput>;
     const missing = (["handle", "displayName", "discipline", "category"] as const).filter((k) => !merged[k]);
-    if (missing.length) throw new AppError("validation", `Complete these before accepting: ${missing.join(", ")}.`);
+    if (missing.length) {
+      throw new AppError("validation", current ? `Complete these before accepting: ${missing.join(", ")}.` : "Save your profile basics (handle, discipline, category) first, then accept.");
+    }
     await saveProfile(creator, { visibility: "listed", ...merged } as ProfileInput);
   }
   await asViewer(creator, async (q) => {
     await q.query(`update app.profile_proposals set status = $2, decided_at = now() where id = $1`, [proposalId, accept ? "accepted" : "declined"]);
-    await audit(q, { actorId: creator.id, action: accept ? "proposal.accept" : "proposal.decline", targetType: "proposal", targetId: proposalId });
+    let added = 0;
+    if (accept) {
+      for (const raw of links.slice(0, 8)) {
+        // Re-validate: stored JSON is never trusted as-is.
+        let l: SocialLink;
+        try {
+          l = normalizeSocial(raw);
+        } catch {
+          continue;
+        }
+        const r = await q.one<{ id: string }>(
+          `insert into app.social_connections (user_id, platform, handle, url, proof_code) values ($1, $2, $3, $4, $5)
+           on conflict (user_id, platform, handle) do nothing returning id`,
+          [creator.id, l.platform, l.handle, l.url, newProofCode()],
+        );
+        if (r) {
+          added++;
+          await audit(q, { actorId: creator.id, action: "social.add", targetType: "social", targetId: r.id, metadata: { platform: l.platform, via: "import" } });
+        }
+      }
+    }
+    await audit(q, { actorId: creator.id, action: accept ? "proposal.accept" : "proposal.decline", targetType: "proposal", targetId: proposalId, metadata: p.source === "import" ? { source: "import", links: added } : undefined });
+  });
+}
+
+// =====================================================================
+// Profile imports — pasted text or a small export file, parsed locally.
+// The result is ALWAYS a proposal: nothing reaches the profile until the
+// creator accepts it. The raw input is never stored or logged.
+// =====================================================================
+export type ImportResult = { proposalId: string; fields: string[]; links: number; warnings: string[] };
+
+export async function importProfile(viewer: Viewer, targetUserId: string, text: string): Promise<ImportResult> {
+  const isOwner = can(viewer, "creators.verify");
+  if (!isOwner) {
+    assertCreator(viewer);
+    if (targetUserId !== viewer.id) throw new AppError("forbidden", "Not allowed.");
+  }
+  const parsed = parseImport(text);
+  const hash = importHash(parsed);
+  const fields: ProposalFields = { ...parsed.fields, ...(parsed.links.length ? { links: parsed.links } : {}) };
+  return asViewer(viewer, async (q) => {
+    const u = await q.one<{ role: string }>(`select role::text as role from app.users where id = $1`, [targetUserId]);
+    if (u?.role !== "creator") throw new AppError("not_found", "Creator not found.");
+    const dup = await q.one(`select 1 from app.profile_proposals where user_id = $1 and import_hash = $2 and status <> 'superseded'`, [targetUserId, hash]);
+    if (dup) throw new AppError("conflict", "This matches an import that was already filed. Nothing new was added.", "text");
+    const open = await q.one<{ source: string }>(`select source from app.profile_proposals where user_id = $1 and status = 'proposed'`, [targetUserId]);
+    if (open) {
+      if (!isOwner) throw new AppError("conflict", "You have a proposal waiting. Accept or decline it first.", "text");
+      await q.query(`update app.profile_proposals set status = 'superseded', decided_at = now() where user_id = $1 and status = 'proposed'`, [targetUserId]);
+    }
+    let row: { id: string } | undefined;
+    try {
+      row = await q.one<{ id: string }>(
+        `insert into app.profile_proposals (user_id, author_id, source, fields, message, import_hash) values ($1, $2, 'import', $3, $4, $5) returning id`,
+        [targetUserId, viewer.id, JSON.stringify(fields), isOwner ? "Imported by the house from details you shared." : null, hash],
+      );
+    } catch (e) {
+      if ((e as { code?: string }).code === "23505") throw new AppError("conflict", "This matches an import that was already filed. Nothing new was added.", "text");
+      throw e;
+    }
+    await audit(q, {
+      actorId: viewer.id,
+      action: "proposal.import",
+      targetType: "creator",
+      targetId: targetUserId,
+      metadata: { fields: Object.keys(parsed.fields), links: parsed.links.length, by: isOwner ? "owner" : "creator" },
+    });
+    return { proposalId: row!.id, fields: Object.keys(parsed.fields), links: parsed.links.length, warnings: parsed.warnings };
   });
 }
 
@@ -304,16 +380,7 @@ function toProfile(c: { handle: string; display_name: string; discipline: string
 // =====================================================================
 // Social profile connections — claims until the owner verifies
 // =====================================================================
-export const PLATFORMS = {
-  instagram: { label: "Instagram", base: "https://www.instagram.com/" },
-  tiktok: { label: "TikTok", base: "https://www.tiktok.com/@" },
-  x: { label: "X", base: "https://x.com/" },
-  youtube: { label: "YouTube", base: "https://www.youtube.com/@" },
-  twitch: { label: "Twitch", base: "https://www.twitch.tv/" },
-  threads: { label: "Threads", base: "https://www.threads.net/@" },
-  website: { label: "Website", base: "" },
-} as const;
-export type Platform = keyof typeof PLATFORMS;
+export { PLATFORMS, type Platform } from "@/server/imports/social";
 export type SocialRow = { id: string; platform: Platform; handle: string; url: string; proof_code: string; status: "unverified" | "verified" | "failed" | "revoked"; show_on_profile: boolean; verified_at: Date | null; note: string | null };
 
 async function listSocialsQ(q: { query: <R>(t: string, p?: unknown[]) => Promise<R[]> }, userId: string) {
@@ -334,21 +401,8 @@ export async function mySocials(creator: Viewer) {
  */
 export async function addSocial(creator: Viewer, input: { platform: Platform; handle: string; url?: string }) {
   assertCreator(creator);
-  const handle = input.handle.trim().replace(/^@/, "");
-  if (!/^[A-Za-z0-9._-]{1,60}$/.test(handle)) throw new AppError("validation", "Use the handle only — letters, numbers, dots, dashes, underscores.", "handle");
-  const meta = PLATFORMS[input.platform];
-  if (!meta) throw new AppError("validation", "Choose a platform.", "platform");
-  let url = input.url?.trim() || (meta.base ? `${meta.base}${handle}` : "");
-  if (!/^https:\/\/[^\s/$.?#].[^\s]*$/.test(url) || url.length > 300) throw new AppError("validation", "Enter the full https:// address.", "url");
-  if (input.platform !== "website") {
-    // Keep links on the platform's own domain so a "verified Instagram" can't point elsewhere.
-    const host = new URL(url).hostname.replace(/^www\./, "");
-    const expected = new URL(meta.base).hostname.replace(/^www\./, "");
-    if (host !== expected) throw new AppError("validation", `That link isn't on ${meta.label}.`, "url");
-  } else {
-    url = new URL(url).toString();
-  }
-  const proof = `${"mnk"}-${randomBytes(4).toString("hex")}`;
+  const { handle, url } = normalizeSocial(input);
+  const proof = newProofCode();
   return asViewer(creator, async (q) => {
     try {
       const row = await q.one<{ id: string }>(

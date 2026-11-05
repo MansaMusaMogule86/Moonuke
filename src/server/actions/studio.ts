@@ -99,3 +99,72 @@ export async function deletePostAction(_prev: FormState, fd: FormData): Promise<
     return fail(e, {});
   }
 }
+
+// ---------------------------------------------------------------- tiers
+
+const tierSchema = z.object({
+  kind: z.enum(["member", "vip"]),
+  name: z.string().max(200),
+  price: z.string().regex(/^\d{1,5}(\.\d{1,2})?$/, "Use a price like 15 or 15.50."),
+  perks: z.string().max(2000),
+  seatLimit: z.string().regex(/^\d{0,6}$/, "Use a whole number, or leave it empty.").optional(),
+});
+const TIER_KEYS = ["kind", "name", "price", "perks", "seatLimit"] as const;
+
+function readTier(fd: FormData) {
+  const values = Object.fromEntries(TIER_KEYS.map((k) => [k, str(fd, k)]));
+  const parsed = tierSchema.safeParse(values);
+  if (!parsed.success) {
+    const fields: Record<string, string> = {};
+    for (const i of parsed.error.issues) fields[String(i.path[0])] ??= i.message;
+    return { values, error: { status: "error", message: "Please check the highlighted fields.", fields, values } as FormState };
+  }
+  const d = parsed.data;
+  const input: studio.TierInput = {
+    kind: d.kind,
+    name: d.name,
+    priceCents: Math.round(Number(d.price) * 100),
+    perks: d.perks.split(/\r?\n/),
+    seatLimit: d.seatLimit ? Number(d.seatLimit) : null,
+    active: fd.get("active") === "on",
+  };
+  return { values, input };
+}
+
+export async function createTierAction(_prev: FormState, fd: FormData): Promise<FormState> {
+  const creator = await requireViewer("club.discover");
+  const r = readTier(fd);
+  if (!r.input) return r.error!;
+  try {
+    await hit(`post:${creator.id}`, LIMITS.postWrite);
+    const id = await studio.createTier(creator, r.input);
+    return { status: "success", message: r.input.active ? "Tier added. Members can see it on your profile." : "Tier added, switched off.", data: { id } };
+  } catch (e) {
+    return fail(e, { ...r.values, active: r.input.active ? "on" : "" });
+  }
+}
+
+export async function updateTierAction(_prev: FormState, fd: FormData): Promise<FormState> {
+  const creator = await requireViewer("club.discover");
+  const id = str(fd, "id");
+  if (!uuid.safeParse(id).success) return { status: "error", message: "Invalid request." };
+  if (str(fd, "intent") === "delete") {
+    try {
+      await hit(`post:${creator.id}`, LIMITS.postWrite);
+      await studio.deleteTier(creator, id);
+      return { status: "success", message: "Tier deleted.", data: { deleted: id } };
+    } catch (e) {
+      return fail(e, {});
+    }
+  }
+  const r = readTier(fd);
+  if (!r.input) return r.error!;
+  try {
+    await hit(`post:${creator.id}`, LIMITS.postWrite);
+    await studio.updateTier(creator, id, r.input);
+    // Echo the saved values: React resets the form to its defaults after an action.
+    return { status: "success", message: "Saved.", data: { id }, values: { ...r.values, active: r.input.active ? "on" : "" } };
+  } catch (e) {
+    return fail(e, { ...r.values, active: r.input.active ? "on" : "" });
+  }
+}

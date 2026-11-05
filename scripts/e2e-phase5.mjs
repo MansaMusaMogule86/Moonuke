@@ -1,4 +1,4 @@
-// Phase 5a end-to-end: creator studio posts — composer, drafts, scheduling,
+// Phase 5 end-to-end: creator studio posts and tiers — composer, drafts, scheduling,
 // publishing, edit, delete, bought-post locks, member visibility, axe WCAG 2.1 AA.
 // Requires a freshly seeded DB and a running server.
 //   BASE=http://localhost:3000 SHOTS=./screenshots node scripts/e2e-phase5.mjs
@@ -131,6 +131,45 @@ await mi.page.waitForURL(/\/studio\/posts\/[0-9a-f-]{36}$/);
 check("bought post: access locked", await mi.page.getByLabel("Who can see it").isDisabled());
 check("bought post: no delete", await mi.page.getByText("can't be deleted").isVisible());
 
+// ================================================================ tiers
+await c.page.goto(`${BASE}/studio`);
+await c.page.getByRole("link", { name: "Tiers", exact: true }).click();
+await c.page.waitForURL(/\/studio\/tiers$/);
+await shot(c.page, "studio-tiers-desktop");
+await axe(c.page, "/studio/tiers @1440");
+const add = c.page.locator("section").filter({ has: c.page.getByRole("heading", { name: "Add a tier" }) });
+await add.getByLabel("Tier name").fill("E2E Salon");
+await add.getByLabel("Monthly price (USD)").fill("0");
+await add.getByRole("button", { name: "Add tier" }).click();
+await add.locator("form [role=alert]").first().waitFor();
+check("tier: free price refused", /price/i.test(await add.locator("form [role=alert]").first().innerText()));
+check("tier: name echoed after error", (await add.getByLabel("Tier name").inputValue()) === "E2E Salon");
+await add.getByLabel("Monthly price (USD)").fill("25");
+await add.getByLabel("Perks, one per line (optional)").fill("Letters\nSalon evenings");
+await add.getByRole("button", { name: "Add tier" }).click();
+await c.page.getByTestId("tier-saved").waitFor();
+await c.page.getByRole("button", { name: "Done" }).click();
+const salon = c.page.getByRole("form", { name: "Tier E2E Salon" });
+await salon.waitFor();
+check("tier: added", await salon.isVisible());
+const vipForm = c.page.getByRole("form", { name: /^Tier VIP/ }).first();
+check("tier: subscribed VIP type locked, no delete", (await vipForm.getByLabel("Type").isDisabled()) && (await vipForm.getByRole("button", { name: /Delete/ }).count()) === 0);
+
+const v2 = await signIn("velvet@moonuke.test");
+await v2.page.goto(`${BASE}/c/isadora`);
+check("member sees the new tier and its price", (await v2.page.getByText("E2E Salon").count()) > 0 && (await v2.page.content()).includes("$25"));
+
+await salon.getByLabel("Monthly price (USD)").fill("30");
+await salon.getByRole("button", { name: "Save tier" }).click();
+await salon.getByText("Saved.").waitFor();
+check("tier: edit keeps the new value", (await salon.getByLabel("Monthly price (USD)").inputValue()) === "30");
+await salon.getByRole("button", { name: /Delete/ }).click();
+await salon.getByRole("button", { name: "Yes, delete E2E Salon" }).click();
+await c.page.getByText("Tier deleted.").waitFor();
+check("tier: deleted", true);
+const memberTiers = await v2.page.goto(`${BASE}/studio/tiers`);
+check("member /studio/tiers → 404", memberTiers.status() === 404);
+
 // ================================================================ mobile
 const cm = await signIn("isadora@moonuke.test", mobile);
 await cm.page.goto(`${BASE}/studio/posts`);
@@ -138,8 +177,10 @@ await shot(cm.page, "studio-posts-mobile");
 await axe(cm.page, "/studio/posts @390");
 await cm.page.goto(`${BASE}/studio/posts/new`);
 await axe(cm.page, "/studio/posts/new @390");
+await cm.page.goto(`${BASE}/studio/tiers`);
+await axe(cm.page, "/studio/tiers @390");
 const overflow = await cm.page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
-check("mobile composer: no horizontal overflow", overflow <= 0, String(overflow));
+check("mobile tiers: no horizontal overflow", overflow <= 0, String(overflow));
 
 await browser.close();
 let failed = 0;

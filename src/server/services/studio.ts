@@ -330,3 +330,79 @@ export async function deleteTier(creator: Viewer, id: string): Promise<void> {
     await audit(q, { actorId: creator.id, action: "tier.delete", targetType: "tier", targetId: id });
   });
 }
+
+// =====================================================================
+// Creator studio — analytics from existing data only (Phase 5c).
+// Aggregates only: never fan identities, no view tracking, no money figures
+// (payments are inactive, so revenue would be fiction).
+// =====================================================================
+export type StudioAnalytics = {
+  members: { active: number; vip: number; new30: number };
+  followers: { total: number; new30: number };
+  weeks: { weekStart: string; members: number; followers: number }[];
+  tiers: { id: string; name: string; kind: "member" | "vip"; active: boolean; members: number; seatLimit: number | null }[];
+  posts: { published: number; scheduled: number; draft: number; hidden: number; byAccess: Record<PostAccess, number> };
+  unlocks: { postId: string; teaser: string; unlocks: number }[];
+};
+
+export const ANALYTICS_WEEKS = 8;
+
+export async function myAnalytics(creator: Viewer): Promise<StudioAnalytics> {
+  assertCreator(creator);
+  return asViewer(creator, async (q) => {
+    const m = await q.one<{ active: number; vip: number; new30: number }>(
+      `select count(*) filter (where s.status = 'active' and s.current_period_end > now())::int as active,
+              count(*) filter (where s.status = 'active' and s.current_period_end > now() and t.kind = 'vip')::int as vip,
+              count(*) filter (where s.created_at > now() - interval '30 days')::int as new30
+         from app.subscriptions s join app.tiers t on t.id = s.tier_id where s.creator_id = $1`,
+      [creator.id],
+    );
+    const f = await q.one<{ total: number; new30: number }>(
+      `select count(*)::int as total, count(*) filter (where created_at > now() - interval '30 days')::int as new30 from app.follows where creator_id = $1`,
+      [creator.id],
+    );
+    const weeks = await q.query<{ week_start: Date; members: number; followers: number }>(
+      `with w as (select generate_series(date_trunc('week', now()) - interval '${ANALYTICS_WEEKS - 1} weeks', date_trunc('week', now()), interval '1 week') as week_start)
+       select w.week_start,
+              (select count(*)::int from app.subscriptions s where s.creator_id = $1 and s.created_at >= w.week_start and s.created_at < w.week_start + interval '1 week') as members,
+              (select count(*)::int from app.follows x where x.creator_id = $1 and x.created_at >= w.week_start and x.created_at < w.week_start + interval '1 week') as followers
+         from w order by w.week_start`,
+      [creator.id],
+    );
+    const tiers = await q.query<{ id: string; name: string; kind: "member" | "vip"; active: boolean; members: number; seat_limit: number | null }>(
+      `select t.id, t.name, t.kind, t.active, t.seat_limit,
+              (select count(*)::int from app.subscriptions s where s.tier_id = t.id and s.status = 'active' and s.current_period_end > now()) as members
+         from app.tiers t where t.creator_id = $1 order by t.kind, t.sort`,
+      [creator.id],
+    );
+    const p = await q.one<{ published: number; scheduled: number; draft: number; hidden: number; preview: number; members: number; vip: number; ppv: number }>(
+      `select count(*) filter (where published_at <= now())::int as published,
+              count(*) filter (where published_at > now())::int as scheduled,
+              count(*) filter (where published_at is null)::int as draft,
+              count(*) filter (where hidden_at is not null)::int as hidden,
+              count(*) filter (where access = 'preview')::int as preview,
+              count(*) filter (where access = 'members')::int as members,
+              count(*) filter (where access = 'vip')::int as vip,
+              count(*) filter (where access = 'ppv')::int as ppv
+         from app.posts where creator_id = $1`,
+      [creator.id],
+    );
+    const unlocks = await q.query<{ post_id: string; teaser: string; unlocks: number }>(
+      `select u.post_id, p.teaser, u.unlocks from app.my_post_unlocks() u join app.posts p on p.id = u.post_id order by u.unlocks desc, p.published_at desc nulls last limit 20`,
+    );
+    return {
+      members: { active: m?.active ?? 0, vip: m?.vip ?? 0, new30: m?.new30 ?? 0 },
+      followers: { total: f?.total ?? 0, new30: f?.new30 ?? 0 },
+      weeks: weeks.map((w) => ({ weekStart: new Date(w.week_start).toISOString(), members: w.members, followers: w.followers })),
+      tiers: tiers.map((t) => ({ id: t.id, name: t.name, kind: t.kind, active: t.active, members: t.members, seatLimit: t.seat_limit })),
+      posts: {
+        published: p?.published ?? 0,
+        scheduled: p?.scheduled ?? 0,
+        draft: p?.draft ?? 0,
+        hidden: p?.hidden ?? 0,
+        byAccess: { preview: p?.preview ?? 0, members: p?.members ?? 0, vip: p?.vip ?? 0, ppv: p?.ppv ?? 0 },
+      },
+      unlocks: unlocks.map((u) => ({ postId: u.post_id, teaser: u.teaser, unlocks: u.unlocks })),
+    };
+  });
+}

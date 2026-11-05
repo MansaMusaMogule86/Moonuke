@@ -1,4 +1,4 @@
-// Phase 5 end-to-end: creator studio posts and tiers — composer, drafts, scheduling,
+// Phase 5 end-to-end: creator studio posts, tiers and analytics — composer, drafts, scheduling,
 // publishing, edit, delete, bought-post locks, member visibility, axe WCAG 2.1 AA.
 // Requires a freshly seeded DB and a running server.
 //   BASE=http://localhost:3000 SHOTS=./screenshots node scripts/e2e-phase5.mjs
@@ -170,6 +170,19 @@ check("tier: deleted", true);
 const memberTiers = await v2.page.goto(`${BASE}/studio/tiers`);
 check("member /studio/tiers → 404", memberTiers.status() === 404);
 
+// ================================================================ analytics (aggregates only)
+await c.page.goto(`${BASE}/studio`);
+await c.page.getByRole("link", { name: "Analytics", exact: true }).click();
+await c.page.waitForURL(/\/studio\/analytics$/);
+await shot(c.page, "studio-analytics-desktop");
+await axe(c.page, "/studio/analytics @1440");
+check("analytics: shows audience stats", await c.page.getByText("Active members").isVisible());
+check("analytics: scheduled post counted", (await c.page.locator("dl div").filter({ hasText: "Scheduled" }).innerText()).includes("1"));
+const analyticsHtml = await c.page.content();
+check("analytics: no fan identities", !/nocturne|velvet|satellite|@moonuke\.test/i.test(analyticsHtml.replace(/isadora/gi, "")));
+const memberAnalytics = await v2.page.goto(`${BASE}/studio/analytics`);
+check("member /studio/analytics → 404", memberAnalytics.status() === 404);
+
 // ================================================================ mobile
 const cm = await signIn("isadora@moonuke.test", mobile);
 await cm.page.goto(`${BASE}/studio/posts`);
@@ -177,6 +190,10 @@ await shot(cm.page, "studio-posts-mobile");
 await axe(cm.page, "/studio/posts @390");
 await cm.page.goto(`${BASE}/studio/posts/new`);
 await axe(cm.page, "/studio/posts/new @390");
+await cm.page.goto(`${BASE}/studio/analytics`);
+await axe(cm.page, "/studio/analytics @390");
+const overflowA = await cm.page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
+check("mobile analytics: no horizontal overflow", overflowA <= 0, String(overflowA));
 await cm.page.goto(`${BASE}/studio/tiers`);
 await axe(cm.page, "/studio/tiers @390");
 const overflow = await cm.page.evaluate(() => document.documentElement.scrollWidth - innerWidth);

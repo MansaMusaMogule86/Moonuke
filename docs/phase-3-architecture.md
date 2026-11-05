@@ -44,7 +44,7 @@ Built on `claude/cool-noether-uvf5h7`. Phase 1 and Phase 2 behaviour, tests and 
 - After a critical report: auto-hiding the post and alerting the owner.
 - Telling the owner that a creator submitted verification.
 
-## Decisions taken (please confirm)
+## Decisions taken (confirmed by the owner, 2026-11-05)
 
 | # | Decision | Default |
 |---|---|---|

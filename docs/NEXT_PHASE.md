@@ -1,5 +1,7 @@
 # Next phase
 
+> **2026-11-05:** the full decision register, compatibility matrix, cost assessment, legal blockers, roadmap and readiness checklist are in `docs/DECISION_REGISTER.md`. Proposed business defaults there are **for evaluation only** and not approved.
+
 **Latest work: Phase 8, zero-cost production readiness.** See `docs/PHASE_8_REPORT.md` and `docs/phase-8-infrastructure.md`. Payments, uploads and Supabase Auth are **built but disabled**: server-enforced flags, refused in production. Phases 1–7 are complete.
 
 ## What's left, and why it isn't built

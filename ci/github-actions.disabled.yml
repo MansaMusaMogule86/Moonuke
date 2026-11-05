@@ -1,7 +1,12 @@
 # DISABLED — GitHub-hosted CI is paused (no spend on Actions or billing).
 # GitHub only runs workflows located in .github/workflows/, so this file is inert here.
 # Local equivalent:  pnpm verify   (see scripts/verify.mjs)
-# To re-enable later:  git mv ci/github-actions.disabled.yml .github/workflows/ci.yml
+# To re-enable later (OWNER APPROVAL REQUIRED, A11):
+#   git mv ci/github-actions.disabled.yml .github/workflows/ci.yml
+# Cost: free for public repositories; for private ones each run uses roughly
+# 10–15 Actions minutes of the account's monthly allowance. Earlier runs never
+# got a runner (account/billing block), so check the account first.
+# Runs the same single command as local verification.
 name: CI
 
 on:
@@ -20,7 +25,7 @@ jobs:
   verify:
     name: Typecheck, tests, build, browser tests
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 45
 
     services:
       postgres:
@@ -61,55 +66,21 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Create databases
+      - name: PostgreSQL client matching the server (pg_dump for the restore drill)
         run: |
-          psql "postgresql://postgres:postgres@localhost:5432/postgres" -c "create database moonuke"
-          psql "postgresql://postgres:postgres@localhost:5432/postgres" -c "create database moonuke_test"
-
-      - name: Typecheck
-        run: pnpm lint
-
-      - name: Unit + server security tests (real PostgreSQL)
-        run: pnpm test
-
-      - name: Production build
-        run: pnpm build
-
-      - name: Production env validation rejects unsafe config
-        run: |
-          if NODE_ENV=production ALLOW_LOCAL_PRODUCTION= APP_URL=http://example.com pnpm -s env:check; then
-            echo "env:check should have failed"; exit 1
-          fi
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo apt-get update -qq && sudo apt-get install -y -qq postgresql-client-16 || true
 
       - name: Install Chromium for Playwright
         run: pnpm exec playwright install --with-deps chromium
 
-      - name: Seed and start server
-        run: |
-          pnpm db:seed
-          nohup pnpm start -p 3000 > server.log 2>&1 &
-          for i in $(seq 1 60); do curl -sf http://localhost:3000/ > /dev/null && break; sleep 1; done
-          curl -sf http://localhost:3000/ > /dev/null
+      - name: Full verification (typecheck, audit, unit + PostgreSQL security tests, build, env check, all browser suites, restore drill)
+        run: pnpm verify
 
-      - name: Browser tests — Phase 1 (interactions + axe)
-        run: BASE=http://localhost:3000 OUT=screenshots node scripts/e2e-smoke.mjs
-
-      - name: Browser tests — Phase 2 (invitation, approval, entitlements + axe)
-        run: |
-          pnpm db:seed
-          BASE=http://localhost:3000 SHOTS=screenshots/phase2 node scripts/e2e-phase2.mjs
-
-      - name: Browser tests — Phase 3 (recovery, MFA, safety, verification + axe)
-        run: |
-          pnpm db:seed
-          BASE=http://localhost:3000 SHOTS=screenshots/phase3 node scripts/e2e-phase3.mjs
-
-      - name: Upload screenshots and server log
+      - name: Upload report, logs and screenshots
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: browser-test-artifacts
-          path: |
-            screenshots/
-            server.log
+          name: verify-report
+          path: reports/
           retention-days: 7

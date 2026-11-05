@@ -1,0 +1,207 @@
+@import "tailwindcss";
+@import "../styles/tokens.css";
+
+/* ------------------------------------------------------------------
+   Tailwind theme bridge — every utility maps back to a MOONUKE token.
+   ------------------------------------------------------------------ */
+@theme inline {
+  --color-ink: var(--mk-ink);
+  --color-ink-2: var(--mk-ink-2);
+  --color-ink-3: var(--mk-ink-3);
+  --color-ink-4: var(--mk-ink-4);
+  --color-gold: var(--mk-gold);
+  --color-gold-soft: var(--mk-gold-soft);
+  --color-gold-muted: var(--mk-gold-muted);
+  --color-ivory: var(--mk-ivory);
+  --color-stone: var(--mk-stone);
+  --color-ash: var(--mk-ash);
+  --color-line: var(--mk-line);
+  --color-line-strong: var(--mk-line-strong);
+  --color-success: var(--mk-success);
+  --color-danger: var(--mk-danger);
+
+  --font-display: var(--mk-font-display);
+  --font-sans: var(--mk-font-sans);
+
+  --radius-sm: var(--mk-radius-sm);
+  --radius-md: var(--mk-radius-md);
+  --radius-lg: var(--mk-radius-lg);
+  --radius-xl: var(--mk-radius-xl);
+
+  --ease-lux: var(--mk-ease-out);
+  --ease-lux-in-out: var(--mk-ease-in-out);
+}
+
+@layer base {
+  html {
+    background: var(--mk-ink);
+    color-scheme: dark;
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+  }
+  body {
+    background: var(--mk-ink);
+    color: var(--mk-ivory);
+    font-family: var(--mk-font-sans);
+    font-size: 1rem;
+    line-height: 1.6;
+    font-feature-settings: "ss01", "kern";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    overflow-x: clip;
+  }
+  ::selection {
+    background: var(--mk-gold);
+    color: var(--mk-ink);
+  }
+  :focus-visible {
+    outline: 1.5px solid var(--mk-gold-soft);
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+  img, svg, video { display: block; max-width: 100%; }
+  h1, h2, h3, h4 { text-wrap: balance; font-weight: 400; }
+  p { text-wrap: pretty; }
+}
+
+/* ------------------------------------------------------------------
+   Signature utilities
+   ------------------------------------------------------------------ */
+@utility text-metal {
+  background-image: var(--mk-metal);
+  background-size: 200% 100%;
+  background-position: 30% 50%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+@utility hairline {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--mk-gold-muted) 20%, var(--mk-gold-soft) 50%, var(--mk-gold-muted) 80%, transparent);
+  opacity: 0.55;
+}
+
+@utility eyebrow {
+  font-family: var(--mk-font-sans);
+  font-size: 0.6875rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  font-weight: 500;
+  color: var(--mk-gold);
+}
+
+@utility grain {
+  position: relative;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: var(--mk-grain);
+    opacity: 0.07;
+    mix-blend-mode: overlay;
+  }
+}
+
+@utility arch {
+  border-radius: 999px 999px var(--mk-radius-lg) var(--mk-radius-lg);
+}
+
+/* Page-level film grain — a single fixed layer, GPU friendly */
+.mk-film {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  background-image: var(--mk-grain);
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+}
+
+/* Marquee — paused for reduced motion */
+@keyframes mk-marquee {
+  from { transform: translate3d(0, 0, 0); }
+  to { transform: translate3d(-50%, 0, 0); }
+}
+.mk-marquee { animation: mk-marquee 48s linear infinite; }
+
+@keyframes mk-sheen {
+  0% { background-position: 120% 50%; }
+  100% { background-position: -20% 50%; }
+}
+.mk-sheen {
+  animation: mk-sheen 7s var(--mk-ease-in-out) infinite alternate;
+}
+
+@keyframes mk-breathe {
+  0%, 100% { opacity: 0.55; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.04); }
+}
+.mk-breathe { animation: mk-breathe 9s var(--mk-ease-in-out) infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .mk-marquee, .mk-sheen, .mk-breathe { animation: none !important; }
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Hero stage geometry. All values in container-query units so the
+   eclipse, its clip-path, and the title stay locked together at any width.
+   ------------------------------------------------------------------ */
+.mk-stage {
+  container-type: inline-size;
+  --t-size: 25cqw;   /* title font size */
+  --t-top: 26cqw;    /* title top */
+  --r: 34cqw;        /* eclipse radius */
+  --cx: 50cqw;       /* eclipse centre x */
+  --cy: 44cqw;       /* eclipse centre y */
+  --art-h: 92cqw;
+}
+@media (min-width: 768px) {
+  .mk-stage {
+    --t-size: 19.5cqw;
+    --t-top: 7.5cqw;
+    --r: 16cqw;
+    --cx: 53cqw;
+    --cy: 18cqw;
+    --art-h: 46cqw;
+  }
+}
+.mk-title {
+  position: absolute;
+  inset-inline: 0;
+  top: var(--t-top);
+  font-family: var(--mk-font-display);
+  font-style: italic;
+  font-weight: 400;
+  font-size: var(--t-size);
+  line-height: 0.9;
+  letter-spacing: -0.035em;
+  text-align: center;
+  white-space: nowrap;
+}
+.mk-title-outline {
+  color: transparent;
+  -webkit-text-stroke: 1px rgb(232 204 145 / 0.8);
+}
+.mk-clip {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  clip-path: circle(calc(var(--r) - 1px) at var(--cx) var(--cy));
+}
+.mk-eclipse {
+  position: absolute;
+  width: calc(var(--r) * 2);
+  height: calc(var(--r) * 2);
+  left: calc(var(--cx) - var(--r));
+  top: calc(var(--cy) - var(--r));
+}

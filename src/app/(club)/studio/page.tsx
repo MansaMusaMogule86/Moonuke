@@ -51,6 +51,7 @@ export default async function StudioPage() {
         <Button href="/studio/tiers" variant="outline">Tiers</Button>
         <Button href="/studio/analytics" variant="outline">Analytics</Button>
         <Button href="/studio/messaging" variant="outline">Messaging</Button>
+        <Button href="/studio/blasts" variant="outline">Blasts</Button>
       </div>
 
       <section aria-labelledby="progress-h" className="mt-10 rounded-[var(--radius-xl)] border border-line bg-ink-2 p-6 md:p-8">

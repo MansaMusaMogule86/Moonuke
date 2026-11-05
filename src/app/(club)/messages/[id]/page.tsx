@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { BlockButton } from "@/components/club/SafetyButtons";
 import { ConversationControls } from "@/components/messaging/ConversationControls";
 import { Thread } from "@/components/messaging/Thread";
+import { BlastOptOut } from "@/components/messaging/BlastOptOut";
+import { isOptedOut } from "@/server/services/blasts";
 import { requireViewer } from "@/server/auth/request";
 import { CAN_SEND_COPY, conversationMessages, getConversation } from "@/server/services/messaging";
 import { uuid } from "@/server/validation";
@@ -27,6 +29,7 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
         </h1>
         <div className="flex flex-wrap items-center gap-2">
           <ConversationControls id={c.id} side={c.side} muted={c.muted} restricted={c.restricted} />
+          {c.side === "fan" && <BlastOptOut creatorId={c.peer.id} optedOut={await isOptedOut(viewer, c.peer.id)} />}
           <BlockButton targetUserId={c.peer.id} name={c.peer.name} />
         </div>
       </div>

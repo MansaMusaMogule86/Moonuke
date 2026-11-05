@@ -7,6 +7,8 @@ import { Portrait } from "@/components/ui/Portrait";
 import { cn } from "@/lib/cn";
 import { requireViewer } from "@/server/auth/request";
 import { myConversations } from "@/server/services/messaging";
+import { myMessagingPause } from "@/server/services/blasts";
+import { PauseBanner } from "@/components/messaging/PauseBanner";
 
 export const metadata: Metadata = { title: "Messages" };
 
@@ -16,6 +18,7 @@ export default async function MessagesPage() {
   const viewer = await requireViewer("club.discover");
   if (viewer.role !== "member" && viewer.role !== "creator") notFound();
   const list = await myConversations(viewer);
+  const pause = await myMessagingPause(viewer);
   return (
     <div className="mx-auto max-w-[860px] px-5 pb-28 pt-14 md:px-10 md:pt-20">
       <p className="eyebrow mb-5">Private</p>
@@ -26,6 +29,7 @@ export default async function MessagesPage() {
       <p className="mt-5 max-w-2xl text-[14px] leading-relaxed text-stone">
         Conversations between members and the creators they belong to. Messages are private to the two of you and stored securely on our servers; they are not end-to-end encrypted. The house can only read a message if it&apos;s reported.
       </p>
+      {pause && <PauseBanner pause={{ id: pause.id, until: new Date(pause.until).toISOString(), reason: pause.reason, appealStatus: pause.appeal_status, decisionNote: pause.decision_note }} />}
       {list.length === 0 ? (
         <p className="mt-10 rounded-[var(--radius-xl)] border border-line bg-ink-2 p-8 text-[15px] text-stone">
           {viewer.role === "creator" ? "No conversations yet." : "No conversations yet. Members can message the creators they belong to from their profile."}

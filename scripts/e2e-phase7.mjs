@@ -1,4 +1,4 @@
-// Phase 7a end-to-end: private messaging — open from profile, send, refuse
+// Phase 7 end-to-end (7a–7c): private messaging, Blasts and appeals — open from profile, send, refuse
 // links, near-real-time reply, notifications, access control, report → house
 // review, removal, exceptional-access guard, restrict, creator tools, axe.
 //   BASE=http://localhost:3000 SHOTS=./screenshots node scripts/e2e-phase7.mjs
@@ -148,6 +148,60 @@ await axe(c.page, "/messages/new @1440");
 await c.page.goto(`${BASE}/studio/messaging`);
 await axe(c.page, "/studio/messaging @1440");
 check("paid requests disabled while payments are off", await c.page.getByLabel("Accept paid message requests").isDisabled());
+
+// ================================================================ Blasts (7b)
+await c.page.goto(`${BASE}/studio/blasts`);
+await shot(c.page, "blasts-desktop");
+await axe(c.page, "/studio/blasts @1440");
+const compose = c.page.locator("section").filter({ has: c.page.getByRole("heading", { name: "New Blast" }) });
+await compose.getByLabel("Message", { exact: true }).fill("visit example.com today");
+await compose.getByRole("button", { name: "Send Blast" }).click();
+await compose.locator("form [role=alert]").first().waitFor();
+check("blast with a link refused", true);
+await compose.getByLabel("Message", { exact: true }).fill("Hello {name}, the e2e salon letter is up.");
+await compose.getByRole("button", { name: "Send Blast" }).click();
+await c.page.getByTestId("blast-saved").waitFor();
+await n.page.goto(convUrl);
+let got = false;
+for (let i = 0; i < 10 && !got; i++) {
+  got = (await n.page.getByText("Hello Nocturne, the e2e salon letter is up.").count()) > 0;
+  if (!got) { await n.page.waitForTimeout(1500); await n.page.reload(); }
+}
+check("blast arrives as a personalised private message", got);
+check("fan can stop broadcasts", await n.page.getByRole("button", { name: "Stop broadcasts" }).isVisible());
+await c.page.goto(`${BASE}/studio/blasts`);
+const hist = c.page.getByRole("list", { name: "Your Blasts" }).getByRole("listitem").first();
+check("history shows delivery counts, no recipient names", /delivered/.test(await hist.innerText()) && !/Nocturne/.test(await c.page.getByRole("list", { name: "Your Blasts" }).innerText()));
+await c.page.goto(`${BASE}/studio/blasts/lists`);
+await axe(c.page, "/studio/blasts/lists @1440");
+await c.page.getByLabel("New list name").fill("E2E front row");
+await c.page.getByRole("button", { name: "Create list" }).click();
+const listSec = c.page.locator("section").filter({ has: c.page.getByRole("heading", { name: /E2E front row/ }) });
+await listSec.waitFor();
+await listSec.getByRole("button", { name: "Add" }).click();
+await listSec.getByRole("button", { name: /^Remove / }).first().waitFor();
+check("custom list: member added", true);
+const memberBlasts = await v.page.goto(`${BASE}/studio/blasts`);
+check("member /studio/blasts → 404", memberBlasts.status() === 404);
+
+// ================================================================ pause → appeal → overturn (7c)
+await o.page.goto(`${BASE}/admin/moderation`);
+await o.page.getByRole("link", { name: "Review message (logged)" }).first().click();
+await o.page.waitForURL(/\/admin\/messaging\/report\//);
+await o.page.getByLabel(/^Reason \(shown to/).fill("Please slow down while we review a report");
+await o.page.getByRole("button", { name: "Pause messaging" }).click();
+await o.page.getByText("Messaging paused for this account.").waitFor();
+await n.page.goto(`${BASE}/messages`);
+check("paused member sees the banner", await n.page.getByRole("heading", { name: /Messaging is paused until/ }).isVisible());
+await axe(n.page, "/messages (paused) @1440");
+await n.page.getByLabel("Appeal (optional)").fill("I only wrote one friendly message; please take another look.");
+await n.page.getByRole("button", { name: "Send appeal" }).click();
+await n.page.getByText("Your appeal is with the house.").waitFor();
+await o.page.goto(`${BASE}/admin/messaging`);
+await o.page.getByRole("button", { name: "Overturn and lift" }).click();
+await o.page.getByText("Overturned").waitFor();
+await n.page.goto(`${BASE}/messages`);
+check("overturned appeal lifts the pause", (await n.page.getByRole("heading", { name: /Messaging is paused/ }).count()) === 0);
 
 // ================================================================ mobile
 const nm = await signIn("nocturne@moonuke.test", mobile);

@@ -8,6 +8,7 @@ const tabs = [
   { href: "/admin", label: "Applications" },
   { href: "/admin/invitations", label: "Invitations" },
   { href: "/admin/referrals", label: "Referrals" },
+  { href: "/admin/onboarding", label: "Onboarding" },
   { href: "/admin/creators", label: "Creators" },
   { href: "/admin/moderation", label: "Moderation" },
   { href: "/admin/members", label: "Members" },
@@ -21,7 +22,7 @@ export function AdminTabs() {
     <nav aria-label="House sections" className="-mx-5 overflow-x-auto px-5 md:mx-0 md:px-0">
       <ul className="flex w-max gap-1 border-b border-line md:w-full">
         {tabs.map((t) => {
-          const active = path === t.href;
+          const active = path === t.href || (t.href !== "/admin" && path.startsWith(`${t.href}/`));
           return (
             <li key={t.href}>
               <Link

@@ -77,7 +77,7 @@ export function Select({ label, error, children, className, ...props }: SelectHT
   );
 }
 
-export function Check({ name, children, error }: { name: string; children: ReactNode; error?: string }) {
+export function Check({ name, children, error, defaultChecked }: { name: string; children: ReactNode; error?: string; defaultChecked?: boolean }) {
   const id = useId();
   return (
     <div>
@@ -86,6 +86,7 @@ export function Check({ name, children, error }: { name: string; children: React
           id={id}
           name={name}
           type="checkbox"
+          defaultChecked={defaultChecked}
           aria-invalid={error ? true : undefined}
           aria-describedby={error ? `${id}-e` : undefined}
           className="peer mt-1 h-5 w-5 shrink-0 cursor-pointer appearance-none rounded-[5px] border border-line-strong bg-ink transition-colors checked:border-gold checked:bg-gold focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-2 focus-visible:outline-gold-soft"

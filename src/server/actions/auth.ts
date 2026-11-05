@@ -41,7 +41,8 @@ export async function signInAction(_prev: FormState, fd: FormData): Promise<Form
 }
 
 export async function applyAction(token: string, _prev: FormState, fd: FormData): Promise<FormState> {
-  const values = { alias: str(fd, "alias"), email: str(fd, "email") };
+  // Echo consent choices so a failed submit doesn't silently untick them (React resets the form). Never echo the password.
+  const values = { alias: str(fd, "alias"), email: str(fd, "email"), adult: str(fd, "adult"), terms: str(fd, "terms") };
   const parsed = applySchema.safeParse({
     alias: str(fd, "alias"),
     email: str(fd, "email"),

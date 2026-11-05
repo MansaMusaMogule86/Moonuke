@@ -43,10 +43,10 @@ export function ApplyForm({ token, emailLocked, role }: { token: string; emailLo
         error={state.fields?.password}
       />
       <div className="space-y-4">
-        <Check name="adult" error={state.fields?.adult}>
+        <Check key={`adult-${state.values?.adult ?? ""}`} name="adult" defaultChecked={state.values?.adult === "on"} error={state.fields?.adult}>
           I confirm I am 18 or older. I understand the house may ask for age verification before approval.
         </Check>
-        <Check name="terms" error={state.fields?.terms}>
+        <Check key={`terms-${state.values?.terms ?? ""}`} name="terms" defaultChecked={state.values?.terms === "on"} error={state.fields?.terms}>
           I accept the house rules and the privacy policy.
         </Check>
       </div>

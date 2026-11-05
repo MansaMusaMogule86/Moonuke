@@ -4,12 +4,6 @@ import type { AssistInput, AssistOutput, ProfileAssistant, Tone } from "./types"
  * Local, deterministic profile drafting — no network, no cost, no data
  * leaves the server. Good enough to give a creator a polished starting point.
  */
-const OPENERS: Record<Tone, string[]> = {
-  refined: ["Quietly devoted to", "A private study in", "An unhurried practice of"],
-  warm: ["Come closer to", "Welcome to the inside of", "A warm, honest look at"],
-  playful: ["Equal parts mischief and", "Behind the curtain of", "The fun side of"],
-  minimal: ["", "Notes on", "Only"],
-};
 const OFFER_DEFAULT: Record<Tone, string> = {
   refined: "the work in progress, the decisions behind it, and the pieces kept for the few",
   warm: "the everyday moments, the process and the people who make it",
@@ -19,24 +13,21 @@ const OFFER_DEFAULT: Record<Tone, string> = {
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const listJoin = (xs: string[]) => (xs.length <= 1 ? xs.join("") : `${xs.slice(0, -1).join(", ")} and ${xs[xs.length - 1]}`);
-const pick = <T,>(xs: T[], seed: number, i: number) => xs[(seed + i) % xs.length];
-
-function seedOf(s: string) {
-  let h = 0;
-  for (const c of s) h = (h * 31 + c.charCodeAt(0)) >>> 0;
-  return h;
-}
 
 export function draftFromTemplate(input: AssistInput): AssistOutput {
   const discipline = input.discipline.trim().toLowerCase();
   const kws = input.keywords.map((k) => k.trim().toLowerCase()).filter(Boolean).slice(0, 4);
   const place = input.city?.trim();
-  const seed = seedOf(`${input.displayName}|${discipline}|${input.tone}`);
   const offering = input.offering?.trim() || OFFER_DEFAULT[input.tone];
 
-  const tagA = input.tone === "minimal"
-    ? `${cap(discipline)}${place ? `. ${place}` : ""}. ${kws.length ? cap(listJoin(kws.slice(0, 2))) + "." : "Members only."}`
-    : `${pick(OPENERS[input.tone], seed, 0)} ${discipline}${place ? ` in ${place}` : ""}.`.replace(/^ /, "").replace(/^./, (c) => c.toUpperCase());
+  // Phrased so any discipline reads naturally, whether it's a craft ("ceramics") or a person ("dancer").
+  const at = place ? ` — ${place}` : "";
+  const tagA = {
+    refined: `${cap(discipline)}, in private${at}.`,
+    warm: `${cap(discipline)}${place ? ` in ${place}` : ""}, up close.`,
+    playful: `${cap(discipline)} by day. The good stuff after hours.`,
+    minimal: `${cap(discipline)}${place ? `. ${place}` : ""}. ${kws.length ? cap(listJoin(kws.slice(0, 2))) + "." : "Members only."}`,
+  }[input.tone];
   const tagB = kws.length
     ? `${cap(listJoin(kws.slice(0, 3)))} — shared with the Circle first.`
     : `${cap(discipline)}, shared with the Circle first.`;

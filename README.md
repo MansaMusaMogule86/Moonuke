@@ -30,20 +30,27 @@ For a real database, run `pnpm db:migrate` and then create the single owner:
 OWNER_EMAIL=… OWNER_ALIAS="The House" OWNER_PASSWORD=… pnpm owner:create
 ```
 
-## Verify
+## Verify (local — GitHub-hosted CI is paused)
 
 ```bash
-pnpm lint           # TypeScript, strict
-pnpm test           # 110 tests: UI (jsdom) and server security tests against real Postgres (TEST_DATABASE_URL)
-NODE_ENV=production pnpm env:check   # validate a production configuration
-pnpm build
-# with a freshly seeded DB and a running server:
-BASE=http://localhost:3000 node scripts/e2e-smoke.mjs     # Phase 1 interactions and axe
-BASE=http://localhost:3000 node scripts/e2e-phase2.mjs    # Phase 2 flows and axe on every route
-BASE=http://localhost:3000 DATABASE_URL=… node scripts/e2e-phase3.mjs   # recovery, MFA, safety, verification
+pnpm verify          # the complete suite, one command, with a pass/fail report
+pnpm verify:quick    # typecheck + unit + PostgreSQL security tests only
 ```
 
-CI (`.github/workflows/ci.yml`) runs all of the above on every push, against Postgres 16.
+`pnpm verify` runs these steps in order:
+1. Preflight.
+2. TypeScript (strict).
+3. Unit tests and PostgreSQL security tests.
+4. Production build.
+5. Production env-safety check.
+6. Start a production server.
+7. Reseed the database and run every Playwright browser suite with axe WCAG 2.1 AA checks (Phases 1–4).
+
+It writes `reports/verify-report.md`, plus logs and screenshots in `reports/`. The report is labelled as a **local run, not GitHub CI**.
+
+Browser suites reset their database, so `verify` uses a dedicated `<db>_e2e` database and `<db>_test` for server tests. Your dev database is never touched. Remote database hosts are refused.
+
+The disabled workflow is kept at `ci/github-actions.disabled.yml`. To re-enable it, `git mv` it back to `.github/workflows/`.
 
 ## Architecture
 
@@ -52,6 +59,7 @@ CI (`.github/workflows/ci.yml`) runs all of the above on every push, against Pos
 - **Phase 3:** [`docs/phase-3-architecture.md`](docs/phase-3-architecture.md). Covers security, recovery, safety, verification, decisions and risks.
 - **Deployment:** [`docs/deployment.md`](docs/deployment.md). Covers env rules, migrations, owner bootstrap and the go-live checklist.
 - **Plans awaiting approval:** [`docs/supabase-auth-migration.md`](docs/supabase-auth-migration.md) and [`docs/verification-design.md`](docs/verification-design.md).
+- **Phase 4:** [`docs/phase-4-architecture.md`](docs/phase-4-architecture.md). Covers white-glove onboarding, proposals, socials and the profile assistant.
 - **Branding:** "Moonuke" is a working name. Everything brand-specific lives in `src/config/brand.ts`.
 
 ```
@@ -78,6 +86,7 @@ src/app/
 | 1 | Identity, design system, homepage, navigation | Done |
 | 2 | Invitation-only access, owner console, discovery, profiles, locked content, payment-ready UI | **Done** (see limitations in the Phase 2 doc) |
 | 3 | Security, recovery, owner MFA, blocking/reporting/moderation, creator verification, CSP, CI | **Done** |
-| 4–7 | Fan app and messaging, studio, storage, Supabase Auth switch, payments and ledger, release | Planned |
+| 4 | White-glove onboarding, profile proposals, social connections, AI-assisted profile prep, approval pipeline | **Done** |
+| 5–7 | Fan app and messaging, content studio and storage, Supabase Auth switch, payments and ledger, release | Planned |
 
 **Payments are not active.** No payment provider is registered, and checkout always returns an unavailable quote. **Nothing is deployed.**

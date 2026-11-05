@@ -10,6 +10,7 @@ import { ImageReveal, Reveal } from "@/components/ui/Reveal";
 import { cn } from "@/lib/cn";
 import { requireViewer } from "@/server/auth/request";
 import { getProfile } from "@/server/services/club";
+import { PLATFORMS, publicSocials } from "@/server/services/onboarding";
 
 export const metadata: Metadata = { title: "Creator" };
 
@@ -20,6 +21,7 @@ export default async function CreatorPage({ params }: { params: Promise<{ handle
   // Missing and not-allowed are indistinguishable by design.
   if (!p) notFound();
 
+  const socials = await publicSocials(viewer, p.id);
   const member = p.tiers.find((t) => t.kind === "member");
   const vip = p.tiers.find((t) => t.kind === "vip");
   const unlockedCount = p.posts.filter((x) => x.unlocked).length;
@@ -47,6 +49,19 @@ export default async function CreatorPage({ params }: { params: Promise<{ handle
             {p.tagline && <p className="mt-6 max-w-xl font-display text-[22px] italic leading-snug text-ivory/85 md:text-[26px]">{p.tagline}</p>}
             {p.bio && <p className="mt-5 max-w-xl text-[16px] leading-relaxed text-stone">{p.bio}</p>}
 
+            {socials.length > 0 && (
+              <ul aria-label="Verified social profiles" className="mt-6 flex flex-wrap gap-2">
+                {socials.map((s) => (
+                  <li key={s.platform + s.handle}>
+                    <a href={s.url} target="_blank" rel="noopener noreferrer nofollow" className="inline-flex items-center gap-2 rounded-full border border-line-strong px-3 py-1.5 text-[12px] text-stone transition-colors hover:border-gold/50 hover:text-ivory">
+                      <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-gold" />
+                      {PLATFORMS[s.platform].label} · @{s.handle}
+                      <span className="sr-only">(verified by the house, opens in a new tab)</span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
             <dl className="mt-10 flex gap-10 border-t border-line pt-6">
               {[
                 ["Members", p.stats.members],

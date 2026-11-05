@@ -294,6 +294,7 @@ export async function restrictMessaging(owner: Viewer, userId: string, hours: nu
   assertOwner(owner);
   if (!Number.isInteger(hours) || hours < 1 || hours > 24 * 90) throw new AppError("validation", "Choose 1 hour to 90 days.", "hours");
   if (reason.trim().length < 3) throw new AppError("validation", "Add a reason.", "reason");
+  if (userId === owner.id) throw new AppError("validation", "You can't pause your own account.");
   await asViewer(owner, async (q) => {
     await q.query(`insert into app.messaging_restrictions (user_id, until, reason, created_by) values ($1, now() + make_interval(hours => $2), $3, $4)`, [userId, hours, reason.trim().slice(0, 300), owner.id]);
     await audit(q, { actorId: owner.id, action: "messaging.restrict", targetType: "user", targetId: userId, metadata: { hours } });

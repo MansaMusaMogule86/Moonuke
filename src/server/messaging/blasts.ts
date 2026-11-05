@@ -12,7 +12,7 @@ import { audit } from "@/server/services/audit";
  *    messages are unique per (sender, client_key): retries never duplicate.
  * Eligibility is re-checked per recipient at delivery time.
  */
-export const BLAST = { batch: 100, maxAttempts: 3, maxRecipients: 5000 } as const;
+export const BLAST = { batch: 100, maxAttempts: 3, maxRecipients: 5000, perDay: 3, leaseMinutes: 10 } as const;
 
 const keyFor = (blastId: string, fanId: string) => `bl${createHash("sha256").update(`${blastId}:${fanId}`).digest("hex").slice(0, 40)}`;
 
@@ -20,11 +20,13 @@ export type RunResult = { blasts: number; delivered: number; skipped: number; fa
 
 export async function runBlasts(now = new Date()): Promise<RunResult> {
   const total: RunResult = { blasts: 0, delivered: 0, skipped: 0, failed: 0 };
-  // Claim due Blasts (and resume any left 'sending' by a crash).
+  // Claim due Blasts with a lease. A 'sending' Blast is re-claimed only after
+  // its lease expires (a crashed worker), never while another worker holds it.
   const claimed = await system((q) =>
     q.query<{ id: string; creator_id: string; body: string; recipients: number }>(
-      `update app.blasts b set status = 'sending', started_at = coalesce(started_at, now())
-        where b.id in (select id from app.blasts where status in ('scheduled', 'sending') and scheduled_at <= $1
+      `update app.blasts b set status = 'sending', started_at = coalesce(started_at, now()), lease_until = now() + interval '${BLAST.leaseMinutes} minutes'
+        where b.id in (select id from app.blasts
+                        where scheduled_at <= $1 and (status = 'scheduled' or (status = 'sending' and (lease_until is null or lease_until < now())))
                         order by scheduled_at limit 5 for update skip locked)
         returning b.id, b.creator_id, b.body, b.recipients`,
       [now],
@@ -32,6 +34,28 @@ export async function runBlasts(now = new Date()): Promise<RunResult> {
   );
   for (const b of claimed) {
     total.blasts++;
+    // The worker runs with elevated privileges, so it re-checks everything the
+    // creator-facing path checked rather than trusting the row (defence in depth).
+    const refusal = await system((q) =>
+      q.one<{ reason: string | null }>(
+        `select case
+                  when not exists (select 1 from app.users u join app.creators c on c.user_id = u.id
+                                    where u.id = $1 and u.role = 'creator' and u.status = 'active' and c.published_at is not null) then 'creator_unavailable'
+                  when app.messaging_restricted($1) then 'creator_paused'
+                  when (select count(*) from app.blasts x where x.creator_id = $1 and x.id <> $2 and x.status in ('sending', 'sent')
+                         and x.started_at > now() - interval '24 hours') >= $3 then 'daily_limit'
+                  else null end as reason`,
+        [b.creator_id, b.id, BLAST.perDay],
+      ),
+    );
+    if (refusal?.reason) {
+      await system(async (q) => {
+        await q.query(`update app.blasts set status = 'canceled', finished_at = now(), lease_until = null where id = $1`, [b.id]);
+        await audit(q, { actorId: null, action: "blast.refused", targetType: "blast", targetId: b.id, metadata: { reason: refusal.reason } });
+      });
+      log("warn", "blasts.refused", { blast: b.id, reason: refusal.reason });
+      continue;
+    }
     if (b.recipients === 0) {
       await system(async (q) => {
         await q.query(
@@ -43,6 +67,8 @@ export async function runBlasts(now = new Date()): Promise<RunResult> {
       });
     }
     for (;;) {
+      // Renew the lease while working through a large Blast.
+      await system((q) => q.query(`update app.blasts set lease_until = now() + interval '${BLAST.leaseMinutes} minutes' where id = $1`, [b.id]));
       const r = await deliverBatch(b);
       total.delivered += r.delivered;
       total.skipped += r.skipped;
@@ -56,7 +82,7 @@ export async function runBlasts(now = new Date()): Promise<RunResult> {
                       failed = (select count(*) from app.blast_deliveries where blast_id = $1 and status = 'failed')`;
       if (left?.n) await q.query(`update app.blasts set ${counts} where id = $1`, [b.id]);
       else {
-        await q.query(`update app.blasts set status = 'sent', finished_at = now(), ${counts} where id = $1`, [b.id]);
+        await q.query(`update app.blasts set status = 'sent', finished_at = now(), lease_until = null, ${counts} where id = $1`, [b.id]);
         await audit(q, { actorId: null, action: "blast.sent", targetType: "blast", targetId: b.id });
       }
     });
@@ -98,7 +124,7 @@ async function deliverBatch(b: { id: string; creator_id: string; body: string })
            on conflict (fan_id, creator_id) do update set fan_id = excluded.fan_id returning id`,
           [r.fan_id, b.creator_id],
         );
-        const body = b.body.replaceAll("{name}", e.alias).slice(0, 2000);
+        const body = personalise(b.body, e.alias);
         const key = keyFor(b.id, r.fan_id);
         const msg =
           (await q.one<{ id: string }>(
@@ -124,4 +150,14 @@ async function deliverBatch(b: { id: string; creator_id: string; body: string })
     }
     return res;
   });
+}
+
+/**
+ * Fill {name}. A function replacement (not a replacement string) so `$&`-style
+ * patterns can never be interpreted; aliases are constrained by the database
+ * to letters, numbers, spaces and . _ ' - and are rendered as text, never HTML.
+ */
+export function personalise(body: string, alias: string): string {
+  const safe = alias.replace(/[^\p{L}\p{N} ._'-]/gu, "").slice(0, 32) || "there";
+  return body.replace(/\{name\}/g, () => safe).slice(0, 2000);
 }

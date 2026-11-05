@@ -150,11 +150,16 @@ export async function myLists(viewer: Viewer): Promise<BlastList[]> {
   return asViewer(viewer, async (q) => {
     const lists = await q.query<{ id: string; name: string }>(`select id, name from app.blast_lists where creator_id = $1 order by name`, [viewer.id]);
     const dir = new Map((await q.query<{ fan_id: string; alias: string }>(`select fan_id, alias from app.my_member_directory()`)).map((d) => [d.fan_id, d.alias]));
-    const out: BlastList[] = [];
-    for (const l of lists) {
-      const m = await q.query<{ fan_id: string }>(`select fan_id from app.blast_list_members where list_id = $1`, [l.id]);
-      out.push({ id: l.id, name: l.name, members: m.filter((x) => dir.has(x.fan_id)).map((x) => ({ fanId: x.fan_id, alias: dir.get(x.fan_id)! })).sort((a, b) => a.alias.localeCompare(b.alias)) });
-    }
+    // One query for all list members (no N+1).
+    const rows = await q.query<{ list_id: string; fan_id: string }>(
+      `select m.list_id, m.fan_id from app.blast_list_members m join app.blast_lists l on l.id = m.list_id where l.creator_id = $1`,
+      [viewer.id],
+    );
+    const out: BlastList[] = lists.map((l) => ({
+      id: l.id,
+      name: l.name,
+      members: rows.filter((r) => r.list_id === l.id && dir.has(r.fan_id)).map((r) => ({ fanId: r.fan_id, alias: dir.get(r.fan_id)! })).sort((a, b) => a.alias.localeCompare(b.alias)),
+    }));
     return out;
   });
 }

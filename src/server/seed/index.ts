@@ -50,8 +50,8 @@ export async function seed(): Promise<SeedResult> {
       const id = await user(`${c.handle}@moonuke.test`, c.name, "creator", "active");
       creatorIds[c.handle] = id;
       await q.query(
-        `insert into app.creators (user_id, handle, display_name, discipline, category, city, tagline, bio, visibility, featured, cover, created_at)
-         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11, now() - make_interval(days => $12))`,
+        `insert into app.creators (user_id, handle, display_name, discipline, category, city, tagline, bio, visibility, featured, cover, created_at, published_at)
+         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11, now() - make_interval(days => $12), now() - make_interval(days => $12))`,
         [id, c.handle, c.name, c.discipline, c.category, c.city, c.tagline, c.bio, c.visibility ?? "listed", !!c.featured, JSON.stringify(c.study), i * 9],
       );
       const m = await q.one<{ id: string }>(
@@ -63,6 +63,11 @@ export async function seed(): Promise<SeedResult> {
         [id, c.vipCents, c.vipSeats ?? null, vipPerks],
       );
       tierIds[c.handle] = { member: m!.id, vip: v!.id };
+      await q.query(
+        `insert into app.creator_verifications (user_id, status, checks, submitted_at, reviewed_at, review_note, age_attested_at, identity_attested_at, consent_records_attested_at, terms_accepted_at)
+         values ($1, 'verified', '{"identity":true,"age":true,"consent_records":true}', now(), now(), 'Dev seed', now(), now(), now(), now())`,
+        [id],
+      );
       postIds[c.handle] = [];
       for (const p of postsFor(c.study)) {
         const post = await q.one<{ id: string }>(
@@ -91,6 +96,20 @@ export async function seed(): Promise<SeedResult> {
     // PPV purchase: mireille's ppv post is index 3
     await q.query(`insert into app.purchases (fan_id, post_id) values ($1, $2)`, [memberId, postIds.mireille[3]]);
     await q.query(`insert into app.follows (fan_id, creator_id) values ($1, $2), ($1, $3)`, [memberId, creatorIds.kaiasol, creatorIds.valentin]);
+
+    // A creator whose profile is drafted and awaiting verification (not visible to members).
+    const rheaId = await user("rhea@moonuke.test", "Rhea Calder", "creator", "active");
+    creatorIds.rhea = rheaId;
+    await q.query(
+      `insert into app.creators (user_id, handle, display_name, discipline, category, city, tagline, bio, cover)
+       values ($1, 'rhea', 'Rhea Calder', 'Ceramicist', 'art', 'Kyoto', 'Kiln notes and glaze tests.', 'Wood-fired stoneware.', $2)`,
+      [rheaId, JSON.stringify({ hair: "bun", light: "left", tilt: 1, adorn: "collar", glow: 0.7 })],
+    );
+    await q.query(
+      `insert into app.creator_verifications (user_id, status, submitted_at, age_attested_at, identity_attested_at, consent_records_attested_at, terms_accepted_at)
+       values ($1, 'submitted', now(), now(), now(), now(), now())`,
+      [rheaId],
+    );
 
     // Invitations
     const inviteToken = randomToken();

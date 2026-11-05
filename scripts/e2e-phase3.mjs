@@ -279,6 +279,41 @@ async function ownerSignIn(opts = desktop) {
   await o.ctx.close();
 }
 
+// ================================================================ creator verification
+{
+  const m = await signIn("velvet@moonuke.test", "velvet-new-password-1");
+  const hiddenRes = await m.page.goto(`${BASE}/c/rhea`);
+  check("unverified creator profile 404 for members", hiddenRes.status() === 404);
+  const r = await signIn("rhea@moonuke.test");
+  check("creator nav shows Studio", await r.page.getByRole("navigation", { name: "Club" }).first().getByRole("link", { name: "Studio" }).isVisible());
+  await r.page.goto(`${BASE}/studio`);
+  check("studio shows submitted status", await r.page.getByText("Submitted", { exact: true }).isVisible());
+  await shot(r.page, "studio-desktop");
+  await axe(r.page, "/studio @1440");
+  await r.page.getByLabel("Tagline (optional)").fill("Kiln notes, glaze tests and the pieces that crack.");
+  await r.page.getByRole("button", { name: "Save profile" }).click();
+  await r.page.getByText("Profile saved").waitFor();
+  check("creator can edit draft profile", true);
+
+  const o = await ownerSignIn();
+  await o.page.goto(`${BASE}/admin/creators`);
+  await axe(o.page, "/admin/creators @1440");
+  const card = o.page.locator("article").filter({ hasText: "Rhea Calder" });
+  await card.getByRole("button", { name: "Verify & publish" }).click();
+  await card.getByText(/Confirm before verifying/).waitFor();
+  check("verify blocked until checklist complete", true);
+  await card.getByLabel("Identity confirmed").check();
+  await card.getByLabel(/18\+ confirmed/).check();
+  await card.getByLabel(/Consent & records/).check();
+  await card.getByRole("button", { name: "Verify & publish" }).click();
+  await card.getByText("Verified and published").waitFor();
+  check("card updates in place: verified + published", (await card.getByText("Published", { exact: true }).count()) === 1);
+  await shot(o.page, "admin-creators-desktop");
+  const live = await m.page.goto(`${BASE}/c/rhea`);
+  check("verified creator now visible to members", live.status() === 200);
+  for (const x of [m, r, o]) await x.ctx.close();
+}
+
 //@@SECTIONS@@
 
 await browser.close();

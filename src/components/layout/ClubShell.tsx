@@ -14,6 +14,7 @@ import { ClubNav, type NavItem } from "./ClubNav";
  */
 export function ClubShell({ viewer, children }: { viewer: Viewer; children: ReactNode }) {
   const items: NavItem[] = [{ href: "/discover", label: "Discover", icon: "discover" }];
+  if (viewer.role === "creator" && can(viewer, "club.discover")) items.push({ href: "/studio", label: "Studio", icon: "studio" });
   if (can(viewer, "referrals.request")) items.push({ href: "/refer", label: "Invite", icon: "invite" });
   if (can(viewer, "applications.review")) items.push({ href: "/admin", label: "House", icon: "house" });
   items.push({ href: "/account/security", label: "Account", icon: "account" });

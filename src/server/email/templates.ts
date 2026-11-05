@@ -78,6 +78,12 @@ export const emails = {
     );
   },
 
+  verificationSubmitted: (p: { url: string }) =>
+    make("verification_submitted", `${brand.name}: a creator submitted verification`, "A creator is ready for review.", ["A creator completed their profile and attestations and is waiting for verification."], { label: "Review creators", url: p.url }),
+
+  creatorVerified: (p: { alias: string; url: string }) =>
+    make("creator_verified", `Your ${brand.name} profile is live`, `You're verified, ${p.alias}.`, ["The house has verified your account and published your profile to members."], { label: "Open your studio", url: p.url }),
+
   criticalReport: (p: { reason: string; url: string }) =>
     make(
       "critical_report",

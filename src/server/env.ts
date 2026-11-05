@@ -26,6 +26,14 @@ const schema = z.object({
   AI_PROVIDER: z.enum(["template", "anthropic", "disabled"]).default("template"),
   ANTHROPIC_API_KEY: z.string().optional(),
   AI_MODEL: z.string().regex(/^claude-[a-z0-9-]+$/).default("claude-opus-5-5"),
+  // Phase 8 feature flags. All default OFF and are enforced server-side
+  // (src/server/flags.ts). Turning one on in production is refused until the
+  // owner approves the provider (see productionProblems).
+  FEATURE_PAYMENTS: z.enum(["on", "off"]).default("off"),
+  FEATURE_UPLOADS: z.enum(["on", "off"]).default("off"),
+  AUTH_PROVIDER: z.enum(["own", "supabase"]).default("own"),
+  STORAGE_PROVIDER: z.enum(["none", "mock"]).default("none"),
+  SCAN_PROVIDER: z.enum(["none", "mock"]).default("none"),
 });
 
 export type Env = z.infer<typeof schema> & { APP_SECRET: string };
@@ -40,6 +48,11 @@ export function productionProblems(e: z.infer<typeof schema>): string[] {
   if (e.EMAIL_TRANSPORT === "dev") p.push("EMAIL_TRANSPORT=dev is not allowed in production (use smtp or disabled).");
   if (e.EMAIL_TRANSPORT === "smtp" && (!e.SMTP_URL || !e.EMAIL_FROM)) p.push("EMAIL_TRANSPORT=smtp requires SMTP_URL and EMAIL_FROM.");
   if (e.AI_PROVIDER === "anthropic" && !e.ANTHROPIC_API_KEY) p.push("AI_PROVIDER=anthropic requires ANTHROPIC_API_KEY.");
+  // No real provider is integrated or approved, so these can't be enabled in production yet.
+  if (e.FEATURE_PAYMENTS === "on") p.push("FEATURE_PAYMENTS=on: no payment provider is integrated or approved (A10).");
+  if (e.FEATURE_UPLOADS === "on") p.push("FEATURE_UPLOADS=on: no approved storage and content-safety scanning provider (A10).");
+  if (e.STORAGE_PROVIDER === "mock" || e.SCAN_PROVIDER === "mock") p.push("Mock storage/scanning providers are for tests only.");
+  if (e.AUTH_PROVIDER === "supabase") p.push("AUTH_PROVIDER=supabase: the migration is prepared but not approved (A3).");
   return p;
 }
 

@@ -15,7 +15,7 @@ export const RETENTION = {
   endedSessionDays: 30,
 } as const;
 
-export type MaintenanceResult = { rateLimits: number; expiredResets: number; sessions: number };
+export type MaintenanceResult = { rateLimits: number; expiredResets: number; sessions: number; abandonedUploads: number };
 
 export async function runMaintenance(now = new Date()): Promise<MaintenanceResult> {
   return system(async (q) => {
@@ -30,6 +30,13 @@ export async function runMaintenance(now = new Date()): Promise<MaintenanceResul
       `delete from app.sessions where (revoked_at is not null and revoked_at < $1) or expires_at < $1 returning 1`,
       [at(RETENTION.endedSessionDays)],
     );
-    return { rateLimits: rl.length, expiredResets: pr.length, sessions: ss.length };
+    // Uploads stuck mid-pipeline for over a day (objects are removed by the
+    // storage adapter's cleanup once one is approved; none exists yet).
+    const up = await q.query(
+      `update app.media_uploads set status = 'abandoned', reason = 'abandoned', updated_at = now()
+        where status in ('pending', 'uploaded', 'scanning') and created_at < $1 returning 1`,
+      [at(1)],
+    );
+    return { rateLimits: rl.length, expiredResets: pr.length, sessions: ss.length, abandonedUploads: up.length };
   });
 }

@@ -44,6 +44,6 @@ describe("maintenance (dead operational rows only)", () => {
     expect(await count(`select count(*) as n from app.audit_log`)).toBe(auditBefore);
     expect(await count(`select count(*) as n from app.email_outbox`)).toBe(outboxBefore);
     // Idempotent.
-    expect(await runMaintenance()).toEqual({ rateLimits: 0, expiredResets: 0, sessions: 0 });
+    expect(await runMaintenance()).toEqual({ rateLimits: 0, expiredResets: 0, sessions: 0, abandonedUploads: 0 });
   });
 });

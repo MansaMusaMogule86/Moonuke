@@ -4,6 +4,7 @@ Detailed references:
 - `docs/phase-2-architecture.md`: access model, RLS, routes.
 - `docs/phase-3-architecture.md`: security, safety, verification.
 - `docs/phase-4-architecture.md`: onboarding.
+- `docs/phase-5-architecture.md`: creator studio (posts, tiers).
 - `docs/deployment.md`: env and runbook.
 
 ## Stack
@@ -25,7 +26,7 @@ src/server/
   db/                      asViewer() (mk_app + RLS) and system() (privileged)
   auth/                    crypto (scrypt, HMAC), totp, permissions, request guards
   services/                accounts, admin, club, referrals, sessions, mfa, account,
-                           recovery, safety, creatorOnboarding, onboarding, rateLimit, audit
+                           recovery, safety, creatorOnboarding, onboarding, studio, rateLimit, audit
   actions/                 server actions (zod → requireViewer → rate limit → service)
   email/                   outbox + templates (dev | smtp | disabled)
   ai/                      profile assistant: template (default) | anthropic | disabled
@@ -52,9 +53,12 @@ scripts/                   migrate, seed, create-owner, env-check, email-drain,
      - `can_view_post()` (preview, members, VIP, PPV, hidden).
      - `is_blocked_between()`, `creator_stats()`, `tier_seats_taken()`.
      - `my_blocks()`, `my_reports()`, `my_onboarding_case()`.
+     - `owns_post()`, `post_has_purchases()`, `tier_has_subscribers()`.
    - **Guard triggers (invoker):**
      - `creators_guard`: only the owner can publish or feature a profile.
      - `socials_guard`: only the owner can change verification status, and editing a link resets it.
+     - `posts_guard`: no self-unhiding, no owner rewrites; a bought post keeps its access and publish time.
+     - `tiers_guard`: a subscribed tier keeps its kind; seats can't drop below members.
      - The `audit_log` trigger makes the log append-only.
 
 ## Authentication (own implementation; Supabase Auth is the target)
@@ -78,6 +82,8 @@ scripts/                   migrate, seed, create-owner, env-check, email-drain,
 | `20261106000004_phase3_creator_verification` | creator_verifications (+ creators.published_at) |
 | `20261107000001_phase4_onboarding` | onboarding_cases, profile_proposals, social_connections, ai_assist_usage |
 | `20261108000001_phase4_profile_imports` | profile_proposals: `import` source, `import_hash` + unique index |
+| `20261109000001_phase5_creator_posts` | posts: drafts/scheduling (nullable `published_at`), creator write policies, `posts_guard` |
+| `20261109000002_phase5_creator_tiers` | tiers: creator write policies, `tiers_guard` |
 
 ## Integrations
 

@@ -1,6 +1,14 @@
 # Next phase
 
-Phase 4 (white-glove creator onboarding) is **built**, including profile imports. Details are in `docs/phase-4-architecture.md`.
+**Current phase: 5, the creator studio** (chosen by the owner). Slices 5a (posts) and 5b (tiers) are built; see `docs/phase-5-architecture.md`. Phase 4 (white-glove onboarding, including profile imports) is complete.
+
+## Phase 5: remaining slices (confirm before building)
+- **5c Analytics.** Use existing data only: members, followers, posts by state, tier seats. **UNKNOWN:** which metrics the owner wants, and whether to record post views or unlocks. Recording them is new data collection.
+- **5d Blasts, fan messaging, segmentation, top fans.** These need a messaging system, which belongs to the fan app. **UNKNOWN:** whether to build messaging now.
+- **5e Earnings, payouts, transactions.** Blocked by payments being inactive and fees, payout schedule and currencies being UNKNOWN. An empty, clearly labelled earnings view is possible.
+- **Media uploads.** Blocked: they need approval for object storage plus CSAM/NCII hash-matching.
+- **Exclusive drops.** **UNKNOWN** what they mean.
+- **Defaults to confirm:** P1–P3 and T1–T4 in `docs/DECISIONS.md`.
 
 ## Phase 4: done (don't rebuild)
 
@@ -31,10 +39,9 @@ Phase 4 (white-glove creator onboarding) is **built**, including profile imports
 - Add server tests (app-layer **and** direct-RLS denial) and browser checks with axe at 1440 and 390 px. Register new suites in `scripts/verify.mjs`.
 - `pnpm verify` must pass before pushing. Report it as a local run.
 
-## After Phase 4 (order UNKNOWN; ask the owner)
+## After Phase 5 (order UNKNOWN; ask the owner)
 Remaining from the original brief:
 - Fan app: vault, messaging, notifications, purchase history, subscription management.
-- Creator studio: posts, media, scheduling, tiers, Blasts, segmentation, analytics, earnings.
 - Supabase Auth migration (`docs/supabase-auth-migration.md`).
 - Payments, crypto and ledger (not activated).
 - Release hardening.

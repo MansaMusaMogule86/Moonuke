@@ -65,8 +65,8 @@
 | Social profile connections (proof-code verification) | Done |
 | AI-assisted profile preparation | Done (local template; Claude adapter opt-in, untested live) |
 | Profile imports | **Done**: paste or export file, platform-agnostic; name, tagline, bio, links; always a proposal. Avatars deferred (needs storage) |
-| Content publishing, media management, scheduled posts | Planned |
-| Tier and VIP management, locked content, exclusive drops | Planned (seeded data only) |
+| Content publishing, media management, scheduled posts | **Partial** (Phase 5a): compose, draft, schedule, publish, edit, delete. No uploads (placeholder media) |
+| Tier and VIP management, locked content, exclusive drops | **Partial** (Phase 5b): tiers editor, locked/VIP/PPV posts. Exclusive drops UNKNOWN |
 | Blasts campaigns, fan messaging, audience segmentation, top fans | Planned |
 | Referrals | Partial: invitation referrals exist; creator referral programme UNKNOWN |
 | Earnings dashboard, revenue analytics, payout requests, transaction history | Planned |
@@ -114,8 +114,8 @@ Each phase's scope as delivered:
 | 1 | Identity, design system, homepage | Done |
 | 2 | Discovery, profiles, VIP, locked UI, plus the invitation-only model | Done |
 | 3 | Re-scoped by the owner to security, recovery, MFA, safety, verification, CI | Done |
-| 4 | Re-scoped to white-glove onboarding | In progress |
-| 5 | Auth, storage, moderation; partly delivered early | Remaining |
+| 4 | Re-scoped to white-glove onboarding | Done |
+| 5 | Re-scoped by the owner to the creator studio (5a posts, 5b tiers done) | In progress |
 | 6 | Payments, crypto and ledger | Remaining |
 | 7 | End-to-end, hardening, release | Remaining |
 

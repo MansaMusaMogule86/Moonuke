@@ -44,7 +44,7 @@ pnpm verify:quick    # typecheck + unit + PostgreSQL security tests only
 4. Production build.
 5. Production env-safety check.
 6. Start a production server.
-7. Reseed the database and run every Playwright browser suite with axe WCAG 2.1 AA checks (Phases 1–4).
+7. Reseed the database and run every Playwright browser suite with axe WCAG 2.1 AA checks (Phases 1–5).
 
 It writes `reports/verify-report.md`, plus logs and screenshots in `reports/`. The report is labelled as a **local run, not GitHub CI**.
 
@@ -74,7 +74,8 @@ Detailed references are linked below.
 - **Phase 3:** [`docs/phase-3-architecture.md`](docs/phase-3-architecture.md). Covers security, recovery, safety, verification, decisions and risks.
 - **Deployment:** [`docs/deployment.md`](docs/deployment.md). Covers env rules, migrations, owner bootstrap and the go-live checklist.
 - **Plans awaiting approval:** [`docs/supabase-auth-migration.md`](docs/supabase-auth-migration.md) and [`docs/verification-design.md`](docs/verification-design.md).
-- **Phase 4:** [`docs/phase-4-architecture.md`](docs/phase-4-architecture.md). Covers white-glove onboarding, proposals, socials and the profile assistant.
+- **Phase 4:** [`docs/phase-4-architecture.md`](docs/phase-4-architecture.md). Covers white-glove onboarding, proposals, socials, imports and the profile assistant.
+- **Phase 5:** [`docs/phase-5-architecture.md`](docs/phase-5-architecture.md). Covers the creator studio: posts and tiers.
 - **Branding:** "Moonuke" is a working name. Everything brand-specific lives in `src/config/brand.ts`.
 
 ```
@@ -102,6 +103,7 @@ src/app/
 | 2 | Invitation-only access, owner console, discovery, profiles, locked content, payment-ready UI | **Done** (see limitations in the Phase 2 doc) |
 | 3 | Security, recovery, owner MFA, blocking/reporting/moderation, creator verification, CSP, CI | **Done** |
 | 4 | White-glove onboarding, profile proposals, social connections, AI-assisted profile prep, approval pipeline | **Done** |
-| 5–7 | Fan app and messaging, content studio and storage, Supabase Auth switch, payments and ledger, release | Planned |
+| 5 | Creator studio: posts (drafts, scheduling) and tiers done; analytics, Blasts, earnings next | **In progress** |
+| 6–7 | Fan app and messaging, storage, Supabase Auth switch, payments and ledger, release | Planned |
 
 **Payments are not active.** No payment provider is registered, and checkout always returns an unavailable quote. **Nothing is deployed.**

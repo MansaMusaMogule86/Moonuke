@@ -1,6 +1,6 @@
 # Current status
 
-**Branch:** `claude/cool-noether-uvf5h7`. **Last code commit:** `07e2002`. **Deployed:** no. **Payments active:** no.
+**Branch:** `claude/cool-noether-uvf5h7`. **Last code commit:** `237e6cc`. **Deployed:** no. **Payments active:** no.
 
 ## Completed phases
 
@@ -37,6 +37,9 @@
 | 6 | Fan app server: vault, purchases, memberships, notifications (RLS, tests) | `2043552` |
 | 6 | Fan app UI and e2e | `d35abcf` |
 | 6 | Docs | `07e2002` |
+| 7a | Messaging server: permissions, risk rules, moderation (RLS, tests) | `2cfa7eb` |
+| 7a | Messaging UI, house review, e2e | `2076024` |
+| 7a | Docs | `237e6cc` |
 
 What Phase 4 delivered:
 - White-glove cases and the pipeline board.
@@ -69,30 +72,38 @@ Phase 6, the fan app (details in `docs/phase-6-architecture.md`):
 - `/library/purchases`: live entitlement state; no amounts are shown, because no payments exist.
 - `/notifications`: read and unread, with an unread badge; ready for Messaging and Blasts.
 
+Phase 7a, messaging (details in `docs/phase-7-messaging.md`):
+- Free text DMs between creators and their members, with near-real-time updates (polling).
+- Creator settings; mute, restrict and block.
+- Rule-based risk scoring: reject, or hold for house review. Rate limits, idempotency and automatic pauses.
+- Message reports with minimal, audited house review.
+- Audit-first exceptional access.
+- Notifications without message text.
+- Blasts (7b) are next. Attachments and paid features are blocked by storage and payments.
+
 What's still open is in `docs/NEXT_PHASE.md`.
 
-## Test results (last full local run: `pnpm verify` at `07e2002`, PASS, ~7.5 min)
+## Test results (last full local run: `pnpm verify` at `237e6cc`, PASS, ~7.5 min)
 This was a **local** run. GitHub Actions did not run.
 
 | Step | Result |
 |---|---|
 | TypeScript strict | pass |
 | Dependency audit (`pnpm audit --prod`) | no known vulnerabilities |
-| Vitest: UI and PostgreSQL security tests, including schema lint | 183 / 183 (19 files) |
+| Vitest: UI and PostgreSQL security tests, including schema lint | 197 / 197 (20 files) |
 | Production build, env-safety check | pass |
-| Browser, Phase 1 (homepage and axe) | 17 / 17 |
-| Browser, Phase 2 (access, entitlements, axe) | 70 / 70 |
-| Browser, Phase 3 (recovery, MFA, safety, verification, axe) | 66 / 66 |
-| Browser, Phase 4 (white-glove flow, profile import, axe) | 43 / 43 |
-| Browser, Phase 5 (studio posts, tiers, analytics, axe) | 39 / 39 |
-| Browser, Phase 6 (fan app, signed media, cancellation, notifications, axe) | 41 / 41 |
-| Browser, release hardening (404s, headers, health, leaks, axe) | 21 / 21 |
-| Backup and restore drill | 28 tables, 62 policies, 22 definer functions, 8 triggers matched |
+| Browser, Phases 1–4 | 17 / 17, 70 / 70, 66 / 66, 43 / 43 |
+| Browser, Phase 5 (studio) | 39 / 39 |
+| Browser, Phase 6 (fan app) | 41 / 41 |
+| Browser, Phase 7 (messaging) | 33 / 33 |
+| Browser, release hardening | 21 / 21 |
+| Backup and restore drill | 32 tables, 68 policies, 39 definer functions, 10 triggers matched |
 
 ## Known issues and limitations
 - **Auth:** our own implementation; the Supabase switch is planned, not done. There's no ID-verification vendor; checks are manual.
 - **Studio:** no uploads, Blasts or earnings yet; analytics are counts only.
-- **Fan app:** no messaging, tips, notification preferences or email or push notifications. The unread badge updates on navigation, not live. Memberships never renew, because there's no billing. Scheduled posts go live silently, with no notification.
+- **Messaging:** text only, no attachments (storage not approved) and no paid messages or tips (payments). Updates arrive by polling, not websockets. Not end-to-end encrypted. No separate moderator role; appeals aren't built yet.
+- **Fan app:** no tips, notification preferences or email or push notifications. The unread badge updates on navigation, not live. Memberships never renew, because there's no billing. Scheduled posts go live silently, with no notification.
 - **Media:** placeholder SVGs only. No uploads, no object storage, no CSAM/NCII hash-matching (required before real uploads).
 - **Email:** never sent through a real SMTP provider.
 - **AI:** the Claude adapter is typechecked against the official SDK but **never called live** (no key, no cost).

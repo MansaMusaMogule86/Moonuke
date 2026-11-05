@@ -1,6 +1,6 @@
 # Current status
 
-**Branch:** `claude/cool-noether-uvf5h7`. **Last code commit:** `237e6cc`. **Deployed:** no. **Payments active:** no.
+**Branch:** `claude/cool-noether-uvf5h7`. **Last code commit:** `cb942bc`. **Deployed:** no. **Payments active:** no.
 
 ## Completed phases
 
@@ -40,6 +40,9 @@
 | 7a | Messaging server: permissions, risk rules, moderation (RLS, tests) | `2cfa7eb` |
 | 7a | Messaging UI, house review, e2e | `2076024` |
 | 7a | Docs | `237e6cc` |
+| 7b/7c | Blasts and appeals server (RLS, worker, tests) | `6f698aa` |
+| 7b/7c | Blasts and appeals UI and e2e | `3584a0b` |
+| 7b/7c | Docs | `cb942bc` |
 
 What Phase 4 delivered:
 - White-glove cases and the pipeline board.
@@ -79,30 +82,35 @@ Phase 7a, messaging (details in `docs/phase-7-messaging.md`):
 - Message reports with minimal, audited house review.
 - Audit-first exceptional access.
 - Notifications without message text.
-- Blasts (7b) are next. Attachments and paid features are blocked by storage and payments.
+- Blasts (7b):
+  - Segments, custom member lists, templates and scheduling.
+  - An idempotent background worker (`pnpm blasts:run`).
+  - Aggregate delivery, read and reply counts; fan opt-out.
+- Appeals of messaging pauses (7c).
+- Attachments and paid features are blocked by storage and payments. The full list of blocked work is in `docs/NEXT_PHASE.md`.
 
 What's still open is in `docs/NEXT_PHASE.md`.
 
-## Test results (last full local run: `pnpm verify` at `237e6cc`, PASS, ~7.5 min)
+## Test results (last full local run: `pnpm verify` at `cb942bc`, PASS, ~8.5 min)
 This was a **local** run. GitHub Actions did not run.
 
 | Step | Result |
 |---|---|
 | TypeScript strict | pass |
 | Dependency audit (`pnpm audit --prod`) | no known vulnerabilities |
-| Vitest: UI and PostgreSQL security tests, including schema lint | 197 / 197 (20 files) |
+| Vitest: UI and PostgreSQL security tests, including schema lint | 204 / 204 (21 files) |
 | Production build, env-safety check | pass |
 | Browser, Phases 1–4 | 17 / 17, 70 / 70, 66 / 66, 43 / 43 |
 | Browser, Phase 5 (studio) | 39 / 39 |
 | Browser, Phase 6 (fan app) | 41 / 41 |
-| Browser, Phase 7 (messaging) | 33 / 33 |
+| Browser, Phase 7 (messaging, Blasts, appeals) | 44 / 44 |
 | Browser, release hardening | 21 / 21 |
-| Backup and restore drill | 32 tables, 68 policies, 39 definer functions, 10 triggers matched |
+| Backup and restore drill | 39 tables, 79 policies, 46 definer functions, 10 triggers matched |
 
 ## Known issues and limitations
 - **Auth:** our own implementation; the Supabase switch is planned, not done. There's no ID-verification vendor; checks are manual.
 - **Studio:** no uploads, Blasts or earnings yet; analytics are counts only.
-- **Messaging:** text only, no attachments (storage not approved) and no paid messages or tips (payments). Updates arrive by polling, not websockets. Not end-to-end encrypted. No separate moderator role; appeals aren't built yet.
+- **Messaging:** text only, no attachments (storage not approved) and no paid messages or tips (payments). Updates arrive by polling, not websockets. Not end-to-end encrypted. No separate moderator role. Appeals cover messaging pauses only.
 - **Fan app:** no tips, notification preferences or email or push notifications. The unread badge updates on navigation, not live. Memberships never renew, because there's no billing. Scheduled posts go live silently, with no notification.
 - **Media:** placeholder SVGs only. No uploads, no object storage, no CSAM/NCII hash-matching (required before real uploads).
 - **Email:** never sent through a real SMTP provider.

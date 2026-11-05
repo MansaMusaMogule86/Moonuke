@@ -22,6 +22,10 @@ const schema = z.object({
   EMAIL_TRANSPORT: z.enum(["dev", "smtp", "disabled"]).default("dev"),
   SMTP_URL: z.string().optional(),
   EMAIL_FROM: z.string().optional(),
+  // AI-assisted profile drafting. "template" is local and free; "anthropic" is opt-in and billed by Anthropic.
+  AI_PROVIDER: z.enum(["template", "anthropic", "disabled"]).default("template"),
+  ANTHROPIC_API_KEY: z.string().optional(),
+  AI_MODEL: z.string().regex(/^claude-[a-z0-9-]+$/).default("claude-opus-5-5"),
 });
 
 export type Env = z.infer<typeof schema> & { APP_SECRET: string };
@@ -35,6 +39,7 @@ export function productionProblems(e: z.infer<typeof schema>): string[] {
   if (!process.env.TRUSTED_PROXY) p.push("TRUSTED_PROXY must be set explicitly (none | vercel | cloudflare | hops:N).");
   if (e.EMAIL_TRANSPORT === "dev") p.push("EMAIL_TRANSPORT=dev is not allowed in production (use smtp or disabled).");
   if (e.EMAIL_TRANSPORT === "smtp" && (!e.SMTP_URL || !e.EMAIL_FROM)) p.push("EMAIL_TRANSPORT=smtp requires SMTP_URL and EMAIL_FROM.");
+  if (e.AI_PROVIDER === "anthropic" && !e.ANTHROPIC_API_KEY) p.push("AI_PROVIDER=anthropic requires ANTHROPIC_API_KEY.");
   return p;
 }
 

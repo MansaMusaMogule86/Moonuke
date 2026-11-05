@@ -70,6 +70,8 @@ export async function redeemInvitation(
       [input.email, passwordHash, inv.intended_role, input.alias, inv.id],
     );
     await q.query(`insert into app.applications (user_id, invitation_id) values ($1, $2)`, [user!.id, inv.id]);
+    // White-glove: attach the new account to its onboarding case, if the house opened one.
+    await q.query(`update app.onboarding_cases set user_id = $1, updated_at = now() where invitation_id = $2 and user_id is null`, [user!.id, inv.id]);
     await audit(q, {
       actorId: user!.id,
       action: "application.submit",

@@ -16,6 +16,7 @@ export type SeedResult = {
   creatorIds: Record<string, string>;
   inviteToken: string; // active, 3 uses, member
   creatorInviteToken: string; // active, 1 use, creator
+  lioInviteToken: string; // white-glove creator invitation (case not yet applied)
 };
 
 /**
@@ -111,6 +112,27 @@ export async function seed(): Promise<SeedResult> {
       [rheaId],
     );
 
+    // White-glove onboarding: Rhea has a concierge case; Lio was invited but hasn't applied yet.
+    await q.query(
+      `insert into app.onboarding_cases (user_id, invitee_name, invitee_email, concierge_notes, welcome_call_at, created_by)
+       values ($1, 'Rhea Calder', 'rhea@moonuke.test', 'Prefers email. Kiln schedule: mornings only.', now() + interval '2 days', $2)`,
+      [rheaId, ownerId],
+    );
+    await q.query(
+      `insert into app.social_connections (user_id, platform, handle, url, proof_code) values ($1, 'instagram', 'rhea.kiln', 'https://www.instagram.com/rhea.kiln', 'mnk-5eed0001')`,
+      [rheaId],
+    );
+    const lioToken = randomToken();
+    const lioInv = await q.one<{ id: string }>(
+      `insert into app.invitations (token_hash, intended_role, email, max_uses, expires_at, note, created_by)
+       values ($1, 'creator', 'lio@example.com', 1, now() + interval '14 days', 'White-glove: Lio Marchand', $2) returning id`,
+      [sha256(lioToken), ownerId],
+    );
+    await q.query(
+      `insert into app.onboarding_cases (invitation_id, invitee_name, invitee_email, concierge_notes, created_by) values ($1, 'Lio Marchand', 'lio@example.com', 'Met at Paris Photo. Large Instagram following.', $2)`,
+      [lioInv!.id, ownerId],
+    );
+
     // Invitations
     const inviteToken = randomToken();
     const inv = await q.one<{ id: string }>(
@@ -140,6 +162,6 @@ export async function seed(): Promise<SeedResult> {
 
     await q.query(`insert into app.audit_log (actor_id, action, metadata) values ($1, 'seed.run', '{"env":"dev"}')`, [ownerId]);
 
-    return { ownerId, memberId, member2Id, pendingId, creatorIds, inviteToken, creatorInviteToken };
+    return { ownerId, memberId, member2Id, pendingId, creatorIds, inviteToken, creatorInviteToken, lioInviteToken: lioToken };
   });
 }

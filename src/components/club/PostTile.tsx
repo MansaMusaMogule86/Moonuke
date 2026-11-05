@@ -14,7 +14,7 @@ const date = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { day: "
 export function PostTile({ post, vipTierId, memberTierId, canReport = false }: { post: PostView; vipTierId?: string; memberTierId?: string; canReport?: boolean }) {
   const locked = !post.unlocked;
   return (
-    <article className="group overflow-hidden rounded-[var(--radius-xl)] border border-line bg-ink-2" aria-label={`${accessLabel[post.access]} post: ${post.teaser}`}>
+    <article id={`post-${post.id}`} className="group scroll-mt-24 overflow-hidden rounded-[var(--radius-xl)] border border-line bg-ink-2" aria-label={`${accessLabel[post.access]} post: ${post.teaser}`}>
       <div className="relative aspect-[4/5] overflow-hidden">
         {locked ? (
           <div className="grain absolute inset-0 bg-[radial-gradient(120%_90%_at_30%_20%,#2a2217_0%,#120f0b_45%,#070707_100%)]" />

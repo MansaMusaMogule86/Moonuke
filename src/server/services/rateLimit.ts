@@ -22,6 +22,7 @@ export const LIMITS = {
   aiAssist: { limit: 30, windowSec: 24 * 60 * 60 },
   profileImport: { limit: 20, windowSec: 24 * 60 * 60 },
   postWrite: { limit: 120, windowSec: 60 * 60 },
+  membershipChange: { limit: 30, windowSec: 60 * 60 },
   blockToggle: { limit: 60, windowSec: 60 * 60 },
 } satisfies Record<string, Limit>;
 

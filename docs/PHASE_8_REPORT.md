@@ -113,4 +113,5 @@ Once the owner chooses providers:
 Without providers, the next useful work is accessibility and UX polish within the approved identity, plus a load-test plan.
 
 ## 9. Commit and push
-The work is in the commits listed in `git log 566cedf..HEAD`. The push status is recorded in `docs/CURRENT_STATUS.md` after the push.
+- **Commits:** `1a2bf42`, `b8b0d94`, `147045c`, `8f6a0d5`, `69ac93d`.
+- **Push:** pushed to `origin/claude/cool-noether-uvf5h7` (`566cedf..69ac93d`). No force-push.

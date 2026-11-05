@@ -135,7 +135,7 @@ export async function getProfile(viewer: Viewer, handle: string): Promise<Profil
         `select p.id, p.access, p.teaser, p.media_kind, p.media_count, p.published_at, p.price_cents, p.currency,
                 (pc.post_id is not null) as unlocked, pc.body, pc.media
            from app.posts p left join app.post_content pc on pc.post_id = p.id
-          where p.creator_id = $1 order by p.published_at desc limit 60`,
+          where p.creator_id = $1 and p.published_at <= now() order by p.published_at desc limit 60`,
         [c.user_id],
       );
     const sub = await q.one<{ kind: "member" | "vip" }>(

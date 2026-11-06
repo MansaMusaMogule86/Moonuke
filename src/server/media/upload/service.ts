@@ -4,6 +4,7 @@ import { system } from "@/server/db";
 import type { Viewer } from "@/server/auth/permissions";
 import { AppError } from "@/server/errors";
 import { requireFeature } from "@/server/flags";
+import { openCase } from "@/server/services/safeguarding";
 import { audit } from "@/server/services/audit";
 import { validateFile } from "./signature";
 import type { SafetyScanner, StorageAdapter } from "./types";
@@ -61,13 +62,24 @@ export async function uploadMedia(viewer: Viewer, purpose: Purpose, declaredMime
     await setState(id.id, "rejected", "storage error");
     throw new AppError("validation", "Upload failed. Please try again.");
   }
+  // Fingerprints removed by a takedown or safeguarding decision can't come back.
+  const blocked = await system((q) => q.one(`select 1 from app.blocked_media_hashes b join app.media_uploads u on u.sha256 = b.hash where u.id = $1`, [id.id]));
+  if (blocked) {
+    await setState(id.id, "quarantined", "blocked fingerprint");
+    await system((q) => audit(q, { actorId: null, action: "media.blocked_fingerprint", targetType: "media", targetId: id.id, metadata: { owner: viewer.id } }));
+    return { id: id.id, status: "quarantined" as const };
+  }
   const scan = await deps.scanner.scan(bytes, verdict.sniffed.mime);
   if (scan.verdict === "clean") {
     await setState(id.id, "clean");
   } else if (scan.verdict === "match") {
     // Quarantine: keep the object for evidence preservation; never serve it.
     await setState(id.id, "quarantined", `scanner match (${scan.list})`);
-    await system((q) => audit(q, { actorId: null, action: "media.quarantined", targetType: "media", targetId: id.id, metadata: { owner: viewer.id, list: scan.list } }));
+    await system(async (q) => {
+      await audit(q, { actorId: null, action: "media.quarantined", targetType: "media", targetId: id.id, metadata: { owner: viewer.id, list: scan.list } });
+      // A hash-list match is a safeguarding matter: preserve and escalate (never reported automatically).
+      await openCase(q, { sourceType: "scan", sourceId: id.id, summary: `Upload matched hash list ${scan.list}.`, uploadId: id.id, userId: viewer.id });
+    });
   } else {
     await setState(id.id, "uploaded", "scan pending retry");
   }
@@ -96,6 +108,7 @@ export async function cleanupAbandoned(storage: StorageAdapter | null, now = new
     q.query<{ id: string; storage_key: string | null }>(
       `update app.media_uploads set status = 'abandoned', reason = 'abandoned', updated_at = now()
         where status in ('pending', 'uploaded', 'scanning') and created_at < $1::timestamptz - make_interval(hours => $2)
+          and not app.under_hold('media_upload', id)
         returning id, storage_key`,
       [now, UPLOAD_LIMITS.abandonAfterHours],
     ),

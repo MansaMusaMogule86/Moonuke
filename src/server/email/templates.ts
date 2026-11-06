@@ -93,6 +93,24 @@ export const emails = {
       { label: "Open the moderation queue", url: p.url },
       "Details are intentionally not included in email.",
     ),
+  takedownAlert: (p: { category: string; reference: string; dueAt: Date; url: string }) =>
+    make(
+      "takedown_alert",
+      `${brand.name}: takedown notice ${p.reference}`,
+      "A takedown notice was received.",
+      [`Category: ${p.category.replace(/_/g, " ")}.`, `Decide by ${p.dueAt.toUTCString()} (48 hours from receipt).`],
+      { label: "Open takedown notices", url: p.url },
+      "Details are intentionally not included in email.",
+    ),
+  safeguardingAlert: (p: { reference: string; url: string }) =>
+    make(
+      "safeguarding_alert",
+      `${brand.name}: urgent safeguarding case ${p.reference}`,
+      "An urgent safeguarding case was opened.",
+      ["The content was withheld and preserved automatically. A trained person must assess it now.", "Do not download, forward or copy the content."],
+      { label: "Open safeguarding", url: p.url },
+      "Details are intentionally not included in email.",
+    ),
 };
 
 export type SecurityEvent = "password_changed" | "mfa_enabled" | "mfa_disabled" | "recovery_code_used" | "sessions_revoked" | "owner_signin";

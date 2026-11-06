@@ -38,6 +38,10 @@ export type StudioPost = {
   hidden: boolean;
   purchased: boolean;
   updatedAt: string;
+  /** Pre-publication review: not_required | pending | approved | rejected. */
+  review: "not_required" | "pending" | "approved" | "rejected";
+  reviewNote: string | null;
+  hiddenReason: string | null;
 };
 
 export type PostInput = {
@@ -110,7 +114,7 @@ export function normalizePost(input: PostInput, now = new Date()) {
   return { access: input.access, priceCents, teaser, body, mediaKind: input.mediaKind, mediaCount, publishedAt };
 }
 
-type Row = { id: string; access: PostAccess; price_cents: number | null; teaser: string; body: string | null; media_kind: StudioPost["mediaKind"]; media_count: number; published_at: Date | null; hidden_at: Date | null; purchased: boolean; updated_at: Date };
+type Row = { id: string; access: PostAccess; price_cents: number | null; teaser: string; body: string | null; media_kind: StudioPost["mediaKind"]; media_count: number; published_at: Date | null; hidden_at: Date | null; purchased: boolean; updated_at: Date; review_state: StudioPost["review"]; review_note: string | null; hidden_reason: string | null };
 const toPost = (r: Row): StudioPost => ({
   id: r.id,
   access: r.access,
@@ -124,9 +128,12 @@ const toPost = (r: Row): StudioPost => ({
   hidden: !!r.hidden_at,
   purchased: r.purchased,
   updatedAt: new Date(r.updated_at).toISOString(),
+  review: r.review_state,
+  reviewNote: r.review_note,
+  hiddenReason: r.hidden_reason,
 });
 const SELECT = `select p.id, p.access, p.price_cents, p.teaser, pc.body, p.media_kind, p.media_count, p.published_at, p.hidden_at,
-                       app.post_has_purchases(p.id) as purchased, p.updated_at
+                       app.post_has_purchases(p.id) as purchased, p.updated_at, p.review_state, p.review_note, p.hidden_reason
                   from app.posts p left join app.post_content pc on pc.post_id = p.id`;
 
 export async function myPosts(creator: Viewer): Promise<StudioPost[]> {
@@ -144,6 +151,9 @@ export async function myPost(creator: Viewer, id: string): Promise<StudioPost | 
 
 const dbError = (e: unknown): never => {
   const code = (e as { code?: string }).code;
+  const hint = (e as { hint?: string }).hint;
+  if (hint === "legal_hold") throw new AppError("conflict", "This post is preserved for a legal reason, so it can't be changed or deleted.");
+  if (hint === "blocked_media") throw new AppError("validation", "This media can't be published here.");
   if (code === "42501") throw new AppError("conflict", "This post has been bought, so its access and publish time are fixed.");
   if (code === "23503") throw new AppError("validation", "Save your profile first.");
   throw e;
@@ -189,7 +199,7 @@ export async function updatePost(creator: Viewer, id: string, input: PostInput):
       )
       .catch(dbError);
     if (!r) throw new AppError("not_found", "Post not found.");
-    await q.query(`update app.post_content set body = $2 where post_id = $1`, [id, p.body || null]);
+    await q.query(`update app.post_content set body = $2 where post_id = $1`, [id, p.body || null]).catch(dbError);
     await audit(q, { actorId: creator.id, action: "post.update", targetType: "post", targetId: id, metadata: { access: p.access, state: stateOf(publishedAt) } });
   });
 }
@@ -200,7 +210,7 @@ export async function deletePost(creator: Viewer, id: string): Promise<void> {
     const cur = await q.one<{ purchased: boolean }>(`select app.post_has_purchases(id) as purchased from app.posts where id = $1 and creator_id = $2`, [id, creator.id]);
     if (!cur) throw new AppError("not_found", "Post not found.");
     if (cur.purchased) throw new AppError("conflict", "This post has been bought, so it can't be deleted.");
-    const r = await q.one(`delete from app.posts where id = $1 and creator_id = $2 returning 1`, [id, creator.id]);
+    const r = await q.one(`delete from app.posts where id = $1 and creator_id = $2 returning 1`, [id, creator.id]).catch(dbError);
     if (!r) throw new AppError("not_found", "Post not found.");
     await audit(q, { actorId: creator.id, action: "post.delete", targetType: "post", targetId: id });
   });

@@ -8,6 +8,7 @@ import { enqueue } from "@/server/email/outbox";
 import { emails } from "@/server/email/templates";
 import { setSuspended } from "./admin";
 import { audit } from "./audit";
+import { openCase, openCaseFor } from "./safeguarding";
 
 export const REPORT_REASONS = [
   { value: "harassment", label: "Harassment or threats" },
@@ -116,6 +117,18 @@ export async function fileReport(viewer: Viewer, input: ReportInput, meta: { ipH
       }
       const owner = await q.one<{ id: string; email: string }>(`select id, email::text as email from app.users where role = 'owner'`);
       if (owner) await enqueue(q, owner.email, emails.criticalReport({ reason: input.reason, url: `${appUrl()}/admin/moderation` }), owner.id);
+      // Child-safety concerns also go to the separate safeguarding queue, with
+      // the content and the account preserved under legal hold.
+      if (input.reason === "underage_concern") {
+        await openCase(q, {
+          sourceType: "report",
+          sourceId: id,
+          summary: `Member report (${input.targetType}): someone may be under 18.`,
+          postId: input.targetType === "post" ? input.targetId : null,
+          messageId: input.targetType === "message" ? input.targetId : null,
+          userId: targetUserId,
+        });
+      }
     });
   }
   return { id, critical, targetUserId };
@@ -196,6 +209,9 @@ export async function moderate(
   );
   if (!r) throw new AppError("not_found", "Report not found.");
   if ((action === "hide_post" || action === "restore_post") && r.target_type !== "post") throw new AppError("validation", "Only posts can be hidden.");
+  if ((action === "dismiss" || action === "restore_post") && (await openCaseFor({ reportId, postId: r.target_type === "post" ? r.target_id : undefined }))) {
+    throw new AppError("conflict", "This is part of a safeguarding case. It can only be resolved there.");
+  }
   if (action === "suspend_user") {
     if (!r.target_user_id) throw new AppError("validation", "No account is attached to this report.");
     await setSuspended(viewer, r.target_user_id, true, opts.note ?? `Moderation: report ${reportId.slice(0, 8)}`, meta).catch((e) => {
@@ -218,7 +234,10 @@ export async function moderate(
       postHidden = true;
     }
     if (action === "restore_post") {
-      await q.query(`update app.posts set hidden_at = null, hidden_reason = null where id = $1`, [r.target_id]);
+      await q.query(`update app.posts set hidden_at = null, hidden_reason = null where id = $1`, [r.target_id]).catch((e) => {
+        if ((e as { hint?: string }).hint === "consent_invalid") throw new AppError("conflict", "A participant's consent or verification is no longer valid, so this post stays hidden.");
+        throw e;
+      });
       postHidden = false;
     }
     await q.query(

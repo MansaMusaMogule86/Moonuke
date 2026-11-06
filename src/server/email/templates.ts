@@ -102,6 +102,15 @@ export const emails = {
       { label: "Open takedown notices", url: p.url },
       "Details are intentionally not included in email.",
     ),
+  decisionNotice: (p: { url: string }) =>
+    make(
+      "decision_notice",
+      `${brand.name}: a decision about your content`,
+      "The house made a decision about your content.",
+      ["You can read the reasons, and appeal if you disagree, in your Studio."],
+      { label: "Open notices", url: p.url },
+      "Details are intentionally not included in email.",
+    ),
   safeguardingAlert: (p: { reference: string; url: string }) =>
     make(
       "safeguarding_alert",

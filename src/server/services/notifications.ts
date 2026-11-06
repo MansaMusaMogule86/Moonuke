@@ -49,6 +49,14 @@ function present(r: Row): FanNotification {
       };
     case "proposal.received":
       return { ...base, title: r.data.source === "import" ? "Imported details are ready to review" : "The house prepared a profile draft for you", detail: "Nothing changes until you accept it.", href: "/studio" };
+    case "system":
+      return {
+        ...base,
+        title: typeof r.data.title === "string" ? r.data.title.slice(0, 120) : "Notification",
+        detail: null,
+        // Internal paths only.
+        href: typeof r.data.href === "string" && /^\/[a-z/-]*$/.test(r.data.href) ? r.data.href : null,
+      };
     default:
       // Future kinds (messages, Blasts) render generically until their UI exists.
       return { ...base, title: typeof r.data.title === "string" ? r.data.title.slice(0, 120) : "Notification", detail: null, href: null };

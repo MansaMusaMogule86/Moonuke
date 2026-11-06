@@ -2,6 +2,7 @@ import "server-only";
 import { asViewer } from "@/server/db";
 import { can, type Viewer } from "@/server/auth/permissions";
 import { AppError } from "@/server/errors";
+import { announceNotices, issueNotice, type Issued } from "./notices";
 
 // =====================================================================
 // Pre-publication review. A post waiting for review (or rejected) is
@@ -51,12 +52,20 @@ export async function reviewQueue(v: Viewer): Promise<ReviewItem[]> {
 export async function decideReview(v: Viewer, postId: string, approve: boolean, note?: string): Promise<"approved" | "rejected"> {
   assertOwner(v);
   if (!approve && (note?.trim().length ?? 0) < 5) throw new AppError("validation", "Tell the creator why (5+ characters).", "note");
-  return asViewer(v, async (q) => {
+  let issued: Issued | null = null;
+  const s = await asViewer(v, async (q) => {
     try {
-      return (await q.one<{ s: "approved" | "rejected" }>(`select app.decide_post_review($1, $2, $3) as s`, [postId, approve, note?.trim() ?? ""]))!.s;
+      const s = (await q.one<{ s: "approved" | "rejected" }>(`select app.decide_post_review($1, $2, $3) as s`, [postId, approve, note?.trim() ?? ""]))!.s;
+      if (s === "rejected") {
+        const p = (await q.one<{ creator_id: string; teaser: string }>(`select creator_id, teaser from app.posts where id = $1`, [postId]))!;
+        issued = await issueNotice(q, { kind: "review_rejected", userId: p.creator_id, postId, sourceType: "review", label: p.teaser, note });
+      }
+      return s;
     } catch (e) {
       if ((e as { code?: string }).code === "P0002") throw new AppError("conflict", "This post is no longer waiting for review.");
       throw e;
     }
   });
+  await announceNotices([issued]).catch(() => {});
+  return s;
 }

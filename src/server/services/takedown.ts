@@ -9,6 +9,7 @@ import { keyedHash, reference, seal, unseal } from "@/server/safety/seal";
 import { audit } from "./audit";
 import { hit, hitIp } from "./rateLimit";
 import { openCase, openCaseFor } from "./safeguarding";
+import { announceNotices, issueNotice, type Issued } from "./notices";
 
 // =====================================================================
 // Public takedown notices. Anyone can file one without an account; filing
@@ -225,7 +226,8 @@ export async function decideTakedown(
     throw new AppError("conflict", "This content is part of a safeguarding case. It can only be resolved there.");
   }
 
-  return asViewer(v, async (q) => {
+  const issued: (Issued | null)[] = [];
+  const result = await asViewer(v, async (q) => {
     let copies = 0;
     let status = notice.status;
     if (decision === "in_review") status = "in_review";
@@ -253,6 +255,14 @@ export async function decideTakedown(
           [notice.target_post_id, id],
         );
         copies = ids.length;
+        // A statement of reasons to each affected creator (requester never identified).
+        const owners = await q.query<{ id: string; creator_id: string; teaser: string }>(`select id, creator_id, teaser from app.posts where id = any($1::uuid[])`, [all]);
+        for (const p of owners) {
+          issued.push(await issueNotice(q, {
+            kind: "takedown_removed", userId: p.creator_id, postId: p.id, sourceType: "takedown", sourceId: id,
+            label: p.teaser, note: n || null, category: notice.category, copy: p.id !== notice.target_post_id,
+          }));
+        }
       }
     }
     if (decision === "reject" && notice.target_post_id) {
@@ -270,6 +280,8 @@ export async function decideTakedown(
     await audit(q, { actorId: v.id, action: `takedown.${decision}`, targetType: "takedown", targetId: id, ipHash: meta.ipHash, metadata: { copies } });
     return { status: final, copies };
   });
+  await announceNotices(issued).catch(() => {});
+  return result;
 }
 
 export async function takedownCounts(v: Viewer) {

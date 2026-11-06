@@ -9,6 +9,7 @@ import { emails } from "@/server/email/templates";
 import { setSuspended } from "./admin";
 import { audit } from "./audit";
 import { openCase, openCaseFor } from "./safeguarding";
+import { announceNotices, issueNotice, type Issued } from "./notices";
 
 export const REPORT_REASONS = [
   { value: "harassment", label: "Harassment or threats" },
@@ -227,11 +228,14 @@ export async function moderate(
     : "actioned";
   const closes = nextStatus === "actioned" || nextStatus === "dismissed";
 
-  return asViewer(viewer, async (q) => {
+  let issued: Issued | null = null;
+  const out = await asViewer(viewer, async (q) => {
     let postHidden: boolean | undefined;
     if (action === "hide_post") {
       await q.query(`update app.posts set hidden_at = coalesce(hidden_at, now()), hidden_reason = $2 where id = $1`, [r.target_id, opts.note ?? "Removed by moderation"]);
       postHidden = true;
+      const p = await q.one<{ creator_id: string; teaser: string }>(`select creator_id, teaser from app.posts where id = $1`, [r.target_id]);
+      if (p) issued = await issueNotice(q, { kind: "moderation_removed", userId: p.creator_id, postId: r.target_id, sourceType: "report", sourceId: reportId, label: p.teaser, note: opts.note });
     }
     if (action === "restore_post") {
       await q.query(`update app.posts set hidden_at = null, hidden_reason = null where id = $1`, [r.target_id]).catch((e) => {
@@ -253,6 +257,8 @@ export async function moderate(
     await audit(q, { actorId: viewer.id, action: `moderation.${action}`, targetType: "report", targetId: reportId, ipHash: meta.ipHash, metadata: action === "escalate" ? { ref: opts.escalationRef } : {} });
     return { status: nextStatus, postHidden };
   });
+  await announceNotices([issued]).catch(() => {});
+  return out;
 }
 
 export async function moderationCounts(viewer: Viewer) {

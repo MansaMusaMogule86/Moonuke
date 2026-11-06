@@ -4,6 +4,7 @@ import { can, type Viewer } from "@/server/auth/permissions";
 import { AppError } from "@/server/errors";
 import { seal, unseal } from "@/server/safety/seal";
 import { audit } from "./audit";
+import { announceNotices, issueNotice, type Issued } from "./notices";
 
 // =====================================================================
 // Participant identity, age and consent records.
@@ -97,7 +98,18 @@ export async function addConsent(v: Viewer, participantId: string, input: { scop
 /** Creator (for their own participant) or owner (from a notice). Returns how many posts were hidden. */
 export async function withdrawConsent(v: Viewer, consentId: string, reason: string): Promise<number> {
   if (!(v.role === "creator" && v.status === "active") && !can(v, "moderation.review")) throw new AppError("forbidden", "Not allowed.");
-  return asViewer(v, async (q) => (await q.one<{ n: number }>(`select app.withdraw_consent($1, $2) as n`, [consentId, reason.trim().slice(0, 500)]).catch(pgError))!.n);
+  let issued: Issued | null = null;
+  const n = await asViewer(v, async (q) => {
+    const n = (await q.one<{ n: number }>(`select app.withdraw_consent($1, $2) as n`, [consentId, reason.trim().slice(0, 500)]).catch(pgError))!.n;
+    // Withdrawn by the house: the creator gets a statement of reasons.
+    if (v.role === "owner") {
+      const p = await q.one<{ participant_id: string; creator_id: string; label: string }>(`select * from app.participant_ref(null, $1)`, [consentId]);
+      if (p) issued = await issueNotice(q, { kind: "consent_withdrawn", userId: p.creator_id, participantId: p.participant_id, sourceType: "consent", sourceId: consentId, label: p.label, note: reason });
+    }
+    return n;
+  });
+  await announceNotices([issued]).catch(() => {});
+  return n;
 }
 
 export type PostParticipant = { participant_id: string; label: string; consent_id: string; consent_active: boolean };
@@ -132,5 +144,13 @@ export async function revealIdentity(v: Viewer, id: string, purpose: string): Pr
 
 export async function reviewParticipant(v: Viewer, id: string, decision: "verified" | "rejected" | "revoked", note?: string) {
   assertOwner(v);
-  await asViewer(v, (q) => q.query(`select app.review_participant($1, $2, $3)`, [id, decision, note?.trim() ?? ""]).catch(pgError));
+  let issued: Issued | null = null;
+  await asViewer(v, async (q) => {
+    await q.query(`select app.review_participant($1, $2, $3)`, [id, decision, note?.trim() ?? ""]).catch(pgError);
+    if (decision === "revoked") {
+      const p = (await q.one<{ creator_id: string; label: string }>(`select creator_id, label from app.participant_ref($1, null)`, [id]))!;
+      issued = await issueNotice(q, { kind: "verification_revoked", userId: p.creator_id, participantId: id, sourceType: "participant", label: p.label, note });
+    }
+  });
+  await announceNotices([issued]).catch(() => {});
 }

@@ -11,6 +11,7 @@ import { decideTakedown, submitTakedown, takedownContact, type RequesterRole, ty
 import { decideReview, setReviewMode } from "@/server/services/review";
 import { addConsent, addParticipant, revealIdentity, reviewParticipant, setPostParticipants, withdrawConsent, type DocType } from "@/server/services/participants";
 import { attestTraining, cyberTiplineDraft, decideCase, releaseHold, type CaseAction } from "@/server/services/safeguarding";
+import { decideAppeal, fileAppeal } from "@/server/services/notices";
 
 // Server actions for safety and compliance. Every action re-checks the
 // caller on the server; services check again, and RLS checks a third time.
@@ -253,5 +254,32 @@ export async function postParticipantsAction(_prev: FormState, fd: FormData): Pr
     return { status: "success", message: links.length ? "Saved. The post now waits for house review." : "Saved. No one else is named in this post." };
   } catch (e) {
     return fail(e);
+  }
+}
+
+// ---------------------------------------------------------------- notices and appeals
+
+export async function fileAppealAction(_prev: FormState, fd: FormData): Promise<FormState> {
+  const v = await requireViewer("club.discover");
+  const id = str(fd, "noticeId");
+  if (!uuid.safeParse(id).success) return bad;
+  try {
+    await fileAppeal(v, id, str(fd, "body"));
+    return { status: "success", message: "Appeal sent. A person will review it and you'll see the outcome here." };
+  } catch (e) {
+    return fail(e, { body: str(fd, "body") });
+  }
+}
+
+export async function decideAppealAction(_prev: FormState, fd: FormData): Promise<FormState> {
+  const v = await requireViewer("moderation.review");
+  const id = str(fd, "id");
+  const outcome = str(fd, "outcome");
+  if (!uuid.safeParse(id).success || (outcome !== "uphold" && outcome !== "overturn")) return bad;
+  try {
+    await decideAppeal(v, id, outcome, str(fd, "note"), await requestMeta());
+    return { status: "success", message: outcome === "overturn" ? "Overturned. The restriction was reversed where possible." : "Upheld. The creator sees your note." };
+  } catch (e) {
+    return fail(e, { note: str(fd, "note") });
   }
 }

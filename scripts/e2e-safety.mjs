@@ -171,6 +171,8 @@ await cp.getByLabel(/Country of the ID/).fill("GB");
 await cp.getByRole("button", { name: "Add person" }).click();
 check("under-18 participant refused", await visible(cp.getByText(/must be 18 or older/)));
 check("nothing stored for the refused person", (await one(`select count(*)::int as n from app.participants`)).n === 0);
+// React resets the form after the action returns; wait for that before refilling.
+await cp.waitForFunction(() => !document.querySelector('input[name="legalName"]')?.value);
 await cp.getByLabel("Full legal name").fill("Fictional Person");
 await cp.getByLabel("Date of birth").fill("1991-05-01");
 await cp.getByRole("button", { name: "Add person" }).click();

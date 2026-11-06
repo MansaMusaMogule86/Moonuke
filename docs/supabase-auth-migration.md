@@ -1,6 +1,17 @@
 # Plan: migrating authentication to Supabase Auth
 
-**Status:** plan only. Nothing has been switched. Per decision D1 (Phase 3), the switch happens only after this plan is **tested on a staging copy and approved**.
+**Status:** plan only. Nothing has been switched.
+
+> **2026-11-06:** the owner supplied a Supabase project and asked for the client packages.
+> - **Installed:** `@supabase/supabase-js` and `@supabase/ssr`.
+> - **Configured:** `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, validated in `src/server/env.ts`. The values are in `.env.local` only, which isn't committed.
+> - **Server client:** `src/server/supabase/server.ts`. It **refuses to run while `AUTH_PROVIDER=own`**, and there is deliberately no browser client.
+> - **Nothing else changed:** no data, schema or users were sent to Supabase, and the app still uses its own sign-in and Postgres.
+> - **Still open:**
+>   - A3 approval of the switch;
+>   - the §10 questions;
+>   - Supabase's acceptable-use position on adult content, in writing (DECISION_REGISTER P-6);
+>   - the plan (staging, Free-tier pausing) for this project. Per decision D1 (Phase 3), the switch happens only after this plan is **tested on a staging copy and approved**.
 
 ## 1. What exists today
 

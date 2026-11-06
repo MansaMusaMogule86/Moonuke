@@ -69,7 +69,7 @@ The research sources are listed at the end.
 | P-6 | Database host | Supabase (Postgres), Neon, or self-managed Postgres | Open. Adult-content acceptability under Supabase's AUP is **unclear** (§2) |
 | P-7 | Email (SMTP) | Any SMTP provider that accepts adult-platform transactional mail | Open (open question #7) |
 | P-8 | Hosting runtime | Cloudflare Workers through OpenNext, or a Node host | Open (§2) |
-| P-9 | Supabase Auth | Only if P-6 = Supabase | Open (A3, §10 questions) |
+| P-9 | Supabase Auth | Only if P-6 = Supabase | Open (A3, §10 questions). **2026-11-06:** project URL and publishable key supplied; client packages installed and prepared, but not active (`AUTH_PROVIDER=own`) |
 
 ### 1d. Infrastructure and deployment
 

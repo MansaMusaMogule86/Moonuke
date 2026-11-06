@@ -5,7 +5,8 @@ import { z } from "zod";
  * Server environment, validated once. Never import from client components.
  * Production refuses to start with unsafe or missing settings (see
  * instrumentation.ts and `pnpm env:check`). Every variable is server-only;
- * nothing is exposed with NEXT_PUBLIC_.
+ * nothing is exposed with NEXT_PUBLIC_, except the Supabase project URL and
+ * publishable key, which Supabase designs to be public.
  */
 const DEV_SECRET = "dev-only-secret-do-not-use-in-production-0123456789";
 
@@ -32,6 +33,10 @@ const schema = z.object({
   FEATURE_PAYMENTS: z.enum(["on", "off"]).default("off"),
   FEATURE_UPLOADS: z.enum(["on", "off"]).default("off"),
   AUTH_PROVIDER: z.enum(["own", "supabase"]).default("own"),
+  // Supabase project (prepared, not active: AUTH_PROVIDER stays "own" until A3 is approved).
+  // Public by design; never put the secret or service-role key in a NEXT_PUBLIC_ variable.
+  NEXT_PUBLIC_SUPABASE_URL: z.string().regex(/^https:\/\/[a-z0-9]{20}\.supabase\.co$/, "NEXT_PUBLIC_SUPABASE_URL must be https://<project-ref>.supabase.co").optional(),
+  NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: z.string().regex(/^sb_publishable_[A-Za-z0-9_-]{20,}$/, "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY must be a publishable key (sb_publishable_…), never a secret key").optional(),
   STORAGE_PROVIDER: z.enum(["none", "mock"]).default("none"),
   SCAN_PROVIDER: z.enum(["none", "mock"]).default("none"),
   // Phase 10: age assurance and geographic restrictions. OFF until the owner

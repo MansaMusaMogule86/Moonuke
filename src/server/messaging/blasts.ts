@@ -18,7 +18,8 @@ const keyFor = (blastId: string, fanId: string) => `bl${createHash("sha256").upd
 
 export type RunResult = { blasts: number; delivered: number; skipped: number; failed: number };
 
-export async function runBlasts(now = new Date()): Promise<RunResult> {
+/** `now` defaults to the database clock (a JS Date would truncate Postgres microseconds and miss just-due rows). */
+export async function runBlasts(now?: Date): Promise<RunResult> {
   const total: RunResult = { blasts: 0, delivered: 0, skipped: 0, failed: 0 };
   // Claim due Blasts with a lease. A 'sending' Blast is re-claimed only after
   // its lease expires (a crashed worker), never while another worker holds it.
@@ -26,10 +27,10 @@ export async function runBlasts(now = new Date()): Promise<RunResult> {
     q.query<{ id: string; creator_id: string; body: string; recipients: number }>(
       `update app.blasts b set status = 'sending', started_at = coalesce(started_at, now()), lease_until = now() + interval '${BLAST.leaseMinutes} minutes'
         where b.id in (select id from app.blasts
-                        where scheduled_at <= $1 and (status = 'scheduled' or (status = 'sending' and (lease_until is null or lease_until < now())))
+                        where scheduled_at <= coalesce($1::timestamptz, now()) and (status = 'scheduled' or (status = 'sending' and (lease_until is null or lease_until < now())))
                         order by scheduled_at limit 5 for update skip locked)
         returning b.id, b.creator_id, b.body, b.recipients`,
-      [now],
+      [now ?? null],
     ),
   );
   for (const b of claimed) {
@@ -42,8 +43,11 @@ export async function runBlasts(now = new Date()): Promise<RunResult> {
                   when not exists (select 1 from app.users u join app.creators c on c.user_id = u.id
                                     where u.id = $1 and u.role = 'creator' and u.status = 'active' and c.published_at is not null) then 'creator_unavailable'
                   when app.messaging_restricted($1) then 'creator_paused'
-                  when (select count(*) from app.blasts x where x.creator_id = $1 and x.id <> $2 and x.status in ('sending', 'sent')
-                         and x.started_at > now() - interval '24 hours') >= $3 then 'daily_limit'
+                  -- Blasts claimed together are all 'sending': only those ranked earlier
+                  -- (by schedule, then id) count, so the cap is applied in order.
+                  when (select count(*) from app.blasts x, app.blasts me where me.id = $2 and x.creator_id = $1 and x.id <> $2
+                         and x.started_at > now() - interval '24 hours'
+                         and (x.status = 'sent' or (x.status = 'sending' and (x.scheduled_at, x.id) < (me.scheduled_at, me.id)))) >= $3 then 'daily_limit'
                   else null end as reason`,
         [b.creator_id, b.id, BLAST.perDay],
       ),

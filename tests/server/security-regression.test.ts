@@ -107,7 +107,7 @@ describe("Blast worker hardening", () => {
     await runBlasts();
     const st = JSON.parse(await snapshot(`select status from app.blasts where body like 'forged%' order by body`)) as { status: string }[];
     expect(st.filter((x) => x.status === "sent")).toHaveLength(BLAST.perDay);
-    expect(st.filter((x) => x.status === "canceled").length).toBeGreaterThanOrEqual(1);
+    expect(st.filter((x) => x.status === "canceled").length, JSON.stringify(st)).toBeGreaterThanOrEqual(1);
   });
 
   it("concurrent workers never double-deliver; a held lease blocks re-claiming", async () => {

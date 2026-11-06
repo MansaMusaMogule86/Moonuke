@@ -6,6 +6,7 @@ import { requireFeature } from "@/server/flags";
 import { log } from "@/server/log";
 import { audit } from "@/server/services/audit";
 import { postingsFor } from "./ledger";
+import { PAYMENT_POLICY } from "./policy";
 import { transition, type PaymentEvent, type PaymentStatus } from "./state";
 import type { VerifiedEvent } from "./webhook";
 
@@ -19,7 +20,8 @@ import type { VerifiedEvent } from "./webhook";
  * engine with the mock provider and an explicit `{ testing: true }` bypass
  * that only works outside production.
  */
-type Opts = { testing?: boolean; feeBps?: number | null };
+/** `refundRevokesAccess` overrides the policy in tests only (ignored in production). */
+type Opts = { testing?: boolean; feeBps?: number | null; refundRevokesAccess?: boolean };
 
 function gate(o: Opts) {
   if (o.testing && process.env.NODE_ENV !== "production") return;
@@ -119,9 +121,20 @@ export async function applyEvent(provider: string, ev: VerifiedEvent, rawBody: s
     }
     await q.query(`update app.payments set status = $2, updated_at = now() where id = $1`, [pay.id, next]);
     // Entitlements follow money: a successful PPV payment grants the purchase.
-    // Revoking on refund/chargeback is an open business question (see docs).
     if (e === "succeeded" && pay.kind === "ppv" && pay.target_id) {
       await q.query(`insert into app.purchases (fan_id, post_id) values ($1, $2) on conflict do nothing`, [pay.fan_id, pay.target_id]);
+    }
+    // Refund or chargeback: the purchase stays (PAY2) unless the policy says
+    // otherwise. Never revoked while another successful payment covers it.
+    const revoke = o.testing && process.env.NODE_ENV !== "production" && o.refundRevokesAccess !== undefined ? o.refundRevokesAccess : PAYMENT_POLICY.refundRevokesAccess;
+    if (revoke && (next === "refunded" || next === "charged_back") && pay.kind === "ppv" && pay.target_id) {
+      const gone = await q.one(
+        `delete from app.purchases x where x.fan_id = $1 and x.post_id = $2
+            and not exists (select 1 from app.payments p where p.fan_id = $1 and p.target_id = $2 and p.kind = 'ppv' and p.status = 'succeeded' and p.id <> $3)
+          returning 1`,
+        [pay.fan_id, pay.target_id, pay.id],
+      );
+      if (gone) await audit(q, { actorId: null, action: "purchase.revoked", targetType: "post", targetId: pay.target_id, metadata: { payment: pay.id, reason: next } });
     }
     await audit(q, { actorId: null, action: `payment.${next}`, targetType: "payment", targetId: pay.id, metadata: { provider, event: ev.type } });
     return done("applied", null, pay.id);
@@ -141,21 +154,44 @@ export async function creatorBalance(creatorId: string, currency = "USD") {
   return { available: Number(r?.available ?? 0), onHold: Number(r?.on_hold ?? 0) };
 }
 
-export type PayoutEligibility = { eligible: boolean; reasons: string[]; available: number };
+export type PayoutEligibility = { eligible: boolean; reasons: string[]; available: number; matured: number; holding: number };
 
 /**
- * Payout eligibility. Minimum amount and hold period are commercial decisions
- * (UNKNOWN): pass them explicitly; null means "not decided" → not eligible.
+ * Funds that have cleared the hold: credits older than `holdDays`, minus every
+ * debit (refunds, chargebacks, payouts) whatever its age, so a recent debit
+ * is never deferred.
  */
-export async function payoutEligibility(creatorId: string, policy: { minimumCents: number | null; currency?: string }): Promise<PayoutEligibility> {
-  const { available, onHold } = await creatorBalance(creatorId, policy.currency ?? "USD");
+async function maturedBalance(creatorId: string, currency: string, holdDays: number, asOf: Date | null): Promise<number> {
+  const r = await system((q) =>
+    q.one<{ m: string }>(
+      `select coalesce(sum(amount_cents) filter (where amount_cents < 0 or created_at <= coalesce($4::timestamptz, now()) - make_interval(days => $3)), 0) as m
+         from app.ledger_entries where account = 'creator:' || $1::text and currency = $2`,
+      [creatorId, currency, holdDays, asOf],
+    ),
+  );
+  return Number(r?.m ?? 0);
+}
+
+/**
+ * Payout eligibility. The minimum and the hold period are commercial decisions
+ * (B-2, B-3): pass them explicitly; null means "not decided" → not eligible.
+ * The minimum applies to matured funds (those past the hold).
+ */
+export async function payoutEligibility(creatorId: string, policy: { minimumCents: number | null; holdDays: number | null; currency?: string; asOf?: Date }): Promise<PayoutEligibility> {
+  const currency = policy.currency ?? "USD";
+  const { available, onHold } = await creatorBalance(creatorId, currency);
   const reasons: string[] = [];
+  if (policy.holdDays != null && (!Number.isInteger(policy.holdDays) || policy.holdDays < 0 || policy.holdDays > 365)) {
+    throw new AppError("validation", "The hold period must be 0 to 365 days.");
+  }
+  const matured = policy.holdDays == null ? 0 : Math.min(available, await maturedBalance(creatorId, currency, policy.holdDays, policy.asOf ?? null));
+  if (policy.holdDays == null) reasons.push("hold period not decided");
   if (policy.minimumCents == null) reasons.push("payout minimum not decided");
-  else if (available < policy.minimumCents) reasons.push("below minimum");
+  else if (policy.holdDays != null && matured < policy.minimumCents) reasons.push(available >= policy.minimumCents ? "funds still in hold period" : "below minimum");
   if (onHold > 0) reasons.push("open dispute");
   const verified = await system((q) => q.one(`select 1 from app.creator_verifications where user_id = $1 and status = 'verified'`, [creatorId]));
   if (!verified) reasons.push("creator not verified");
-  return { eligible: reasons.length === 0, reasons, available };
+  return { eligible: reasons.length === 0, reasons, available, matured, holding: Math.max(0, available - matured) };
 }
 
 /** Compare provider-reported states with ours; returns mismatches only. */

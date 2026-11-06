@@ -29,10 +29,22 @@ Every entry point calls `requireFeature()`. Tests reach the engines through an e
 - The ledger is **append-only** (a trigger blocks update and delete) and each transaction must **balance**, enforced by a deferred constraint trigger.
 - Creators read their own totals through `my_balances()` (SECURITY DEFINER, aggregate only).
 
+**Payout hold and refund policy** (roadmap item 5, built 2026-11-06; payments still disabled):
+- `payoutEligibility()` takes `holdDays` explicitly (`null` = not decided = never eligible).
+  - Only **matured** funds count towards the minimum: credits older than the hold, minus every debit whatever its age, so a refund or chargeback is never deferred.
+  - It reports `available`, `matured` and `holding`.
+  - The owner's proposed 14 days (B-3) is recorded as `PROPOSED_PAYOUT_HOLD_DAYS` but **not applied**.
+- `src/server/payments/policy.ts` → `PAYMENT_POLICY.refundRevokesAccess = false`, which **keeps PAY2**.
+  - When switched (an owner decision overriding PAY2, B-5), a refund or chargeback of a pay-per-view payment removes the purchase, but never while another successful payment covers it.
+  - The removal is audited (`purchase.revoked`).
+  - Tests use an override that's ignored in production.
+- Tests: `tests/server/payouts-refunds.test.ts` (7 tests).
+- Processor reserves would apply on top of this hold (REPORTED).
+
 **Not decided, so there are no defaults:**
 - The platform fee: `feeBps` is required and the engine throws without it.
-- The payout minimum and hold period: `null` means never eligible.
-- Whether a refund or chargeback revokes a purchase. Today the purchase is kept; this is an open question.
+- The payout minimum and hold period: `null` means never eligible. Proposed: $50 and 14 days (B-2, B-3).
+- Whether a refund or chargeback revokes a purchase. The switch exists and is off (PAY2); turning it on is B-5.
 
 **No provider is assumed to accept adult creator content.** The registry stays empty, and an adapter is added only after a processor approves the business (A10).
 

@@ -1,5 +1,7 @@
 # Next phase
 
+> **2026-11-06 (roadmap item 5):** the payout hold and the refund-access switch are built, with payments still disabled and PAY2 unchanged. The hold length (B-3) and any PAY2 override (B-5) are the owner's decisions.
+>
 > **2026-11-06 (Phase 11):** the restricted moderator role is built and switched off: `docs/phase-11-moderators.md`. It needs the owner's approval (A1, B-6).
 >
 > **2026-11-06 (Phase 10):** age assurance and regional rules are built and switched off: `docs/phase-10-age-geo.md`. Turning them on needs the owner's approval, a vendor (P-2) and jurisdictions (L-1).

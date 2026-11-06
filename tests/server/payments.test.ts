@@ -75,7 +75,7 @@ describe("payment engine (mock provider, test DB)", () => {
     await applyEvent("mock", ev("e5", "payment.succeeded", "mock_ref_1"), "{}", T);
     await applyEvent("mock", ev("e6", "dispute.opened", "mock_ref_1"), "{}", T);
     expect(await creatorBalance(s.creatorIds.isadora)).toEqual({ available: 0, onHold: 960 });
-    expect((await payoutEligibility(s.creatorIds.isadora, { minimumCents: 100 })).reasons).toContain("open dispute");
+    expect((await payoutEligibility(s.creatorIds.isadora, { minimumCents: 100, holdDays: 0 })).reasons).toContain("open dispute");
     await applyEvent("mock", ev("e7", "dispute.lost", "mock_ref_1"), "{}", T);
     expect(await creatorBalance(s.creatorIds.isadora)).toEqual({ available: 0, onHold: 0 });
     const st = await system((q) => q.one<{ status: string }>(`select status from app.payments where provider_ref = 'mock_ref_1'`));
@@ -85,9 +85,10 @@ describe("payment engine (mock provider, test DB)", () => {
   it("payout eligibility needs a decided minimum; reconciliation finds drift", async () => {
     await ppv();
     await applyEvent("mock", ev("e8", "payment.succeeded", "mock_ref_1"), "{}", T);
-    const undecided = await payoutEligibility(s.creatorIds.isadora, { minimumCents: null });
+    const undecided = await payoutEligibility(s.creatorIds.isadora, { minimumCents: null, holdDays: 0 });
     expect(undecided).toMatchObject({ eligible: false, reasons: ["payout minimum not decided"] });
-    expect((await payoutEligibility(s.creatorIds.isadora, { minimumCents: 500 })).eligible).toBe(true);
+    expect((await payoutEligibility(s.creatorIds.isadora, { minimumCents: 500, holdDays: null })).reasons).toContain("hold period not decided");
+    expect((await payoutEligibility(s.creatorIds.isadora, { minimumCents: 500, holdDays: 0 })).eligible).toBe(true);
     const drift = await reconcile("mock", [{ providerRef: "mock_ref_1", status: "refunded", amountCents: 1200 }, { providerRef: "ghost", status: "succeeded", amountCents: 5 }]);
     expect(drift.map((d) => d.providerRef).sort()).toEqual(["ghost", "mock_ref_1"]);
   });

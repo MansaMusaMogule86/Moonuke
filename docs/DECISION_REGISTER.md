@@ -9,6 +9,8 @@
 
 The research sources are listed at the end.
 
+> **Update 2026-11-06 (roadmap item 5):** the payout hold and the refund-revocation switch are built (`docs/phase-8-infrastructure.md`). The hold is explicit, with the proposed 14 days recorded but not applied; revocation is off, so PAY2 holds. B-3 and B-5 remain the owner's decisions.
+>
 > **Update 2026-11-06 (Phase 11):** the restricted moderator role is built and **switched off** (`docs/phase-11-moderators.md`; proposed MOD1–MOD5). B-6 is still the owner's decision.
 >
 > **Update 2026-11-06 (Phase 10):** age-assurance architecture and regional rules are built and **switched off** (`docs/phase-10-age-geo.md`; proposed AG1–AG6). L-1 and P-2 are unchanged and still blocking.
@@ -173,7 +175,7 @@ An **18+ checkbox is not age verification.** MOONUKE's current fan check (confir
 | 2 | ✱ **Pre-publication review queue:** posts held until a reviewer approves them, behind a flag so current behaviour is preserved until enabled | B-6 for staff; owner approval to switch on |
 | 3 | ✱ **Per-post participant and consent records:** co-performer ID and age references and signed releases, stored as references, not documents | P-3 for real verification |
 | 4 | ✱ NCMEC reporting workflow (manual export plus a CyberTipline-ready packet); 1-year preservation lock on quarantined material | Owner approval of the process |
-| 5 | ✱ Payout hold period in eligibility; refund-revocation option behind a policy flag (off, keeping PAY2) | B-3, B-5 |
+| 5 | ✱ Payout hold period in eligibility; refund-revocation option behind a policy flag (off, keeping PAY2). **Built 2026-11-06** | B-3, B-5 |
 | 6 | ✱ Moderator role: capabilities, RLS helpers, audit, tests (inactive until approved) | B-6 |
 | 7 | ✱ Age-assurance adapter interface and geo-gating by jurisdiction (mock provider) | L-1, P-2 for real use |
 | 8 | ✱ Staging spike: OpenNext and Hyperdrive on a free account, **local only, no deploy** | Owner approval to create accounts |

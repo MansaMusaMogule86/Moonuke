@@ -45,6 +45,11 @@ export type Viewer = {
   mfa: MfaState;
   /** Public handle of the current session (never the token or its hash). */
   sessionId?: string;
+  /**
+   * Effective moderator capabilities (Phase 11). Empty unless the moderator
+   * role is switched on, this member holds a grant, and the session is AAL2.
+   */
+  staff?: readonly string[];
 };
 
 /**

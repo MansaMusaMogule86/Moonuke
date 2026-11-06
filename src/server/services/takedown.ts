@@ -6,7 +6,8 @@ import { AppError } from "@/server/errors";
 import { enqueue } from "@/server/email/outbox";
 import { emails } from "@/server/email/templates";
 import { keyedHash, reference, seal, unseal } from "@/server/safety/seal";
-import { audit } from "./audit";
+import { audit, auditStaffView } from "./audit";
+import { assertOwnerOrStaff } from "@/server/auth/staff";
 import { hit, hitIp } from "./rateLimit";
 import { openCase, openCaseFor } from "./safeguarding";
 import { announceNotices, issueNotice, type Issued } from "./notices";
@@ -180,13 +181,16 @@ const NOTICE_SELECT = `
     left join app.creators c on c.user_id = n.target_creator_id`;
 
 export async function takedownQueue(v: Viewer, view: "open" | "closed" = "open"): Promise<NoticeRow[]> {
-  assertOwner(v);
+  assertOwnerOrStaff(v, "takedowns.decide");
   const st = view === "open" ? ["received", "in_review", "escalated"] : ["removed", "rejected"];
-  return asViewer(v, (q) => q.query<NoticeRow>(`${NOTICE_SELECT} where n.status = any($1::text[]) and n.duplicate_of is null order by n.due_at limit 200`, [st]));
+  return asViewer(v, async (q) => {
+    await auditStaffView(q, v, "takedowns");
+    return q.query<NoticeRow>(`${NOTICE_SELECT} where n.status = any($1::text[]) and n.duplicate_of is null order by n.due_at limit 200`, [st]);
+  });
 }
 
 export async function takedownNotice(v: Viewer, id: string): Promise<NoticeRow | null> {
-  assertOwner(v);
+  assertOwnerOrStaff(v, "takedowns.decide");
   return (await asViewer(v, (q) => q.one<NoticeRow>(`${NOTICE_SELECT} where n.id = $1`, [id]))) ?? null;
 }
 
@@ -216,7 +220,7 @@ export async function decideTakedown(
   note: string | undefined,
   meta: { ipHash?: string | null } = {},
 ): Promise<{ status: string; copies: number }> {
-  assertOwner(v);
+  assertOwnerOrStaff(v, "takedowns.decide");
   const n = note?.trim() ?? "";
   if (decision === "reject" && n.length < 10) throw new AppError("validation", "Explain why the notice is rejected (10+ characters).", "note");
   const notice = await takedownNotice(v, id);
@@ -285,7 +289,7 @@ export async function decideTakedown(
 }
 
 export async function takedownCounts(v: Viewer) {
-  assertOwner(v);
+  assertOwnerOrStaff(v, "takedowns.decide");
   return asViewer(v, async (q) =>
     (await q.one<{ open: number; overdue: number; due_soon: number }>(
       `select count(*) filter (where status in ('received','in_review'))::int as open,

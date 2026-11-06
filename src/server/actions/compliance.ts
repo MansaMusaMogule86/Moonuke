@@ -12,6 +12,7 @@ import { decideReview, setReviewMode } from "@/server/services/review";
 import { addConsent, addParticipant, revealIdentity, reviewParticipant, setPostParticipants, withdrawConsent, type DocType } from "@/server/services/participants";
 import { attestTraining, cyberTiplineDraft, decideCase, releaseHold, type CaseAction } from "@/server/services/safeguarding";
 import { decideAppeal, fileAppeal } from "@/server/services/notices";
+import { grantStaff, revokeStaff, setModeratorsEnabled } from "@/server/services/staff";
 
 // Server actions for safety and compliance. Every action re-checks the
 // caller on the server; services check again, and RLS checks a third time.
@@ -56,7 +57,8 @@ export async function takedownAction(_prev: FormState, fd: FormData): Promise<Fo
 // ---------------------------------------------------------------- owner: takedowns
 
 export async function decideTakedownAction(_prev: FormState, fd: FormData): Promise<FormState> {
-  const v = await requireViewer("moderation.review");
+  // Owner or a moderator with the capability: the service checks which.
+  const v = await requireViewer();
   const id = str(fd, "id");
   const decision = str(fd, "decision") as TakedownDecision;
   if (!uuid.safeParse(id).success || !["in_review", "remove", "reject"].includes(decision)) return bad;
@@ -96,7 +98,8 @@ export async function reviewModeAction(_prev: FormState, fd: FormData): Promise<
 }
 
 export async function decideReviewAction(_prev: FormState, fd: FormData): Promise<FormState> {
-  const v = await requireViewer("moderation.review");
+  // Owner or a moderator with the capability: the service checks which.
+  const v = await requireViewer();
   const id = str(fd, "id");
   const decision = str(fd, "decision");
   if (!uuid.safeParse(id).success || !["approve", "reject"].includes(decision)) return bad;
@@ -272,7 +275,8 @@ export async function fileAppealAction(_prev: FormState, fd: FormData): Promise<
 }
 
 export async function decideAppealAction(_prev: FormState, fd: FormData): Promise<FormState> {
-  const v = await requireViewer("moderation.review");
+  // Owner or a moderator with the capability: the service checks which.
+  const v = await requireViewer();
   const id = str(fd, "id");
   const outcome = str(fd, "outcome");
   if (!uuid.safeParse(id).success || (outcome !== "uphold" && outcome !== "overturn")) return bad;
@@ -281,5 +285,41 @@ export async function decideAppealAction(_prev: FormState, fd: FormData): Promis
     return { status: "success", message: outcome === "overturn" ? "Overturned. The restriction was reversed where possible." : "Upheld. The creator sees your note." };
   } catch (e) {
     return fail(e, { note: str(fd, "note") });
+  }
+}
+
+// ---------------------------------------------------------------- owner: moderators
+
+export async function grantStaffAction(_prev: FormState, fd: FormData): Promise<FormState> {
+  const v = await requireViewer("moderation.review");
+  const caps = fd.getAll("cap").filter((x): x is string => typeof x === "string");
+  try {
+    await grantStaff(v, str(fd, "email"), caps, str(fd, "note"));
+    return { status: "success", message: "Granted." };
+  } catch (e) {
+    return fail(e, { email: str(fd, "email"), note: str(fd, "note") });
+  }
+}
+
+export async function revokeStaffAction(_prev: FormState, fd: FormData): Promise<FormState> {
+  const v = await requireViewer("moderation.review");
+  const id = str(fd, "userId");
+  if (!uuid.safeParse(id).success) return bad;
+  try {
+    await revokeStaff(v, id, str(fd, "reason"));
+    return { status: "success", message: "Revoked. It took effect immediately." };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+export async function moderatorsSwitchAction(_prev: FormState, fd: FormData): Promise<FormState> {
+  const v = await requireViewer("moderation.review");
+  const on = str(fd, "on") === "true";
+  try {
+    await setModeratorsEnabled(v, on);
+    return { status: "success", message: on ? "Moderator access is on." : "Moderator access is off.", data: { enabled: String(on) } };
+  } catch (e) {
+    return fail(e);
   }
 }

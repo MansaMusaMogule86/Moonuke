@@ -1,4 +1,5 @@
 import "server-only";
+import { featureEnabled } from "@/server/flags";
 import { system, type Q } from "@/server/db";
 import { randomToken, sha256 } from "@/server/auth/crypto";
 import type { Viewer } from "@/server/auth/permissions";
@@ -37,6 +38,16 @@ export async function resolveSession(token: string | undefined | null): Promise<
     if (Date.now() - new Date(row.last_seen_at).getTime() > 5 * 60_000) {
       await q.query(`update app.sessions set last_seen_at = now() where id_hash = $1`, [sha256(token)]);
     }
+    const aal = mfa === "verified" ? 2 : 1;
+    // Moderator capabilities: only with the flag on, the owner's switch on, a live grant and AAL2.
+    let staff: string[] = [];
+    if (row.role === "member" && row.status === "active" && aal === 2 && featureEnabled("moderators")) {
+      const g = await q.one<{ caps: string[] }>(
+        `select g.capabilities as caps from app.staff_grants g, app.safety_settings s where g.user_id = $1 and g.revoked_at is null and s.id and s.moderators_enabled`,
+        [row.id],
+      );
+      staff = g?.caps ?? [];
+    }
     return {
       id: row.id,
       role: row.role,
@@ -44,8 +55,9 @@ export async function resolveSession(token: string | undefined | null): Promise<
       alias: row.alias,
       email: row.email,
       mfa,
-      aal: mfa === "verified" ? 2 : 1,
+      aal,
       sessionId: row.public_id,
+      staff,
     };
   });
 }

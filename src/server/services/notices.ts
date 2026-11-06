@@ -5,7 +5,8 @@ import { appUrl } from "@/server/env";
 import { AppError } from "@/server/errors";
 import { enqueue } from "@/server/email/outbox";
 import { emails } from "@/server/email/templates";
-import { audit } from "./audit";
+import { audit, auditStaffView } from "./audit";
+import { assertOwnerOrStaff, canStaff } from "@/server/auth/staff";
 import { openCaseFor } from "./safeguarding";
 
 // =====================================================================
@@ -182,17 +183,25 @@ function assertOwner(v: Viewer) {
 
 export type AppealRow = {
   id: string; body: string; created_at: Date; notice_id: string; kind: NoticeKind; statement: Statement;
-  post_id: string | null; participant_id: string | null; source_id: string | null; alias: string;
+  post_id: string | null; participant_id: string | null; source_id: string | null; alias: string | null;
 };
+/** Participant and consent cases involve identity records: owner only. */
+const OWNER_ONLY_KINDS: NoticeKind[] = ["verification_revoked", "consent_withdrawn"];
+
 export async function appealQueue(v: Viewer): Promise<AppealRow[]> {
-  assertOwner(v);
-  return asViewer(v, (q) =>
-    q.query<AppealRow>(
+  assertOwnerOrStaff(v, "appeals.decide");
+  const staff = !can(v, "moderation.review");
+  return asViewer(v, async (q) => {
+    await auditStaffView(q, v, "appeals");
+    // Moderators never see appeals of their own decisions, or participant cases.
+    return q.query<AppealRow>(
       `select a.id, a.body, a.created_at, n.id as notice_id, n.kind, n.statement, n.post_id, n.participant_id, n.source_id, u.alias::text as alias
-         from app.decision_appeals a join app.moderation_notices n on n.id = a.notice_id join app.users u on u.id = a.user_id
-        where a.status = 'open' order by a.created_at limit 100`,
-    ),
-  );
+         from app.decision_appeals a join app.moderation_notices n on n.id = a.notice_id left join app.users u on u.id = a.user_id
+        where a.status = 'open' and (not $1 or (n.issued_by is distinct from app.uid() and n.kind <> all($2::text[])))
+        order by a.created_at limit 100`,
+      [staff, OWNER_ONLY_KINDS],
+    );
+  });
 }
 
 /**
@@ -200,16 +209,18 @@ export async function appealQueue(v: Viewer): Promise<AppealRow[]> {
  * possible; a decision is final either way.
  */
 export async function decideAppeal(v: Viewer, appealId: string, outcome: "uphold" | "overturn", note: string, meta: { ipHash?: string | null } = {}) {
-  assertOwner(v);
+  assertOwnerOrStaff(v, "appeals.decide");
+  const staff = !can(v, "moderation.review") && canStaff(v, "appeals.decide");
   const n = note.trim();
   if (n.length < 10) throw new AppError("validation", "Explain the outcome to the creator (10+ characters).", "note");
   const a = await asViewer(v, (q) =>
-    q.one<{ kind: NoticeKind; post_id: string | null; participant_id: string | null; source_id: string | null; status: string }>(
-      `select n.kind, n.post_id, n.participant_id, n.source_id, a.status from app.decision_appeals a join app.moderation_notices n on n.id = a.notice_id where a.id = $1`,
+    q.one<{ kind: NoticeKind; post_id: string | null; participant_id: string | null; source_id: string | null; status: string; issued_by: string | null }>(
+      `select n.kind, n.post_id, n.participant_id, n.source_id, a.status, n.issued_by from app.decision_appeals a join app.moderation_notices n on n.id = a.notice_id where a.id = $1`,
       [appealId],
     ),
   );
   if (!a) throw new AppError("not_found", "Appeal not found.");
+  if (staff && (OWNER_ONLY_KINDS.includes(a.kind) || a.issued_by === v.id)) throw new AppError("forbidden", "Only the owner can decide this appeal.");
   if (a.status !== "open") throw new AppError("conflict", "This appeal has already been decided.");
   if (outcome === "overturn") {
     if (a.kind === "consent_withdrawn") throw new AppError("conflict", "Content can't be restored without the consent of the person shown.");

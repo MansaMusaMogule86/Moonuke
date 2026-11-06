@@ -22,3 +22,8 @@ export async function audit(q: Q, e: AuditEvent) {
     [e.actorId, e.action, e.targetType ?? null, e.targetId ?? null, e.ipHash ?? null, JSON.stringify(e.metadata ?? {})],
   );
 }
+
+/** Moderators' queue views are recorded too (the owner's are not: the owner reads the audit log itself). */
+export async function auditStaffView(q: Q, v: { id: string; role: string; staff?: readonly string[] }, queue: string) {
+  if (v.role === "member" && (v.staff?.length ?? 0) > 0) await audit(q, { actorId: v.id, action: "staff.view_queue", metadata: { queue } });
+}

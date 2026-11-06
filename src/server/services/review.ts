@@ -2,6 +2,8 @@ import "server-only";
 import { asViewer } from "@/server/db";
 import { can, type Viewer } from "@/server/auth/permissions";
 import { AppError } from "@/server/errors";
+import { assertOwnerOrStaff } from "@/server/auth/staff";
+import { auditStaffView } from "./audit";
 import { announceNotices, issueNotice, type Issued } from "./notices";
 
 // =====================================================================
@@ -36,21 +38,22 @@ export type ReviewItem = {
   media_kind: string; media_count: number; published_at: Date | null; updated_at: Date; reasons: string[]; participants: number;
 };
 export async function reviewQueue(v: Viewer): Promise<ReviewItem[]> {
-  assertOwner(v);
-  return asViewer(v, (q) =>
-    q.query<ReviewItem>(
+  assertOwnerOrStaff(v, "review.decide");
+  return asViewer(v, async (q) => {
+    await auditStaffView(q, v, "review");
+    return q.query<ReviewItem>(
       `select p.id, c.display_name as creator_name, c.handle::text as handle, p.access, p.teaser, pc.body, p.media_kind, p.media_count,
               p.published_at, p.updated_at, p.review_reasons as reasons,
               (select count(*)::int from app.post_participant_list(p.id)) as participants
          from app.posts p join app.creators c on c.user_id = p.creator_id left join app.post_content pc on pc.post_id = p.id
         where p.review_state = 'pending' and p.hidden_at is null
         order by p.updated_at limit 100`,
-    ),
-  );
+    );
+  });
 }
 
 export async function decideReview(v: Viewer, postId: string, approve: boolean, note?: string): Promise<"approved" | "rejected"> {
-  assertOwner(v);
+  assertOwnerOrStaff(v, "review.decide");
   if (!approve && (note?.trim().length ?? 0) < 5) throw new AppError("validation", "Tell the creator why (5+ characters).", "note");
   let issued: Issued | null = null;
   const s = await asViewer(v, async (q) => {

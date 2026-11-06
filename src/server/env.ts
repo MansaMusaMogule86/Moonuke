@@ -39,6 +39,8 @@ const schema = z.object({
   FEATURE_AGE_ASSURANCE: z.enum(["on", "off"]).default("off"),
   AGE_PROVIDER: z.enum(["none", "mock"]).default("none"),
   FEATURE_GEO_RESTRICTIONS: z.enum(["on", "off"]).default("off"),
+  // Phase 11: restricted moderator role. OFF until the owner approves staff (A1, B-6).
+  FEATURE_MODERATORS: z.enum(["on", "off"]).default("off"),
 });
 
 export type Env = z.infer<typeof schema> & { APP_SECRET: string };
@@ -60,6 +62,7 @@ export function productionProblems(e: z.infer<typeof schema>): string[] {
   if (e.FEATURE_AGE_ASSURANCE === "on") p.push("FEATURE_AGE_ASSURANCE=on: no age-assurance vendor is approved (P-2).");
   if (e.AGE_PROVIDER === "mock") p.push("Mock age-assurance provider is for tests only.");
   if (e.FEATURE_GEO_RESTRICTIONS === "on") p.push("FEATURE_GEO_RESTRICTIONS=on: jurisdictions are not decided (L-1).");
+  if (e.FEATURE_MODERATORS === "on") p.push("FEATURE_MODERATORS=on: the moderator role is not approved (A1, B-6).");
   if (e.AUTH_PROVIDER === "supabase") p.push("AUTH_PROVIDER=supabase: the migration is prepared but not approved (A3).");
   return p;
 }

@@ -7,7 +7,8 @@ import { AppError } from "@/server/errors";
 import { enqueue } from "@/server/email/outbox";
 import { emails } from "@/server/email/templates";
 import { setSuspended } from "./admin";
-import { audit } from "./audit";
+import { audit, auditStaffView } from "./audit";
+import { assertOwnerOrStaff } from "@/server/auth/staff";
 import { openCase, openCaseFor } from "./safeguarding";
 import { announceNotices, issueNotice, type Issued } from "./notices";
 
@@ -164,10 +165,11 @@ export type QueueRow = {
 };
 
 export async function moderationQueue(viewer: Viewer, view: "open" | "escalated" | "closed" = "open"): Promise<QueueRow[]> {
-  assertOwner(viewer);
+  assertOwnerOrStaff(viewer, "reports.view");
   const statuses = view === "open" ? ["open", "in_review"] : view === "escalated" ? ["escalated"] : ["actioned", "dismissed"];
-  return asViewer(viewer, (q) =>
-    q.query<QueueRow>(
+  return asViewer(viewer, async (q) => {
+    await auditStaffView(q, viewer, "reports");
+    return q.query<QueueRow>(
       `select r.id, r.target_type, r.target_id, r.target_user_id, r.reason, r.details, r.severity, r.status, r.escalation_ref, r.resolution_note, r.created_at,
               ru.alias::text as reporter_alias,
               case when r.target_type = 'message' then 'Private message from ' || coalesce(tu.alias::text, 'a member') else coalesce(p.teaser, c.display_name, tu.alias::text) end as target_label,
@@ -184,8 +186,8 @@ export async function moderationQueue(viewer: Viewer, view: "open" | "escalated"
         where r.status = any($1::app.report_status[])
         order by r.severity desc, r.created_at asc limit 200`,
       [statuses],
-    ),
-  );
+    );
+  });
 }
 
 export type ModAction = "in_review" | "dismiss" | "hide_post" | "restore_post" | "suspend_user" | "escalate" | "resolve";
@@ -198,7 +200,9 @@ export async function moderate(
   opts: { note?: string; escalationRef?: string } = {},
   meta: { ipHash?: string | null } = {},
 ): Promise<{ status: QueueRow["status"]; postHidden?: boolean }> {
-  assertOwner(viewer);
+  // Suspension stays owner-only; moderators need the capability for the action.
+  if (action === "suspend_user") assertOwner(viewer);
+  else assertOwnerOrStaff(viewer, action === "hide_post" || action === "restore_post" ? "content.hide" : "reports.decide");
   if (action === "escalate" && !opts.escalationRef?.trim()) {
     throw new AppError("validation", "Add the external reference (case or ticket number) for this escalation.", "escalationRef");
   }
@@ -262,7 +266,7 @@ export async function moderate(
 }
 
 export async function moderationCounts(viewer: Viewer) {
-  assertOwner(viewer);
+  assertOwnerOrStaff(viewer, "reports.view");
   return asViewer(viewer, async (q) =>
     (await q.one<{ open: number; critical: number; escalated: number }>(
       `select count(*) filter (where status in ('open','in_review'))::int as open,

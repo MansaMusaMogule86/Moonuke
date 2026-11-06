@@ -65,7 +65,8 @@ export async function unblockAction(_prev: FormState, fd: FormData): Promise<For
 }
 
 export async function moderateAction(_prev: FormState, fd: FormData): Promise<FormState> {
-  const viewer = await requireViewer("moderation.review");
+  // Owner or a moderator with the capability: the service checks which.
+  const viewer = await requireViewer();
   const parsed = moderateSchema.safeParse({ id: str(fd, "id"), action: str(fd, "action"), note: str(fd, "note"), escalationRef: str(fd, "escalationRef") });
   if (!parsed.success) return { status: "error", message: "Invalid request.", fields: fieldErrors(parsed.error) };
   try {

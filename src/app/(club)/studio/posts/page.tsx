@@ -42,6 +42,8 @@ export default async function PostsPage() {
                   <Badge tone={STATE_TONE[p.state]}>{p.state}</Badge>
                   <Badge tone="neutral">{ACCESS[p.access]}{p.priceCents != null ? ` · ${formatMoney({ amountCents: p.priceCents, currency: "USD" })}` : ""}</Badge>
                   {p.hidden && <Badge tone="live">Hidden by the house</Badge>}
+                  {p.review === "pending" && <Badge tone="locked">Waiting for review</Badge>}
+                  {p.review === "rejected" && <Badge tone="live">Not approved</Badge>}
                 </div>
                 <p className="mt-2 truncate text-[16px] text-ivory">{p.teaser}</p>
                 <p className="mt-1 text-[12px] text-ash">

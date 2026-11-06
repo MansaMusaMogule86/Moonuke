@@ -11,6 +11,7 @@ const tabs = [
   { href: "/admin/onboarding", label: "Onboarding" },
   { href: "/admin/creators", label: "Creators" },
   { href: "/admin/moderation", label: "Moderation" },
+  { href: "/admin/safety", label: "Safety" },
   { href: "/admin/messaging", label: "Messaging" },
   { href: "/admin/members", label: "Members" },
   { href: "/admin/email", label: "Email" },

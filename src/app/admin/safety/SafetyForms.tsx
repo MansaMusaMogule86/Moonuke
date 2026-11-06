@@ -5,7 +5,7 @@ import { Check, FormMessage, Submit, TextArea } from "@/components/forms";
 import { Field } from "@/components/ui/Field";
 import { idle } from "@/lib/forms";
 import {
-  attestTrainingAction, decideCaseAction, decideReviewAction, decideTakedownAction, draftAction, releaseHoldAction,
+  attestTrainingAction, decideAppealAction, decideCaseAction, decideReviewAction, decideTakedownAction, draftAction, releaseHoldAction,
   revealContactAction, revealIdentityAction, reviewModeAction, reviewParticipantAction,
 } from "@/server/actions/compliance";
 
@@ -186,6 +186,22 @@ export function ReleaseHold({ id }: { id: string }) {
       <input type="hidden" name="id" value={id} />
       <Field label="Reason for release" name="reason" maxLength={1000} defaultValue={state.values?.reason} error={state.fields?.reason} />
       <Submit variant="ghost" className={small}>Release hold</Submit>
+    </form>
+  );
+}
+
+export function DecideDecisionAppeal({ id, canOverturn }: { id: string; canOverturn: boolean }) {
+  const [state, action] = useActionState(decideAppealAction, idle);
+  if (state.status === "success") return <FormMessage state={state} />;
+  return (
+    <form action={action} className="space-y-3">
+      <FormMessage state={state} />
+      <input type="hidden" name="id" value={id} />
+      <Field label="Note for the creator" name="note" maxLength={1000} defaultValue={state.values?.note} error={state.fields?.note} />
+      <div className="flex flex-wrap gap-2">
+        <Submit name="outcome" value="uphold" variant="outline" className={small}>Uphold</Submit>
+        {canOverturn && <Submit name="outcome" value="overturn" className={small}>Overturn</Submit>}
+      </div>
     </form>
   );
 }

@@ -5,6 +5,7 @@ import { Stepper } from "@/components/onboarding/Stepper";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { requireViewer } from "@/server/auth/request";
+import { unreadNotices } from "@/server/services/notices";
 import { listCategories } from "@/server/services/club";
 import { getOnboarding } from "@/server/services/creatorOnboarding";
 import { assistantInfo, myOnboarding, myProposals, mySocials, STAGES } from "@/server/services/onboarding";
@@ -24,6 +25,7 @@ const statusCopy = {
 export default async function StudioPage() {
   const viewer = await requireViewer("club.discover");
   if (viewer.role !== "creator") notFound();
+  const unread = await unreadNotices(viewer);
   const [ob, categories, onboarding, proposals, socials] = await Promise.all([
     getOnboarding(viewer),
     listCategories(viewer),
@@ -53,6 +55,7 @@ export default async function StudioPage() {
         <Button href="/studio/messaging" variant="outline">Messaging</Button>
         <Button href="/studio/blasts" variant="outline">Blasts</Button>
         <Button href="/studio/participants" variant="outline">Participants</Button>
+        <Button href="/studio/notices" variant="outline">{unread ? `Notices (${unread} new)` : "Notices"}</Button>
       </div>
 
       <section aria-labelledby="progress-h" className="mt-10 rounded-[var(--radius-xl)] border border-line bg-ink-2 p-6 md:p-8">

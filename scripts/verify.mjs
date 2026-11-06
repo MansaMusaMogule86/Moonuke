@@ -205,6 +205,7 @@ if (!QUICK) {
         ["Browser: Phase 7 messaging + axe", "scripts/e2e-phase7.mjs", { SHOTS: path.join(REPORT_DIR, "screens/phase7") }],
         ["Browser: release hardening + axe", "scripts/e2e-hardening.mjs", { SHOTS: path.join(REPORT_DIR, "screens/hardening") }],
         ["Browser: safety + compliance + axe", "scripts/e2e-safety.mjs", { SHOTS: path.join(REPORT_DIR, "screens/safety") }],
+        ["Browser: notices + appeals + axe", "scripts/e2e-notices.mjs", { SHOTS: path.join(REPORT_DIR, "screens/notices") }],
       ];
       for (const [name, file, extra] of suites) {
         if (!fs.existsSync(path.join(ROOT, file))) {

@@ -98,6 +98,9 @@ These defaults set what creators may charge once payments exist:
 
 Still open: the platform fee, payout schedule and currencies beyond USD (open question #6).
 
+## Proposed, awaiting confirmation (safety and compliance, 2026-11-06)
+Roadmap items 1–4 (takedowns, pre-publication review, participant records, safeguarding) were approved and built. They introduce proposed defaults **SC1–SC11**, listed in `docs/DECISION_REGISTER.md` §7a. They're **not** confirmed and don't change any confirmed default above.
+
 ## Phase 8 conflict needing a decision
 - **Visual identity.** The Phase 8 brief asks for an identity "distinct from the competitor's black-and-gold identity". The approved identity (Phase 1, `MASTER_PRD.md` §1) *is* black and gold, with fixed tokens. Changing it is a rebrand, and the brief also says "do not perform a full visual rebrand without approval". **Nothing was changed.** The owner should decide whether to keep the approved palette or commission a new direction.
 

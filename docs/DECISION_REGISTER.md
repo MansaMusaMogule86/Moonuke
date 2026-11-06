@@ -9,6 +9,8 @@
 
 The research sources are listed at the end.
 
+> **Update 2026-11-06:** roadmap items 1–4 were approved and built locally. See §7 and `docs/phase-8-safety-compliance.md`. Only statuses and the checklist were updated; no confirmed decision was rewritten.
+
 ---
 
 ## 1. Decision register
@@ -41,10 +43,10 @@ The research sources are listed at the end.
 |---|---|---|
 | L-1 | Which jurisdictions will be served, or geo-blocked, at launch? | Open (blocking) |
 | L-2 | Fan age assurance: an 18+ attestation is **not** sufficient where §4 laws apply | Open (blocking). Needs a vendor and method |
-| L-3 | Creator and participant ID, age and consent records (Mastercard rules; possibly 2257) | Partial. Creator verification is manual; **per-content co-performer consent records don't exist** |
-| L-4 | NCII takedown process for **non-members** within 48 hours (TAKE IT DOWN Act) | **Gap.** Today only signed-in members can report |
-| L-5 | CSAM: reporting to NCMEC and preserving material for 1 year | Partial. Quarantine preserves material; reporting is "recorded only" |
-| L-6 | Pre-publication review of creator content (Mastercard) | **Gap.** Posts publish without house review |
+| L-3 | Creator and participant ID, age and consent records (Mastercard rules; possibly 2257) | **Built (local), 2026-11-06:** encrypted participant records, under-18 refusal, per-post consent, withdrawal. **Still open:** document verification needs a vendor (P-3) or private evidence storage; 2257 applicability (L-9) |
+| L-4 | NCII takedown process for **non-members** within 48 hours (TAKE IT DOWN Act) | **Built (local), 2026-11-06:** public form, 48-hour clock, deduplication, identical-copy removal, fingerprint block. **Still open:** counsel to confirm the notice fields and the process meet the Act; a requester acknowledgement channel |
+| L-5 | CSAM: reporting to NCMEC and preserving material for 1 year | **Built (local), 2026-11-06:** a separate safeguarding queue, training-gated access, 365-day legal holds that block deletion, manual-only CyberTipline draft. **Still open:** NCMEC ESP registration, a counsel-verified procedure, secure evidence storage for real media |
+| L-6 | Pre-publication review of creator content (Mastercard) | **Built (local), 2026-11-06:** review gate enforced in the database. Default `flagged` (posts naming participants); the owner can switch to `all`. **Still open:** whether the processor requires `all`, and whether existing posts must be re-reviewed (SC4) |
 | L-7 | Retention periods, deletion and export requests, privacy policy, terms | Open (counsel) |
 | L-8 | Business entity, jurisdiction of incorporation, tax (sales tax, VAT on digital services), creator tax forms | Open (counsel and accountant) |
 | L-9 | Whether 2257 applies to the platform (primary or secondary producer) | UNRESOLVED (counsel) |
@@ -157,6 +159,8 @@ An **18+ checkbox is not age verification.** MOONUKE's current fan check (confir
 
 **Engineering that needs no approval** is marked ✱: it's safe and reversible, and nothing is enabled.
 
+> **2026-11-06:** items 1–4 are **built and verified locally** (see §7). Items 5–12 are unchanged.
+
 | Priority | Item | Depends on |
 |---|---|---|
 | 1 | ✱ **Public NCII and CSAM takedown request form** for non-members: hashed evidence, a 48-hour SLA clock, duplicate hash blocking, a notice page | None (law already in force) |
@@ -176,20 +180,23 @@ An **18+ checkbox is not age verification.** MOONUKE's current fan check (confir
 
 ## 6. Production readiness checklist
 
-**Code and security (done; local evidence: `pnpm verify` PASS at `8f6a0d5`):**
+**Code and security (done; local evidence: `pnpm verify` PASS at `8f6a0d5`, and again for the 2026-11-06 safety work, see §7):**
 - [x] RLS on every table; schema lint; RLS regression suite.
 - [x] Server-side authorization in two layers; identical 404s for missing and forbidden pages; CSP and headers.
 - [x] Owner MFA; sessions; recovery; rate limits; redacted logs; health check.
 - [x] Backup and restore drill; maintenance job; dependency audit.
 - [x] Payments, uploads and Supabase Auth gated off and refused in production.
 
-**Blocking: legal and safety (§4)**
+**Blocking: legal and safety (§4)** (`[~]` means built locally, but external or legal dependencies remain)
 - [ ] Jurisdictions decided; geo-blocking where not compliant.
 - [ ] Fan age assurance (a highly-effective or high-certainty method) integrated.
-- [ ] Creator and co-performer ID, age and consent records.
-- [ ] Public NCII takedown with a 48-hour SLA and a notice page.
-- [ ] NCMEC reporting procedure plus 1-year preservation.
-- [ ] Pre-publication review (if required by the processor or counsel).
+- [~] Creator and co-performer ID, age and consent records. *Records, consent and withdrawal built; document verification (P-3) open.*
+- [~] Public NCII takedown with a 48-hour SLA and a notice page. *Built; counsel review and requester acknowledgements open.*
+- [~] NCMEC reporting procedure plus 1-year preservation. *Workflow and holds built; ESP registration, a verified procedure and evidence storage open.*
+- [~] Pre-publication review (if required by the processor or counsel). *Built; the mode decision (SC4) is open.*
+- [ ] Statements of reasons to creators for takedown and review decisions, and an appeal route (EU DSA Art. 17 and 20, REPORTED).
+- [ ] Managed encryption key (KMS) for safety records, separate from `APP_SECRET`.
+- [ ] Safeguarding training and procedure signed off for every person with access.
 - [ ] Terms, privacy policy, creator agreement, complaints and appeals policy.
 - [ ] Entity, tax and bookkeeping set up.
 
@@ -210,6 +217,62 @@ An **18+ checkbox is not age verification.** MOONUKE's current fan check (confir
 - [ ] Moderator role (B-6).
 - [ ] Re-enabling CI (A11).
 - [ ] **Written approval to deploy.**
+
+---
+
+## 7. Safety and compliance implementation (2026-11-06)
+
+**Built locally:** roadmap items 1–4. Details are in `docs/phase-8-safety-compliance.md`.
+- Migration `20261114000001_phase8_safety_compliance.sql`.
+- No deployment, no paid services, no external submissions, no changes to payments or the visual identity.
+- The 52 confirmed defaults, including PAY2, are unchanged.
+
+### 7a. Proposed defaults introduced (awaiting owner confirmation)
+
+| # | Proposed default | Why |
+|---|---|---|
+| SC1 | The 48-hour clock applies to **every** takedown category, not only NCII | Simpler and conservative; the TAKE IT DOWN Act sets it for NCII |
+| SC2 | Urgent categories (NCII, CSAM, consent withdrawn) withhold the post **on receipt**; rejecting the notice restores it | Mirrors confirmed S1 ("content first"). The risk is abuse by false notices, mitigated by SC3 and house review |
+| SC3 | Takedown rate limits: 5 per hour per network, 5 per day per email; a honeypot field | Abuse prevention without a paid CAPTCHA |
+| SC4 | Review mode `flagged` by default (posts naming participants); `all` is owner-switchable; existing posts aren't re-queued when switching | Preserves current behaviour. A processor may require `all` and re-review |
+| SC5 | Minimum lengths: rejecting a post 5 characters; rejecting a notice 10; identity purpose 10; hold release 20; "no report required" 40 | Every sensitive decision has a recorded reason |
+| SC6 | Preservation is at least 365 days; holds can be extended, never shortened or deleted; release only after the case closes and the period ends | 18 U.S.C. § 2258A(h) (REPORT Act) |
+| SC7 | Safeguarding access: the owner at AAL2 with a self-attested training record (within 3 years) | "Trained, authorised personnel." The standard and evidence of training are UNRESOLVED |
+| SC8 | Only `underage_concern` member reports open a safeguarding case automatically; `non_consensual` and `illegal_content` stay in the ordinary queue (with S1 withholding) | Keeps the urgent queue focused on child safety |
+| SC9 | No acknowledgement email to requesters; the reference is shown on screen | Avoids a plaintext copy of the email in the outbox |
+| SC10 | Participant and consent records are never deleted (`on delete restrict`) | Record-keeping (Mastercard; possibly 2257) |
+| SC11 | No identity documents are stored; identity fields are encrypted with a key derived from `APP_SECRET` | No approved storage or KYC vendor. Production needs a managed key |
+
+### 7b. Remaining legal dependencies (counsel)
+- **TAKE IT DOWN Act:** do our notice fields and process satisfy a "valid request"? Covered: signature, identification and location of the content, good-faith statement, contact details. What does "known identical copies" mean beyond exact fingerprints? REPORTED.
+- **NCMEC:** registration as an electronic service provider; the 2258A report contents; who may view material, and how; preservation scope and secure storage; what may be disclosed to the account holder.
+- **EU DSA:**
+  - Art. 16 notice-and-action;
+  - Art. 17 statements of reasons to the affected creator (not built);
+  - Art. 20 internal complaint handling (not built).
+- **UK Online Safety Act:** illegal-content duties and record-keeping for takedown decisions.
+- **Data protection:** lawful basis and a DPIA for identity, consent and requester data; retention periods for notices, participant records, cases and holds after release (the retention open question).
+- **2257:** whether the platform is a secondary producer, and what record format and custodian are required (L-9).
+- **Card-network rules:** whether `flagged` review is enough, or every item needs review before publication.
+
+### 7c. Provider approvals still needed
+- **ID and age verification vendor (P-3):** to verify participant documents instead of manual attestation.
+- **Private evidence storage (P-5):** with adult content allowed in writing, for consent documents and preserved media.
+- **Hash-matching scanner (P-4):** pre-publication CSAM and NCII matching. Today only exact fingerprints from our own decisions are blocked.
+- **KMS or secret manager:** for the safety encryption key.
+- **SMTP (P-7):** for requester acknowledgements, if SC9 is reversed.
+
+### 7d. Remaining launch blockers for this area
+- Counsel sign-off on 7b.
+- NCMEC registration.
+- Training records for every person with access.
+- Statements of reasons and appeals for creators affected by takedowns, review rejections and consent withdrawals.
+- A requester follow-up channel.
+- Participant document verification.
+- Private evidence storage.
+- Managed key.
+- The moderator role (B-6), if anyone other than the owner will review.
+- Everything in §6 outside this area: age assurance, jurisdictions, providers, deployment approval.
 
 ---
 

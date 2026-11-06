@@ -1,5 +1,7 @@
 # Next phase
 
+> **2026-11-06 (later):** Phase 9, creator statements of reasons and appeals, is built and verified locally: `docs/phase-9-notices-appeals.md`. The owner needs to confirm AP1–AP6.
+>
 > **2026-11-06:** safety and compliance (roadmap items 1–4) is built and verified locally: `docs/phase-8-safety-compliance.md`. The owner needs to confirm or change the proposed defaults SC1–SC11; remaining legal, provider and launch dependencies are in `docs/DECISION_REGISTER.md` §7.
 >
 > **2026-11-05:** the full decision register, compatibility matrix, cost assessment, legal blockers, roadmap and readiness checklist are in `docs/DECISION_REGISTER.md`. Proposed business defaults there are **for evaluation only** and not approved.
@@ -19,7 +21,7 @@ Everything that needs no decision is built. **Each remaining item needs the owne
 | Real email delivery | SMTP provider and sending domain (open question #7) |
 | Production deployment | Approval and a hosting target (A10, open question #9) |
 | Editorial photography | Visual direction approval (A13) |
-| Takedown statements of reasons and creator appeals; requester acknowledgements | Counsel (EU DSA Art. 17 and 20) and the SC9 decision |
+| Requester acknowledgements; EU transparency database submissions; member appeals | The SC9 decision; counsel (DSA Art. 24(5)) |
 | Participant ID-document verification; private evidence storage | KYC vendor (P-3) and storage (P-5) approvals |
 | NCMEC submission | Manual only by design. Needs ESP registration and a counsel-verified procedure |
 | A separate moderator role | Capabilities are designed (`src/server/auth/staff.ts`, inactive). It needs the owner's decision (A1) |

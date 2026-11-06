@@ -9,6 +9,8 @@
 
 The research sources are listed at the end.
 
+> **Update 2026-11-06 (later):** creator statements of reasons and appeals were built (`docs/phase-9-notices-appeals.md`; proposed defaults AP1–AP6).
+>
 > **Update 2026-11-06:** roadmap items 1–4 were approved and built locally. See §7 and `docs/phase-8-safety-compliance.md`. Only statuses and the checklist were updated; no confirmed decision was rewritten.
 
 ---
@@ -194,7 +196,7 @@ An **18+ checkbox is not age verification.** MOONUKE's current fan check (confir
 - [~] Public NCII takedown with a 48-hour SLA and a notice page. *Built; counsel review and requester acknowledgements open.*
 - [~] NCMEC reporting procedure plus 1-year preservation. *Workflow and holds built; ESP registration, a verified procedure and evidence storage open.*
 - [~] Pre-publication review (if required by the processor or counsel). *Built; the mode decision (SC4) is open.*
-- [ ] Statements of reasons to creators for takedown and review decisions, and an appeal route (EU DSA Art. 17 and 20, REPORTED).
+- [~] Statements of reasons to creators for takedown and review decisions, and an appeal route (EU DSA Art. 17 and 20, REPORTED). *Built (Phase 9); counsel review, the transparency database and member appeals open.*
 - [ ] Managed encryption key (KMS) for safety records, separate from `APP_SECRET`.
 - [ ] Safeguarding training and procedure signed off for every person with access.
 - [ ] Terms, privacy policy, creator agreement, complaints and appeals policy.
@@ -266,7 +268,7 @@ An **18+ checkbox is not age verification.** MOONUKE's current fan check (confir
 - Counsel sign-off on 7b.
 - NCMEC registration.
 - Training records for every person with access.
-- Statements of reasons and appeals for creators affected by takedowns, review rejections and consent withdrawals.
+- ~~Statements of reasons and appeals for creators~~: built in Phase 9. Counsel review and the EU transparency database (Art. 24(5)) remain.
 - A requester follow-up channel.
 - Participant document verification.
 - Private evidence storage.

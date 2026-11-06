@@ -49,6 +49,7 @@
 | 8 | Blast worker daily-cap ordering and DB-clock fix | `2334756` |
 | 8 | Safety and compliance server: takedowns, review gate, participants, safeguarding | `ab47a0b` |
 | 8 | Safety and compliance UI and e2e | `96dd1d2` |
+| 9 | Creator statements of reasons and appeals (server, UI, e2e) | see git log |
 
 What Phase 4 delivered:
 - White-glove cases and the pipeline board.
@@ -108,19 +109,24 @@ Phase 8, safety and compliance (`docs/phase-8-safety-compliance.md`):
 - A training-gated safeguarding queue with 365-day legal holds and manual-only NCMEC preparation.
 - Proposed defaults SC1–SC11 await the owner (`docs/DECISION_REGISTER.md` §7).
 
+Phase 9, creator statements of reasons and appeals (`docs/phase-9-notices-appeals.md`):
+- Every house restriction notifies the creator with the decision, facts, ground, automation and redress.
+- One appeal per decision, decided by the owner. Overturning reverses the restriction where it's safe.
+- Proposed defaults AP1–AP6 await the owner.
+
 What's still open is in `docs/NEXT_PHASE.md`.
 
-## Test results (last full local run: `pnpm verify` at `7e76e84`, PASS, 450 s)
+## Test results (last full local run: `pnpm verify`, Phase 9 working tree on `645a33f`, PASS, 477 s)
 This was a **local** run. GitHub Actions did not run.
 
 | Step | Result |
 |---|---|
 | TypeScript strict | pass |
 | Dependency audit (`pnpm audit --prod`) | no known vulnerabilities |
-| Vitest: UI and PostgreSQL security tests, including schema lint, RLS regression and safety compliance | 264 / 264 (27 files) |
+| Vitest: UI and PostgreSQL security tests | 272 / 272 (28 files) |
 | Production build, env-safety check | pass |
-| Browser, Phases 1–7, hardening and safety | 17 / 17, 70 / 70, 66 / 66, 43 / 43, 39 / 39, 41 / 41, 44 / 44, 21 / 21, 52 / 52 |
-| Backup and restore drill | 54 tables, 90 policies, 68 definer functions, 24 triggers matched |
+| Browser, Phases 1–7, hardening, safety and notices | 17 / 17, 70 / 70, 66 / 66, 43 / 43, 39 / 39, 41 / 41, 44 / 44, 21 / 21, 52 / 52, 22 / 22 |
+| Backup and restore drill | 56 tables, 96 policies, 72 definer functions, 26 triggers matched |
 
 ## Known issues and limitations
 - **Auth:** our own implementation; the Supabase switch is planned, not done. There's no ID-verification vendor; checks are manual.

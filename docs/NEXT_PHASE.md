@@ -1,5 +1,7 @@
 # Next phase
 
+> **2026-11-06 (Phase 10):** age assurance and regional rules are built and switched off: `docs/phase-10-age-geo.md`. Turning them on needs the owner's approval, a vendor (P-2) and jurisdictions (L-1).
+>
 > **2026-11-06 (later):** Phase 9, creator statements of reasons and appeals, is built and verified locally: `docs/phase-9-notices-appeals.md`. The owner needs to confirm AP1–AP6.
 >
 > **2026-11-06:** safety and compliance (roadmap items 1–4) is built and verified locally: `docs/phase-8-safety-compliance.md`. The owner needs to confirm or change the proposed defaults SC1–SC11; remaining legal, provider and launch dependencies are in `docs/DECISION_REGISTER.md` §7.

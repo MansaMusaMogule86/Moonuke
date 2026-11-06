@@ -9,6 +9,8 @@
 
 The research sources are listed at the end.
 
+> **Update 2026-11-06 (Phase 10):** age-assurance architecture and regional rules are built and **switched off** (`docs/phase-10-age-geo.md`; proposed AG1–AG6). L-1 and P-2 are unchanged and still blocking.
+>
 > **Update 2026-11-06 (later):** creator statements of reasons and appeals were built (`docs/phase-9-notices-appeals.md`; proposed defaults AP1–AP6).
 >
 > **Update 2026-11-06:** roadmap items 1–4 were approved and built locally. See §7 and `docs/phase-8-safety-compliance.md`. Only statuses and the checklist were updated; no confirmed decision was rewritten.
@@ -190,8 +192,8 @@ An **18+ checkbox is not age verification.** MOONUKE's current fan check (confir
 - [x] Payments, uploads and Supabase Auth gated off and refused in production.
 
 **Blocking: legal and safety (§4)** (`[~]` means built locally, but external or legal dependencies remain)
-- [ ] Jurisdictions decided; geo-blocking where not compliant.
-- [ ] Fan age assurance (a highly-effective or high-certainty method) integrated.
+- [~] Jurisdictions decided; geo-blocking where not compliant. *Regional rules built and switched off (Phase 10); the jurisdiction decision (L-1) open.*
+- [~] Fan age assurance (a highly-effective or high-certainty method) integrated. *Architecture built and switched off (Phase 10); vendor (P-2) and approval open.*
 - [~] Creator and co-performer ID, age and consent records. *Records, consent and withdrawal built; document verification (P-3) open.*
 - [~] Public NCII takedown with a 48-hour SLA and a notice page. *Built; counsel review and requester acknowledgements open.*
 - [~] NCMEC reporting procedure plus 1-year preservation. *Workflow and holds built; ESP registration, a verified procedure and evidence storage open.*

@@ -34,6 +34,11 @@ const schema = z.object({
   AUTH_PROVIDER: z.enum(["own", "supabase"]).default("own"),
   STORAGE_PROVIDER: z.enum(["none", "mock"]).default("none"),
   SCAN_PROVIDER: z.enum(["none", "mock"]).default("none"),
+  // Phase 10: age assurance and geographic restrictions. OFF until the owner
+  // approves a vendor and the jurisdictions (L-1, L-2, P-2).
+  FEATURE_AGE_ASSURANCE: z.enum(["on", "off"]).default("off"),
+  AGE_PROVIDER: z.enum(["none", "mock"]).default("none"),
+  FEATURE_GEO_RESTRICTIONS: z.enum(["on", "off"]).default("off"),
 });
 
 export type Env = z.infer<typeof schema> & { APP_SECRET: string };
@@ -52,6 +57,9 @@ export function productionProblems(e: z.infer<typeof schema>): string[] {
   if (e.FEATURE_PAYMENTS === "on") p.push("FEATURE_PAYMENTS=on: no payment provider is integrated or approved (A10).");
   if (e.FEATURE_UPLOADS === "on") p.push("FEATURE_UPLOADS=on: no approved storage and content-safety scanning provider (A10).");
   if (e.STORAGE_PROVIDER === "mock" || e.SCAN_PROVIDER === "mock") p.push("Mock storage/scanning providers are for tests only.");
+  if (e.FEATURE_AGE_ASSURANCE === "on") p.push("FEATURE_AGE_ASSURANCE=on: no age-assurance vendor is approved (P-2).");
+  if (e.AGE_PROVIDER === "mock") p.push("Mock age-assurance provider is for tests only.");
+  if (e.FEATURE_GEO_RESTRICTIONS === "on") p.push("FEATURE_GEO_RESTRICTIONS=on: jurisdictions are not decided (L-1).");
   if (e.AUTH_PROVIDER === "supabase") p.push("AUTH_PROVIDER=supabase: the migration is prepared but not approved (A3).");
   return p;
 }

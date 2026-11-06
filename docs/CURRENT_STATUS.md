@@ -1,6 +1,6 @@
 # Current status
 
-**Branch:** `claude/cool-noether-uvf5h7`. **Last code commit:** `8f6a0d5`. **Deployed:** no. **Payments active:** no.
+**Branch:** `claude/cool-noether-uvf5h7`. **Last code commit:** `96dd1d2`. **Deployed:** no. **Payments active:** no.
 
 ## Completed phases
 
@@ -46,6 +46,9 @@
 | 8 | Worker hardening, indexes, security regression suite | `1a2bf42` |
 | 8 | Payments, uploads and auth seam (disabled behind flags) | `b8b0d94` |
 | 8 | CI workflow updated (still disabled); loading.tsx reverted | `147045c`, `8f6a0d5` |
+| 8 | Blast worker daily-cap ordering and DB-clock fix | `2334756` |
+| 8 | Safety and compliance server: takedowns, review gate, participants, safeguarding | `ab47a0b` |
+| 8 | Safety and compliance UI and e2e | `96dd1d2` |
 
 What Phase 4 delivered:
 - White-glove cases and the pipeline board.
@@ -98,19 +101,26 @@ Phase 8, zero-cost production readiness (`docs/PHASE_8_REPORT.md`):
 - Indexes.
 - Payment, upload and auth infrastructure, **built and disabled**.
 
+Phase 8, safety and compliance (`docs/phase-8-safety-compliance.md`):
+- Public takedown notices at `/takedown`, with a 48-hour clock and removal of identical copies.
+- A pre-publication review gate, enforced in the database.
+- Encrypted participant identity, age and consent records.
+- A training-gated safeguarding queue with 365-day legal holds and manual-only NCMEC preparation.
+- Proposed defaults SC1–SC11 await the owner (`docs/DECISION_REGISTER.md` §7).
+
 What's still open is in `docs/NEXT_PHASE.md`.
 
-## Test results (last full local run: `pnpm verify` at `8f6a0d5`, PASS, ~9 min)
+## Test results (last full local run: `pnpm verify` at `7e76e84`, PASS, 450 s)
 This was a **local** run. GitHub Actions did not run.
 
 | Step | Result |
 |---|---|
 | TypeScript strict | pass |
 | Dependency audit (`pnpm audit --prod`) | no known vulnerabilities |
-| Vitest: UI and PostgreSQL security tests, including schema lint and RLS regression | 236 / 236 (26 files) |
+| Vitest: UI and PostgreSQL security tests, including schema lint, RLS regression and safety compliance | 264 / 264 (27 files) |
 | Production build, env-safety check | pass |
-| Browser, Phases 1–7 and hardening | 17 / 17, 70 / 70, 66 / 66, 43 / 43, 39 / 39, 41 / 41, 44 / 44, 21 / 21 |
-| Backup and restore drill | 44 tables, 80 policies, 47 definer functions, 12 triggers matched |
+| Browser, Phases 1–7, hardening and safety | 17 / 17, 70 / 70, 66 / 66, 43 / 43, 39 / 39, 41 / 41, 44 / 44, 21 / 21, 52 / 52 |
+| Backup and restore drill | 54 tables, 90 policies, 68 definer functions, 24 triggers matched |
 
 ## Known issues and limitations
 - **Auth:** our own implementation; the Supabase switch is planned, not done. There's no ID-verification vendor; checks are manual.

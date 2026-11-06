@@ -58,7 +58,7 @@ Every entry point calls `requireFeature()`. Tests reach the engines through an e
 - Rollback: `AUTH_PROVIDER=own` restores the current behaviour; see `docs/supabase-auth-migration.md` §9.
 
 ## Moderation and retention (design; not active)
-- `src/server/auth/staff.ts`: the moderator capability vocabulary and the owner-only powers. `MODERATOR_ROLE_ENABLED = false`: adding staff needs the owner's decision.
+- `src/server/auth/staff.ts`: the moderator capabilities and the owner-only powers. The role is now built and switched off (Phase 11, `docs/phase-11-moderators.md`).
 - `src/server/ops/retention.ts`: every retention period is `null` ("keep"), because it's a legal decision. The queries only measure what a candidate policy would remove; nothing deletes.
 
 ## Defaults (confirmed by the owner, 2026-11-05)

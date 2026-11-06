@@ -101,6 +101,8 @@ Still open: the platform fee, payout schedule and currencies beyond USD (open qu
 ## Proposed, awaiting confirmation (safety and compliance, 2026-11-06)
 Roadmap items 1–4 (takedowns, pre-publication review, participant records, safeguarding) were approved and built. They introduce proposed defaults **SC1–SC11**, listed in `docs/DECISION_REGISTER.md` §7a. They're **not** confirmed and don't change any confirmed default above.
 
+Phase 11 (restricted moderator role, switched off) adds proposed defaults **MOD1–MOD5** (`docs/phase-11-moderators.md`).
+
 Phase 10 (age assurance and regional rules, switched off) adds proposed defaults **AG1–AG6** (`docs/phase-10-age-geo.md`).
 
 Phase 9 (creator statements of reasons and appeals) adds proposed defaults **AP1–AP6** (`docs/phase-9-notices-appeals.md`), also unconfirmed.

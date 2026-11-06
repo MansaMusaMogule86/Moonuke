@@ -9,6 +9,8 @@
 
 The research sources are listed at the end.
 
+> **Update 2026-11-06 (Phase 11):** the restricted moderator role is built and **switched off** (`docs/phase-11-moderators.md`; proposed MOD1–MOD5). B-6 is still the owner's decision.
+>
 > **Update 2026-11-06 (Phase 10):** age-assurance architecture and regional rules are built and **switched off** (`docs/phase-10-age-geo.md`; proposed AG1–AG6). L-1 and P-2 are unchanged and still blocking.
 >
 > **Update 2026-11-06 (later):** creator statements of reasons and appeals were built (`docs/phase-9-notices-appeals.md`; proposed defaults AP1–AP6).
@@ -218,7 +220,7 @@ An **18+ checkbox is not age verification.** MOONUKE's current fan check (confir
 **Approvals:**
 - [ ] Rebrand decision (B-7).
 - [ ] Refund-policy override of PAY2 (B-5).
-- [ ] Moderator role (B-6).
+- [~] Moderator role (B-6). *Built and switched off (Phase 11); approval, staff selection and vetting open.*
 - [ ] Re-enabling CI (A11).
 - [ ] **Written approval to deploy.**
 

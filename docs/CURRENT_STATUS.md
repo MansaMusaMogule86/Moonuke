@@ -49,7 +49,9 @@
 | 8 | Blast worker daily-cap ordering and DB-clock fix | `2334756` |
 | 8 | Safety and compliance server: takedowns, review gate, participants, safeguarding | `ab47a0b` |
 | 8 | Safety and compliance UI and e2e | `96dd1d2` |
-| 9 | Creator statements of reasons and appeals (server, UI, e2e) | see git log |
+| 9 | Creator statements of reasons and appeals (server, UI, e2e) | `ac961f7`, `be5805b` |
+| 10 | Age assurance and regional rules, switched off | see git log |
+| 11 | Restricted moderator role, switched off | see git log |
 
 What Phase 4 delivered:
 - White-glove cases and the pipeline board.
@@ -114,19 +116,24 @@ Phase 9, creator statements of reasons and appeals (`docs/phase-9-notices-appeal
 - One appeal per decision, decided by the owner. Overturning reverses the restriction where it's safe.
 - Proposed defaults AP1–AP6 await the owner.
 
+Phases 10 and 11 (built, **switched off**; production refuses them):
+- **Age assurance and regional rules** (`docs/phase-10-age-geo.md`): an access gate, a provider seam with a test-only mock, and owner-prepared country rules. Proposed defaults AG1–AG6.
+- **Restricted moderator role** (`docs/phase-11-moderators.md`): capability grants for members with MFA, reusing the existing queues, with every view and decision audited. Proposed defaults MOD1–MOD5.
+
 What's still open is in `docs/NEXT_PHASE.md`.
 
-## Test results (last full local run: `pnpm verify`, Phase 9 working tree on `645a33f`, PASS, 477 s)
+## Test results (last full local run: `pnpm verify`, Phase 11 working tree on `76bc22a`, PASS, 570 s)
 This was a **local** run. GitHub Actions did not run.
 
 | Step | Result |
 |---|---|
 | TypeScript strict | pass |
 | Dependency audit (`pnpm audit --prod`) | no known vulnerabilities |
-| Vitest: UI and PostgreSQL security tests | 272 / 272 (28 files) |
+| Vitest: UI and PostgreSQL security tests | 296 / 296 (30 files) |
 | Production build, env-safety check | pass |
-| Browser, Phases 1–7, hardening, safety and notices | 17 / 17, 70 / 70, 66 / 66, 43 / 43, 39 / 39, 41 / 41, 44 / 44, 21 / 21, 52 / 52, 22 / 22 |
-| Backup and restore drill | 56 tables, 96 policies, 72 definer functions, 26 triggers matched |
+| Browser: Phases 1–7 and hardening | 17 / 17, 70 / 70, 66 / 66, 43 / 43, 39 / 39, 41 / 41, 44 / 44, 21 / 21 |
+| Browser: safety, notices, age and regional rules (off), moderators (off) | 52 / 52, 22 / 22, 13 / 13, 11 / 11 |
+| Backup and restore drill | 59 tables, 112 policies, 82 definer functions, 26 triggers matched |
 
 ## Known issues and limitations
 - **Auth:** our own implementation; the Supabase switch is planned, not done. There's no ID-verification vendor; checks are manual.

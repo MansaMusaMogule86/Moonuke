@@ -1,5 +1,7 @@
 # Next phase
 
+> **2026-11-06 (Phase 11):** the restricted moderator role is built and switched off: `docs/phase-11-moderators.md`. It needs the owner's approval (A1, B-6).
+>
 > **2026-11-06 (Phase 10):** age assurance and regional rules are built and switched off: `docs/phase-10-age-geo.md`. Turning them on needs the owner's approval, a vendor (P-2) and jurisdictions (L-1).
 >
 > **2026-11-06 (later):** Phase 9, creator statements of reasons and appeals, is built and verified locally: `docs/phase-9-notices-appeals.md`. The owner needs to confirm AP1–AP6.
@@ -26,7 +28,7 @@ Everything that needs no decision is built. **Each remaining item needs the owne
 | Requester acknowledgements; EU transparency database submissions; member appeals | The SC9 decision; counsel (DSA Art. 24(5)) |
 | Participant ID-document verification; private evidence storage | KYC vendor (P-3) and storage (P-5) approvals |
 | NCMEC submission | Manual only by design. Needs ESP registration and a counsel-verified procedure |
-| A separate moderator role | Capabilities are designed (`src/server/auth/staff.ts`, inactive). It needs the owner's decision (A1) |
+| Activating the moderator role | Built and switched off (Phase 11). It needs the owner's decision (A1, B-6) |
 | Retention and deletion periods, data export | Legal (open question #5) |
 | Re-enabling CI | The workflow is updated to run `pnpm verify` and stays disabled. It needs approval (A11) and an Actions-enabled account |
 | Visual identity change | Owner decision: the Phase 8 brief conflicts with the approved black-and-gold identity (see DECISIONS) |

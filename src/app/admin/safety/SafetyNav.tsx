@@ -7,6 +7,7 @@ const items = [
   { key: "participants", href: "/admin/safety/participants", label: "Participants" },
   { key: "appeals", href: "/admin/safety/appeals", label: "Appeals" },
   { key: "safeguarding", href: "/admin/safety/safeguarding", label: "Safeguarding" },
+  { key: "access", href: "/admin/safety/access", label: "Access rules" },
 ] as const;
 
 export function SafetyNav({ current, counts }: { current: (typeof items)[number]["key"]; counts?: Partial<Record<(typeof items)[number]["key"], number>> }) {

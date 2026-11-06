@@ -1,4 +1,5 @@
 import { getViewer } from "@/server/auth/request";
+import { gateRequest } from "@/server/compliance/access";
 import { studySvg } from "@/server/media/placeholder";
 import { verifyMediaSignature } from "@/server/media/sign";
 import { getEntitledMedia } from "@/server/services/club";
@@ -27,6 +28,8 @@ export async function GET(req: Request, { params }: { params: Promise<{ postId: 
   const viewer = await getViewer();
   if (!viewer || viewer.status !== "active") return deny();
   if (!verifyMediaSignature(postId, i, viewer.id, exp, sig)) return deny();
+  // Regional rules and age assurance (no-op while both are switched off).
+  if (!(await gateRequest(viewer)).allowed) return deny();
 
   const study = await getEntitledMedia(viewer, postId, i);
   if (!study) return deny();

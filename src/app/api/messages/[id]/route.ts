@@ -1,4 +1,5 @@
 import { getViewer } from "@/server/auth/request";
+import { gateRequest } from "@/server/compliance/access";
 import { isAppError } from "@/server/errors";
 import { conversationMessages } from "@/server/services/messaging";
 import { uuid } from "@/server/validation";
@@ -16,6 +17,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
   const { id } = await params;
   const viewer = await getViewer();
   if (!viewer || viewer.status !== "active" || viewer.mfa === "pending" || !uuid.safeParse(id).success) return json({ error: "not_found" }, 404);
+  if (!(await gateRequest(viewer)).allowed) return json({ error: "not_found" }, 404);
   const after = new URL(req.url).searchParams.get("after") ?? undefined;
   try {
     return json({ messages: await conversationMessages(viewer, id, { after }) });

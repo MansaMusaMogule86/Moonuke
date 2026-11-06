@@ -26,7 +26,8 @@ const sevLabel = { 3: "Critical", 2: "High", 1: "Normal" } as const;
  * One report. State lives here, so the card reflects each decision
  * immediately instead of disappearing (or going stale) on revalidation.
  */
-export function ModerationCard({ row }: { row: QueueRow }) {
+/** `canSuspend` is false for moderators: suspension is owner-only. */
+export function ModerationCard({ row, canSuspend = true }: { row: QueueRow; canSuspend?: boolean }) {
   const [state, action] = useActionState(moderateAction, idle);
   const [escalating, setEscalating] = useState(false);
   const status = (state.data?.status as QueueRow["status"]) ?? row.status;
@@ -85,7 +86,7 @@ export function ModerationCard({ row }: { row: QueueRow }) {
                 ) : (
                   <Submit name="action" value="hide_post" className="h-10 px-4 text-[13px]">Hide post</Submit>
                 ))}
-              {row.target_user_id && row.target_status === "active" && (
+              {canSuspend && row.target_user_id && row.target_status === "active" && (
                 <Submit name="action" value="suspend_user" variant="outline" className="h-10 px-4 text-[13px]">Suspend account</Submit>
               )}
               {!closed && <Submit name="action" value="dismiss" variant="ghost" className="h-10 px-4 text-[13px]">Dismiss</Submit>}

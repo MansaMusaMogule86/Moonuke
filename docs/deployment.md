@@ -19,9 +19,9 @@ NODE_ENV=production pnpm env:check
 |---|---|
 | `DATABASE_URL` | Required. Keep it in the host's secret manager. |
 | `APP_SECRET` | Required, 32+ random characters. It signs media URLs, keys IP and rate-limit hashes, and derives the MFA encryption key. **Rotating it invalidates signed URLs and every enrolled authenticator** (owner re-enrols via mandatory setup). |
-| `APP_URL` | Required. Must be `https://`. |
-| `TRUSTED_PROXY` | Required **explicitly**: `vercel`, `cloudflare`, `hops:N` or `none`. A wrong value allows spoofed IPs, or turns IP rate limits off (`none`). |
-| `EMAIL_TRANSPORT` | `smtp` or `disabled`. `dev` is refused. |
+| `APP_URL` | Required. Must be `https://`. On Vercel it defaults to `https://$VERCEL_PROJECT_PRODUCTION_URL`; set it for a custom domain. |
+| `TRUSTED_PROXY` | Required **explicitly**: `vercel`, `cloudflare`, `hops:N` or `none`. A wrong value allows spoofed IPs, or turns IP rate limits off (`none`). On Vercel (`VERCEL=1`) it defaults to `vercel`. |
+| `EMAIL_TRANSPORT` | `smtp` or `disabled`. `dev` is refused. On Vercel it defaults to `disabled`. |
 | `SMTP_URL`, `EMAIL_FROM` | Required with `smtp`. |
 | `ALLOW_LOCAL_PRODUCTION` | **Never set it in a deployment.** It is for localhost and CI only, and it is refused for non-localhost URLs. |
 

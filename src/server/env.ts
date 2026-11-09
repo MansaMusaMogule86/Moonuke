@@ -56,7 +56,7 @@ export function productionProblems(e: z.infer<typeof schema>): string[] {
   if (!e.APP_SECRET) p.push("APP_SECRET must be set (32+ random characters).");
   if (e.APP_SECRET === DEV_SECRET) p.push("APP_SECRET is the development default.");
   if (!e.APP_URL.startsWith("https://")) p.push("APP_URL must use https://.");
-  if (!process.env.TRUSTED_PROXY) p.push("TRUSTED_PROXY must be set explicitly (none | vercel | cloudflare | hops:N).");
+  if (!process.env.TRUSTED_PROXY && process.env.VERCEL !== "1") p.push("TRUSTED_PROXY must be set explicitly (none | vercel | cloudflare | hops:N).");
   if (e.EMAIL_TRANSPORT === "dev") p.push("EMAIL_TRANSPORT=dev is not allowed in production (use smtp or disabled).");
   if (e.EMAIL_TRANSPORT === "smtp" && (!e.SMTP_URL || !e.EMAIL_FROM)) p.push("EMAIL_TRANSPORT=smtp requires SMTP_URL and EMAIL_FROM.");
   if (e.AI_PROVIDER === "anthropic" && !e.ANTHROPIC_API_KEY) p.push("AI_PROVIDER=anthropic requires ANTHROPIC_API_KEY.");
@@ -76,7 +76,12 @@ let cached: Env | null = null;
 
 export function env(): Env {
   if (cached) return cached;
+  // On Vercel (VERCEL=1 is set by the platform) the proxy and https domain are known, and with no SMTP configured
+  // mail is off rather than the dev outbox. Anything set explicitly still wins. APP_SECRET has no default.
+  const prodHost = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+  const vercel = process.env.VERCEL === "1" ? { TRUSTED_PROXY: "vercel", EMAIL_TRANSPORT: "disabled", ...(prodHost && { APP_URL: `https://${prodHost}` }) } : {};
   const raw = {
+    ...vercel,
     ...process.env,
     // Back-compat with the Phase 2 variable name.
     APP_SECRET: process.env.APP_SECRET ?? process.env.MOONUKE_SECRET,

@@ -43,7 +43,7 @@ const dump = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "mk-drill-")), "app
 
 const run = (cmd, args) => {
   const r = spawnSync(cmd, args, { encoding: "utf8" });
-  if (r.status !== 0) throw new Error(`${cmd} failed: ${(r.stderr || r.stdout).slice(-800)}`);
+  if (r.status !== 0) throw new Error(`${cmd} failed: ${(r.stderr || r.stdout || String(r.error)).slice(-800)}`);
   return r.stdout;
 };
 async function query(url, sql) {

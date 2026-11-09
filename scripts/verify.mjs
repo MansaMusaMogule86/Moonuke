@@ -59,10 +59,15 @@ function record(step, ok, ms, detail = "") {
   console.log(`${mark} ${step.padEnd(44)} ${fmt(ms).padStart(8)}  ${detail}`);
 }
 
+// Windows can't spawn `pnpm` (a .cmd shim) without a shell, so run pnpm's own JS via node when we know it.
+const PNPM = process.env.npm_execpath;
+const cmdFor = (cmd, args) => (cmd === "pnpm" && PNPM ? [process.execPath, [PNPM, ...args]] : [cmd, args]);
+const spawnSyncX = (cmd, args, opts) => spawnSync(...cmdFor(cmd, args), opts);
+
 function run(step, cmd, args, env = {}, { summarize } = {}) {
   const start = Date.now();
   const logFile = path.join(LOG_DIR, `${step.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}.log`);
-  const r = spawnSync(cmd, args, { cwd: ROOT, env: { ...process.env, ...env }, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
+  const r = spawnSyncX(cmd, args, { cwd: ROOT, env: { ...process.env, ...env }, encoding: "utf8", maxBuffer: 64 * 1024 * 1024 });
   const out = `${r.stdout ?? ""}${r.stderr ?? ""}`;
   fs.writeFileSync(logFile, out);
   const ok = r.status === 0;
@@ -152,7 +157,7 @@ run("Typecheck (tsc --noEmit, strict)", "pnpm", ["-s", "lint"]);
 {
   // Dependency audit. Needs the registry; a network failure is reported as skipped, not passed.
   const start = Date.now();
-  const r = spawnSync("pnpm", ["audit", "--prod"], { cwd: ROOT, encoding: "utf8", timeout: 90_000 });
+  const r = spawnSyncX("pnpm", ["audit", "--prod"], { cwd: ROOT, encoding: "utf8", timeout: 90_000 });
   const out = `${r.stdout ?? ""}${r.stderr ?? ""}`;
   if (/No known vulnerabilities found/.test(out)) record("Dependency audit (pnpm audit --prod)", true, Date.now() - start, "no known vulnerabilities");
   else if (/vulnerabilit/i.test(out) && !/ERR_|ENOTFOUND|ETIMEDOUT|ECONNRESET|fetch failed/i.test(out)) record("Dependency audit (pnpm audit --prod)", false, Date.now() - start, (out.match(/\d+ vulnerabilit[^\n]*/) ?? ["vulnerabilities found"])[0]);
@@ -178,14 +183,14 @@ if (!QUICK) {
   run(
     "Production env check rejects unsafe config",
     "node",
-    ["-e", `const r=require('child_process').spawnSync('pnpm',['-s','env:check'],{env:{...process.env,NODE_ENV:'production',ALLOW_LOCAL_PRODUCTION:'',APP_URL:'http://example.com',DATABASE_URL:'${E2E_DB}'},encoding:'utf8'});process.exit(r.status===0?1:0)`],
+    ["-e", `const p=process.env.npm_execpath;const r=require('child_process').spawnSync(p?process.execPath:'pnpm',[...(p?[p]:[]),'-s','env:check'],{env:{...process.env,NODE_ENV:'production',ALLOW_LOCAL_PRODUCTION:'',APP_URL:'http://example.com',DATABASE_URL:'${E2E_DB}'},encoding:'utf8'});process.exit(r.status===0?1:0)`],
   );
 
   if (built) {
     const start = Date.now();
     run("Migrate + seed e2e database", "pnpm", ["-s", "db:seed"], serverEnv);
     const logFile = fs.openSync(path.join(LOG_DIR, "server.log"), "w");
-    const server = spawn(path.join(ROOT, "node_modules/.bin/next"), ["start", "-p", String(port)], {
+    const server = spawn(process.execPath, [require.resolve("next/dist/bin/next"), "start", "-p", String(port)], {
       cwd: ROOT,
       env: { ...process.env, ...serverEnv, NODE_ENV: "production" },
       stdio: ["ignore", logFile, logFile],
@@ -214,15 +219,16 @@ if (!QUICK) {
           record(name, null, 0, "suite not present");
           continue;
         }
-        spawnSync("pnpm", ["-s", "db:seed"], { cwd: ROOT, env: { ...process.env, ...serverEnv }, encoding: "utf8" });
+        spawnSyncX("pnpm", ["-s", "db:seed"], { cwd: ROOT, env: { ...process.env, ...serverEnv }, encoding: "utf8" });
         run(name, "node", [file], { ...serverEnv, BASE: APP_URL, ...extra }, { summarize: e2eSummary });
       }
     }
     try {
-      process.kill(-server.pid, "SIGTERM");
+      if (process.platform === "win32") spawnSync("taskkill", ["/pid", String(server.pid), "/T", "/F"]);
+      else process.kill(-server.pid, "SIGTERM");
     } catch {}
     // Backup → restore → compare (rows, RLS, policies, definers, triggers, grants).
-    spawnSync("pnpm", ["-s", "db:seed"], { cwd: ROOT, env: { ...process.env, ...serverEnv }, encoding: "utf8" });
+    spawnSyncX("pnpm", ["-s", "db:seed"], { cwd: ROOT, env: { ...process.env, ...serverEnv }, encoding: "utf8" });
     run("Backup + restore drill (pg_dump → pg_restore)", "node", ["scripts/backup-drill.mjs", E2E_DB], {}, { summarize: (out) => (out.match(/[✓✗] restore drill[^\n]*/) ?? [""])[0].replace(/^[✓✗] restore drill:? ?/, "") });
   }
 }

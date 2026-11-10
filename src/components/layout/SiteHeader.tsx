@@ -124,7 +124,7 @@ export function SiteHeader() {
         </div>
       </motion.header>
 
-      <Sheet open={open} onOpenChange={setOpen} title={brand.name} description={`${brand.tagline}. Adults only.`}>
+      <Sheet open={open} onOpenChange={setOpen} title={brand.name} description={`${brand.tagline}.`}>
         <nav aria-label="Mobile">
           <ul className="divide-y divide-line">
             {NAV.map((item, i) => (

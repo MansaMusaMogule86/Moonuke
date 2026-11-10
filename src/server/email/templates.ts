@@ -20,7 +20,7 @@ function layout(title: string, paragraphs: string[], cta?: { label: string; url:
 <tr><td style="padding:0 0 28px;font:500 13px/1 Georgia,serif;letter-spacing:.3em;color:#d6b56d;text-transform:uppercase">${esc(brand.name)}</td></tr>
 <tr><td style="padding:0 0 20px;font:400 30px/1.15 Georgia,serif;color:#f6f0e6">${esc(title)}</td></tr>
 <tr><td>${p}${button}${foot}</td></tr>
-<tr><td style="padding:32px 0 0;border-top:1px solid #222;font:12px/1.6 Arial,sans-serif;color:#8a847b">${esc(brand.name)} — ${esc(brand.tagline)}. Adults 18+. You received this because of activity on your account or an invitation addressed to you.</td></tr>
+<tr><td style="padding:32px 0 0;border-top:1px solid #222;font:12px/1.6 Arial,sans-serif;color:#8a847b">${esc(brand.name)} — ${esc(brand.tagline)}. 18+ only. You received this because of activity on your account or an invitation addressed to you.</td></tr>
 </table></td></tr></table></body></html>`;
 }
 

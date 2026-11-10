@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { Bodoni_Moda, Jost } from "next/font/google";
 import { Providers } from "@/components/Providers";
 import { brand, pageTitle } from "@/config/brand";
+import { appUrl, env, isIndexable } from "@/server/env";
 import "./globals.css";
 
 const bodoni = Bodoni_Moda({
@@ -20,13 +21,18 @@ const jost = Jost({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: { default: pageTitle(), template: `%s · ${brand.name}` },
-  description:
-    `${brand.name} is ${brand.description.charAt(0).toLowerCase()}${brand.description.slice(1)}`,
-  robots: { index: true, follow: true },
-  openGraph: { title: brand.name, description: brand.descriptor, type: "website" },
-};
+export function generateMetadata(): Metadata {
+  const google = env().GOOGLE_SITE_VERIFICATION;
+  return {
+    metadataBase: new URL(appUrl()),
+    title: { default: pageTitle(), template: `%s · ${brand.name}` },
+    description:
+      `${brand.name} is ${brand.description.charAt(0).toLowerCase()}${brand.description.slice(1)}`,
+    robots: isIndexable() ? { index: true, follow: true } : { index: false, follow: false },
+    openGraph: { title: brand.name, description: brand.descriptor, type: "website" },
+    ...(google && { verification: { google } }),
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: "#050505",

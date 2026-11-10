@@ -22,6 +22,7 @@ NODE_ENV=production pnpm env:check
 | `APP_URL` | Required. Must be `https://`. On Vercel it defaults to `https://$VERCEL_PROJECT_PRODUCTION_URL`; set it for a custom domain. |
 | `TRUSTED_PROXY` | Required **explicitly**: `vercel`, `cloudflare`, `hops:N` or `none`. A wrong value allows spoofed IPs, or turns IP rate limits off (`none`). On Vercel (`VERCEL=1`) it defaults to `vercel`. |
 | `EMAIL_TRANSPORT` | `smtp` or `disabled`. `dev` is refused. On Vercel it defaults to `disabled`. |
+| `GOOGLE_SITE_VERIFICATION` | Optional. The `content` token from Search Console's HTML-tag method. Only the live site is indexable: Vercel previews (`VERCEL_ENV` ≠ `production`) and non-https builds serve `Disallow: /` and `noindex`. The sitemap lists the homepage only. |
 | `SMTP_URL`, `EMAIL_FROM` | Required with `smtp`. |
 | `ALLOW_LOCAL_PRODUCTION` | **Never set it in a deployment.** It is for localhost and CI only, and it is refused for non-localhost URLs. |
 

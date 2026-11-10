@@ -8,6 +8,10 @@ import { Tiers } from "@/components/home/Tiers";
 import { Vault } from "@/components/home/Vault";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader";
+import type { Metadata } from "next";
+
+// Resolved against metadataBase, so tracking parameters (?utm_…, ?fbclid…) never reach the canonical.
+export const metadata: Metadata = { alternates: { canonical: "/" } };
 
 export default function HomePage() {
   return (

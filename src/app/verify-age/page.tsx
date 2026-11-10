@@ -20,7 +20,7 @@ export default async function VerifyAgePage() {
         <p role="status" className="text-[15px] text-ivory">You&apos;re verified. You can continue to the club.</p>
       ) : (
         <div className="space-y-5 text-[15px] leading-relaxed text-stone">
-          <p>The law where you are requires a reliable age check before you can see adult content. An approved provider carries it out; we only keep the result (passed or not), never your documents or date of birth.</p>
+          <p>The law where you are requires a reliable age check before you can see age-restricted content. An approved provider carries it out; we only keep the result (passed or not), never your documents or date of birth.</p>
           {status.lastStatus === "failed" && <p role="alert" className="text-danger">Your last check didn&apos;t pass. You can try again.</p>}
           <StartAgeCheck />
         </div>

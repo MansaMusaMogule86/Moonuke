@@ -11,7 +11,7 @@ export const brand = {
   descriptor: "The Private Creator Club",
   tagline: "A private creator club",
   description:
-    "An invitation-only club for creators and their most devoted members. Alias-first privacy, VIP rooms, and locked content. Adults 18+.",
+    "An invitation-only club for creators and their most devoted members. Alias-first privacy, VIP rooms, and locked content.",
   /**
    * Wordmark letters. `moonIndex` is the letter drawn as a hairline "new moon"
    * circle (the second O of MOONUKE). Set to null for a plain wordmark.

@@ -26,6 +26,7 @@ export const LIMITS = {
   messageSend: { limit: 40, windowSec: 10 * 60 },
   messagePerConversation: { limit: 15, windowSec: 60 },
   blockToggle: { limit: 60, windowSec: 60 * 60 },
+  securityAdmin: { limit: 300, windowSec: 60 * 60 },
 } satisfies Record<string, Limit>;
 
 /**

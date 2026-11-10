@@ -9,6 +9,7 @@ import { clearSession, requestMeta, setSessionCookie } from "@/server/auth/reque
 import { bucketKey } from "@/server/auth/crypto";
 import { isAppError } from "@/server/errors";
 import { redeemInvitation, signIn } from "@/server/services/accounts";
+import { recordLoginFailure } from "@/server/security/monitor";
 import { hit, hitIp, LIMITS } from "@/server/services/rateLimit";
 import { applySchema, fieldErrors, forgotSchema, resetSchema, signinSchema } from "@/server/validation";
 
@@ -32,6 +33,7 @@ export async function signInAction(_prev: FormState, fd: FormData): Promise<Form
     mfa = r.viewer.mfa;
     role = r.viewer.role;
   } catch (e) {
+    if (isAppError(e) && e.code === "rate_limited") await recordLoginFailure(parsed.data.email, null, meta.security, "rate_limited");
     if (isAppError(e)) return { status: "error", message: e.message, values };
     throw e;
   }

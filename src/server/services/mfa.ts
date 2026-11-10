@@ -12,7 +12,8 @@ import {
   verifyTotp,
 } from "@/server/auth/totp";
 import type { Viewer } from "@/server/auth/permissions";
-import { AppError } from "@/server/errors";
+import { AppError, isAppError } from "@/server/errors";
+import { contextFromMeta, recordLoginSuccess, recordMfaFailure, type SecurityContext } from "@/server/security/monitor";
 import { audit } from "./audit";
 import { notifySecurity } from "./recovery";
 
@@ -60,8 +61,8 @@ async function storeRecoveryCodes(q: Q, userId: string): Promise<string[]> {
  * Confirm enrolment with a first code. Marks the CURRENT session as verified
  * (AAL2) and returns recovery codes — shown exactly once.
  */
-export async function confirmEnrollment(viewer: Viewer, code: string): Promise<string[]> {
-  return system(async (q) => {
+export async function confirmEnrollment(viewer: Viewer, code: string, meta?: { ipHash: string | null; userAgent: string | null; security?: SecurityContext }): Promise<string[]> {
+  const codes = await system(async (q) => {
     const f = await q.one<{ secret_enc: string; confirmed_at: Date | null }>(
       `select secret_enc, confirmed_at from app.mfa_factors where user_id = $1 for update`,
       [viewer.id],
@@ -76,15 +77,22 @@ export async function confirmEnrollment(viewer: Viewer, code: string): Promise<s
     await audit(q, { actorId: viewer.id, action: "mfa.enable", targetType: "user", targetId: viewer.id });
     return codes;
   });
+  // An owner's first sign-in completes here (MFA is mandatory before any owner access).
+  if (viewer.role === "owner" && viewer.sessionId && meta) {
+    await recordLoginSuccess({ userId: viewer.id, role: viewer.role, sessionRef: viewer.sessionId, method: "enrolled" }, contextFromMeta(meta));
+  }
+  return codes;
 }
 
 /**
  * Complete sign-in for a session that is awaiting its second factor.
  * Accepts a current TOTP code or one unused recovery code.
  */
-export async function verifyChallenge(viewer: Viewer, input: string, meta: { ipHash: string | null }): Promise<void> {
+export async function verifyChallenge(viewer: Viewer, input: string, meta: { ipHash: string | null; userAgent?: string | null; security?: SecurityContext }): Promise<void> {
   if (viewer.mfa !== "pending" || !viewer.sessionId) throw new AppError("conflict", "Nothing to verify.");
-  await system(async (q) => {
+  const ctx = contextFromMeta({ ipHash: meta.ipHash, userAgent: meta.userAgent ?? null, security: meta.security });
+  const method = /^\d{6}$/.test(input.trim()) ? "totp" : "recovery";
+  const usedRecovery = await system(async (q) => {
     const f = await q.one<{ secret_enc: string; last_used_step: string | null }>(
       `select secret_enc, last_used_step from app.mfa_factors where user_id = $1 and confirmed_at is not null for update`,
       [viewer.id],
@@ -114,7 +122,13 @@ export async function verifyChallenge(viewer: Viewer, input: string, meta: { ipH
     await audit(q, { actorId: viewer.id, action: usedRecovery ? "mfa.recovery_used" : "mfa.challenge_ok", ipHash: meta.ipHash });
     if (usedRecovery) await notifySecurity(q, viewer.id, "recovery_code_used");
     if (viewer.role === "owner") await notifySecurity(q, viewer.id, "owner_signin");
+    return usedRecovery;
+  }).catch(async (e) => {
+    // A wrong code rolls the transaction back, so the failure is recorded outside it.
+    if (isAppError(e) && e.code === "validation") await recordMfaFailure(viewer.id, method, ctx);
+    throw e;
   });
+  await recordLoginSuccess({ userId: viewer.id, role: viewer.role, sessionRef: viewer.sessionId, method: usedRecovery ? "recovery" : "totp" }, ctx);
 }
 
 async function requireCurrentCode(q: Q, viewer: Viewer, code: string) {

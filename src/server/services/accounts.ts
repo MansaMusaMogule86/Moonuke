@@ -4,6 +4,7 @@ import { dummyHash, hashPassword, sha256, verifyPassword } from "@/server/auth/c
 import type { Role, Viewer } from "@/server/auth/permissions";
 import { AppError } from "@/server/errors";
 import { audit } from "./audit";
+import { contextFromMeta, recordBlockedAttempt, recordLoginFailure, recordLoginSuccess, recordRegistration, type SecurityContext } from "@/server/security/monitor";
 import { createSession } from "./sessions";
 
 const INVALID = "This invitation is no longer valid.";
@@ -39,12 +40,12 @@ export type Application = { alias: string; email: string; password: string };
 export async function redeemInvitation(
   token: string,
   input: Application,
-  meta: { ipHash: string | null; userAgent: string | null },
+  meta: { ipHash: string | null; userAgent: string | null; security?: SecurityContext },
 ): Promise<{ sessionToken: string; userId: string }> {
   if (!TOKEN_RE.test(token)) throw new AppError("invalid_invitation", INVALID);
   const passwordHash = await hashPassword(input.password);
 
-  return system(async (q) => {
+  const done = await system(async (q) => {
     const inv = await q.one<{ id: string; intended_role: Role; email: string | null }>(
       `update app.invitations set use_count = use_count + 1
         where token_hash = $1 and revoked_at is null and expires_at > now() and use_count < max_uses
@@ -69,7 +70,7 @@ export async function redeemInvitation(
        values ($1, $2, $3, 'pending', $4, now(), $5) returning id`,
       [input.email, passwordHash, inv.intended_role, input.alias, inv.id],
     );
-    await q.query(`insert into app.applications (user_id, invitation_id) values ($1, $2)`, [user!.id, inv.id]);
+    const application = await q.one<{ id: string }>(`insert into app.applications (user_id, invitation_id) values ($1, $2) returning id`, [user!.id, inv.id]);
     // White-glove: attach the new account to its onboarding case, if the house opened one.
     await q.query(`update app.onboarding_cases set user_id = $1, updated_at = now() where invitation_id = $2 and user_id is null`, [user!.id, inv.id]);
     await audit(q, {
@@ -81,8 +82,14 @@ export async function redeemInvitation(
       metadata: { role: inv.intended_role },
     });
     const sessionToken = await createSession(user!.id, meta.userAgent, q);
-    return { sessionToken, userId: user!.id };
+    return { sessionToken, userId: user!.id, role: inv.intended_role, invitationId: inv.id, applicationId: application!.id };
   });
+  // Recorded only after the account committed; an invalid invitation never gets here.
+  await recordRegistration(
+    { userId: done.userId, role: done.role, invitationId: done.invitationId, applicationId: done.applicationId },
+    contextFromMeta(meta),
+  );
+  return { sessionToken: done.sessionToken, userId: done.userId };
 }
 
 /**
@@ -92,9 +99,10 @@ export async function redeemInvitation(
 export async function signIn(
   email: string,
   password: string,
-  meta: { ipHash: string | null; userAgent: string | null },
+  meta: { ipHash: string | null; userAgent: string | null; security?: SecurityContext },
 ): Promise<{ sessionToken: string; viewer: Viewer }> {
   const fail = new AppError("invalid_credentials", "That email and password don't match an account.");
+  const ctx = contextFromMeta(meta);
   const row = await system((q) =>
     q.one<Omit<Viewer, "aal" | "mfa"> & { password_hash: string; has_factor: boolean }>(
       `select u.id, u.role, u.status, u.alias::text as alias, u.email::text as email, u.password_hash,
@@ -106,19 +114,28 @@ export async function signIn(
   const ok = await verifyPassword(password, row?.password_hash ?? (await dummyHash()));
   if (!row || !ok) {
     await system((q) => audit(q, { actorId: row?.id ?? null, action: "auth.signin_failed", ipHash: meta.ipHash }));
+    await recordLoginFailure(email, row?.id ?? null, ctx, "bad_credentials");
     throw fail;
   }
   if (row.status === "suspended" || row.status === "rejected") {
     await system((q) => audit(q, { actorId: row.id, action: "auth.signin_blocked", ipHash: meta.ipHash, metadata: { status: row.status } }));
+    await recordBlockedAttempt(email, row.id, row.status, ctx);
     throw new AppError("forbidden", "This account can't sign in. Contact the house if you think this is a mistake.");
   }
-  return system(async (q) => {
+  const out = await system(async (q) => {
     const sessionToken = await createSession(row.id, meta.userAgent, q);
     await audit(q, { actorId: row.id, action: "auth.signin", ipHash: meta.ipHash });
+    const session = await q.one<{ public_id: string }>(`select public_id from app.sessions where id_hash = $1`, [sha256(sessionToken)]);
     const { password_hash: _ph, has_factor, ...rest } = row;
-    const viewer: Viewer = { ...rest, mfa: has_factor ? "pending" : "none", aal: 1 };
+    const viewer: Viewer = { ...rest, mfa: has_factor ? "pending" : "none", aal: 1, sessionId: session!.public_id };
     return { sessionToken, viewer };
   });
+  // Complete only when no second factor is needed. Enrolled accounts complete at the challenge;
+  // an owner without a factor completes when enrolment succeeds (MFA is mandatory for owners).
+  if (out.viewer.mfa === "none" && out.viewer.role !== "owner") {
+    await recordLoginSuccess({ userId: out.viewer.id, role: out.viewer.role, sessionRef: out.viewer.sessionId!, method: "password" }, ctx);
+  }
+  return out;
 }
 
 /** Bootstrap the single platform owner (CLI / seed only). */

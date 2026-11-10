@@ -68,8 +68,7 @@ export function asViewer<T>(viewer: string | { id: string; aal?: 1 | 2 } | null,
 /**
  * Privileged transaction for the narrow set of operations that must run
  * before a viewer exists or across viewers: sessions, sign-in lookup,
- * invitation redemption, rate limiting, session revocation, and writing
- * and evaluating security monitoring events (src/server/security; the console reads them only via asViewer).
+ * invitation redemption, rate limiting, session revocation.
  * Keep call sites few; each is listed in docs/phase-2-architecture.md.
  */
 export function system<T>(fn: (q: Q) => Promise<T>): Promise<T> {

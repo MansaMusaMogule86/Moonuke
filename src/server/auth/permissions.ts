@@ -13,7 +13,6 @@ export const PERMISSIONS = [
   "moderation.review",
   "creators.verify",
   "club.report",
-  "security.view",
 ] as const;
 export type Permission = (typeof PERMISSIONS)[number];
 
@@ -28,7 +27,6 @@ const matrix: Record<Role, readonly Permission[]> = {
     "audit.view",
     "moderation.review",
     "creators.verify",
-    "security.view",
   ],
   creator: ["club.discover", "club.follow", "referrals.request", "club.report"],
   member: ["club.discover", "club.follow", "referrals.request", "club.report"],

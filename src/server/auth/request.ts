@@ -5,7 +5,6 @@ import { cache } from "react";
 import { brand } from "@/config/brand";
 import { env, isProd } from "@/server/env";
 import { clientIp, type TrustedProxy } from "@/server/net/ip";
-import { contextFrom } from "@/server/security/monitor";
 import { hashIp } from "./crypto";
 import { can, type Permission, type Viewer } from "./permissions";
 import { resolveSession, revokeSession, SESSION_TTL_DAYS } from "@/server/services/sessions";
@@ -37,9 +36,8 @@ export async function clearSession() {
  */
 export async function requestMeta() {
   const h = await headers();
-  const mode = env().TRUSTED_PROXY as TrustedProxy;
-  const ip = clientIp(h, mode);
-  return { ip, ipHash: hashIp(ip), userAgent: h.get("user-agent"), security: contextFrom(h, mode) };
+  const ip = clientIp(h, env().TRUSTED_PROXY as TrustedProxy);
+  return { ip, ipHash: hashIp(ip), userAgent: h.get("user-agent") };
 }
 
 /** The signed-in account for this request (memoised per request). */

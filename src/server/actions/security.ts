@@ -56,7 +56,7 @@ export async function confirmMfaAction(_prev: FormState, fd: FormData): Promise<
   if (!parsed.success) return { status: "error", message: "Enter the 6-digit code from your app.", fields: { code: "Required." } };
   try {
     await hit(`mfa:enrol:${viewer.id}`, LIMITS.mfaChallenge);
-    const codes = await confirmEnrollment(viewer, parsed.data, await requestMeta());
+    const codes = await confirmEnrollment(viewer, parsed.data);
     flush();
     return { status: "success", message: "Two-step sign-in is on.", data: { codes: codes.join("\n") } };
   } catch (e) {

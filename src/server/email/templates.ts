@@ -120,38 +120,6 @@ export const emails = {
       { label: "Open safeguarding", url: p.url },
       "Details are intentionally not included in email.",
     ),
-  /** Immediate security alert. Carries only the alert summary (built from allowlisted fields), never IPs, emails or tokens. */
-  securityAlert: (p: { severity: "info" | "warning" | "high" | "critical"; summary: string; at: Date; url: string }) =>
-    make(
-      "security_alert",
-      `${brand.name} security: ${p.severity} alert`,
-      `A ${p.severity} security alert needs review.`,
-      [p.summary, `Raised at ${when(p.at)}.`],
-      { label: "Review in the security console", url: p.url },
-      "Sign-in is required, and the console asks for your second factor. Details are intentionally kept out of email.",
-    ),
-  /** Daily summary: counts only. */
-  securityDigest: (p: {
-    day: string;
-    timezone: string;
-    totals: { logins: number; accounts: number; registrations: number; creatorApplications: number; failed: number; alerts: number; high: number; openAlerts: number };
-    countries: { country: string; n: number }[];
-    url: string;
-  }) =>
-    make(
-      "security_digest",
-      `${brand.name} daily security summary · ${p.day}`,
-      `Security summary for the 24 hours to ${p.day} (${p.timezone}).`,
-      [
-        `Successful sign-ins: ${p.totals.logins} across ${p.totals.accounts} accounts.`,
-        `New registrations: ${p.totals.registrations}. New creator applications: ${p.totals.creatorApplications}.`,
-        `Failed sign-in attempts: ${p.totals.failed}. Alerts raised: ${p.totals.alerts} (${p.totals.high} high or critical).`,
-        `Alerts waiting for review: ${p.totals.openAlerts}.`,
-        `Approximate countries: ${p.countries.length ? p.countries.map((c) => `${c.country} ${c.n}`).join(", ") : "none recorded"}.`,
-      ],
-      { label: "Open the security console", url: p.url },
-      "Countries come from the hosting provider's network data and are approximate.",
-    ),
 };
 
 export type SecurityEvent = "password_changed" | "mfa_enabled" | "mfa_disabled" | "recovery_code_used" | "sessions_revoked" | "owner_signin";

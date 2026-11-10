@@ -16,7 +16,6 @@ const tabs = [
   { href: "/admin/messaging", label: "Messaging" },
   { href: "/admin/members", label: "Members" },
   { href: "/admin/email", label: "Email" },
-  { href: "/admin/security", label: "Security" },
   { href: "/admin/audit", label: "Audit log" },
 ];
 

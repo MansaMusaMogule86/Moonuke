@@ -4,16 +4,16 @@
  * tests/tokens.test.ts verifies parity and contrast budgets.
  */
 export const color = {
-  ink: "#08080b",
+  ink: "#050505",
   ink2: "#121217",
   ink3: "#1a1921",
   ink4: "#24232c",
-  gold: "#d8b86b",
-  goldSoft: "#f2dda6",
+  gold: "#d4af37",
+  goldSoft: "#f5d58a",
   goldMuted: "#a88b45",
-  pink: "#ff3cac",
-  pinkSoft: "#ff6fc0",
-  ivory: "#f6f2eb",
+  pink: "#ff2d96",
+  pinkSoft: "#ff8bc8",
+  ivory: "#f8f5f0",
   stone: "#b9b4c0",
   ash: "#948f9c",
   success: "#9ccba2",

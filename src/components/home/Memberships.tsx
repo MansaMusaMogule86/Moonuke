@@ -12,6 +12,7 @@ export function Memberships() {
     <section id="memberships" aria-labelledby="memberships-title" className="section-y border-t border-line">
       <span id="tiers" className="block -translate-y-24" aria-hidden />
       <span id="vault" className="block -translate-y-24" aria-hidden />
+      <span id="features" className="block -translate-y-24" aria-hidden />
       <div className="container-page">
         <SectionHeading
           id="memberships-title"

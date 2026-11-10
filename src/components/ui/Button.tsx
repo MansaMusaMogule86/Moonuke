@@ -9,13 +9,15 @@ type Size = "sm" | "md" | "lg";
 
 const base =
   "group/btn relative inline-flex select-none items-center justify-center gap-2.5 whitespace-nowrap rounded-full font-sans font-medium tracking-[0.04em] " +
-  "transition-[background-color,color,border-color,box-shadow,transform] duration-[260ms] ease-lux " +
+  "transition-[background-color,color,border-color,box-shadow,transform,filter] duration-[260ms] ease-lux " +
   "active:scale-[0.97] active:duration-[140ms] disabled:pointer-events-none disabled:opacity-40 aria-disabled:pointer-events-none aria-disabled:opacity-40";
 
 const variants: Record<Variant, string> = {
-  gold: "bg-gold text-ink shadow-[inset_0_1px_0_rgb(255_255_255/0.35)] hover:bg-gold-soft",
+  gold:
+    "bg-[linear-gradient(180deg,var(--mk-gold-soft)_0%,var(--mk-gold)_100%)] text-ink shadow-[inset_0_1px_0_rgb(255_255_255/0.5),0_8px_24px_-12px_rgb(212_175_55/0.6)] " +
+    "hover:brightness-[1.06] hover:shadow-[inset_0_1px_0_rgb(255_255_255/0.6),0_10px_30px_-10px_rgb(212_175_55/0.7)]",
   pink: "bg-pink text-ink shadow-[inset_0_1px_0_rgb(255_255_255/0.3)] hover:bg-pink-soft",
-  outline: "border border-line-strong bg-transparent text-ivory hover:border-ivory/40 hover:bg-ivory/[0.04]",
+  outline: "border border-line-strong bg-transparent text-ivory hover:border-gold/60 hover:bg-gold/[0.06]",
   ghost: "text-ivory hover:bg-ivory/[0.06]",
   quiet: "text-stone hover:text-ivory",
 };

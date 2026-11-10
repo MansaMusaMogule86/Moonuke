@@ -35,7 +35,7 @@ export function Portrait({ src, alt, study, className, priority, sizes = "(max-w
   return (
     <div className={cn("relative overflow-hidden bg-ink-2", className)}>
       {src ? (
-        <Image src={src} alt={alt} fill priority={priority} sizes={sizes} className="object-cover" />
+        <Image src={src} alt={alt} fill preload={priority} sizes={sizes} className="object-cover" />
       ) : (
         <Study alt={alt} {...(study ?? { hair: "long", light: "left" })} />
       )}
@@ -45,10 +45,10 @@ export function Portrait({ src, alt, study, className, priority, sizes = "(max-w
 
 // Accent families: gold, pink, rose-gold and a cool plum, all from the palette.
 const ACCENTS = {
-  hoops: ["216 184 107", "242 221 166"],
-  crown: ["255 60 172", "255 111 192"],
-  collar: ["232 160 127", "216 184 107"],
-  none: ["150 120 200", "255 111 192"],
+  hoops: ["212 175 55", "245 213 138"],
+  crown: ["255 45 150", "255 139 200"],
+  collar: ["232 160 127", "212 175 55"],
+  none: ["150 120 200", "255 139 200"],
 } as const;
 const SHAPES = { long: "38% 62%", bun: "50% 30%", crop: "62% 40%", wrap: "30% 45%" } as const;
 
@@ -66,7 +66,7 @@ export function Study({ alt, hair, light, tilt = 0, adorn = "none", glow = 0.6 }
           `radial-gradient(70% 55% at ${x} 18%, rgb(${a} / ${0.3 * strength}), transparent 70%)`,
           `radial-gradient(60% 50% at ${SHAPES[hair] ?? SHAPES.long}, rgb(${b} / ${0.2 * strength}), transparent 72%)`,
           `linear-gradient(${150 + tilt * 4}deg, transparent 40%, rgb(${a} / 0.08) 52%, transparent 64%)`,
-          "linear-gradient(180deg, transparent 55%, rgb(8 8 11 / 0.7))",
+          "linear-gradient(180deg, transparent 55%, rgb(5 5 5 / 0.7))",
         ].join(","),
       }}
     />

@@ -17,7 +17,7 @@ export function PostTile({ post, vipTierId, memberTierId, canReport = false }: {
     <article id={`post-${post.id}`} className="group scroll-mt-24 overflow-hidden rounded-[var(--radius-xl)] border border-line bg-ink-2" aria-label={`${accessLabel[post.access]} post: ${post.teaser}`}>
       <div className="relative aspect-[4/5] overflow-hidden">
         {locked ? (
-          <div className="absolute inset-0 bg-[radial-gradient(120%_90%_at_30%_20%,#2a2433_0%,#14131a_45%,#08080b_100%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(120%_90%_at_30%_20%,#2a2433_0%,#14131a_45%,#050505_100%)]" />
         ) : (
           // eslint-disable-next-line @next/next/no-img-element -- signed, short-lived, per-viewer URL; must not be cached by the image optimiser
           <img src={post.media?.[0]} alt={post.teaser} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover transition-transform duration-[1400ms] ease-lux group-hover:scale-[1.03]" />

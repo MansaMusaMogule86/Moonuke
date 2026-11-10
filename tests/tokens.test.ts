@@ -18,14 +18,14 @@ describe("design tokens", () => {
   });
 
   it("matches the Diva Fans palette", () => {
-    expect(color.ink).toBe("#08080b");
+    expect(color.ink).toBe("#050505");
     expect(color.ink2).toBe("#121217");
     expect(color.ink3).toBe("#1a1921");
-    expect(color.gold).toBe("#d8b86b");
-    expect(color.goldSoft).toBe("#f2dda6");
+    expect(color.gold).toBe("#d4af37");
+    expect(color.goldSoft).toBe("#f5d58a");
     expect(color.goldMuted).toBe("#a88b45");
-    expect(color.pink).toBe("#ff3cac");
-    expect(color.ivory).toBe("#f6f2eb");
+    expect(color.pink).toBe("#ff2d96");
+    expect(color.ivory).toBe("#f8f5f0");
     expect(color.stone).toBe("#b9b4c0");
   });
 

@@ -17,9 +17,11 @@ const browser = await chromium.launch();
   const page = await ctx.newPage();
   await page.goto(BASE + "/", { waitUntil: "networkidle" });
 
-  const desktopCta = page.getByRole("banner").getByRole("link", { name: "Sign in" });
-  check("mobile: header sign-in collapses into the menu", !(await desktopCta.isVisible()));
-  check("mobile: hero sign-in visible", await page.locator("section[aria-labelledby=hero-title]").getByRole("link", { name: "Sign in" }).isVisible());
+  const desktopCta = page.getByRole("banner").getByRole("link", { name: "Log in" });
+  check("mobile: header log-in collapses into the menu", !(await desktopCta.isVisible()));
+  const primary = page.locator("section[aria-labelledby=hero-title]").getByRole("link", { name: "Join as a Creator" });
+  check("mobile: primary CTA visible in the first screen", (await primary.isVisible()) && (await primary.boundingBox()).y + 56 <= 844);
+  check("mobile: CTA touch targets ≥ 44px", (await primary.boundingBox()).height >= 44);
 
   await page.getByRole("button", { name: "Open menu" }).click();
   const dialog = page.getByRole("dialog");
@@ -31,14 +33,14 @@ const browser = await chromium.launch();
   check("mobile: Escape closes sheet", !(await dialog.isVisible().catch(() => false)));
 
   await page.getByRole("button", { name: "Open menu" }).click();
-  await page.getByRole("dialog").getByRole("link", { name: "FAQ" }).click();
+  await page.getByRole("dialog").getByRole("link", { name: "Features" }).click();
   await page.waitForTimeout(1200);
-  check("mobile: menu link navigates to section", page.url().endsWith("#faq"));
+  check("mobile: menu link navigates to section", page.url().endsWith("#features"));
   await ctx.close();
 }
 
 // ---- Layout: no horizontal overflow at the supported widths
-for (const width of [360, 390, 768, 1024, 1440, 1920]) {
+for (const width of [320, 360, 375, 390, 430, 768, 1024, 1440, 1920]) {
   const ctx = await browser.newContext({ viewport: { width, height: 900 } });
   const page = await ctx.newPage();
   await page.goto(BASE + "/", { waitUntil: "networkidle" });
@@ -54,10 +56,13 @@ for (const width of [360, 390, 768, 1024, 1440, 1920]) {
   await page.goto(BASE + "/", { waitUntil: "networkidle" });
 
   const hero = page.locator("section[aria-labelledby=hero-title]");
-  check("hero: headline states the product", /closer connection/i.test((await page.locator("#hero-title").textContent()) ?? ""));
-  check("hero: sign-in goes to the real flow", (await hero.getByRole("link", { name: "Sign in" }).getAttribute("href")) === "/signin");
+  check("hero: headline states the product", /Premium Space for Exclusive Creators/.test((await page.locator("#hero-title").textContent()) ?? ""));
+  check("hero: creator CTA goes to the creator section", (await hero.getByRole("link", { name: "Join as a Creator" }).getAttribute("href")) === "/#creators");
+  check("hero: discover CTA goes to the real directory", (await hero.getByRole("link", { name: "Discover Creators" }).getAttribute("href")) === "/discover");
+  check("hero: portrait is the prioritised image", await page.evaluate(() => { const i = document.querySelector("section[aria-labelledby=hero-title] img"); return !!i && i.complete && i.naturalWidth > 0 && i.getAttribute("fetchpriority") === "high"; }));
   check("hero: no public registration CTA", (await page.getByRole("link", { name: /request entry|register|sign up|apply/i }).count()) === 0);
-  check("header: sign-in always visible", await page.getByRole("banner").getByRole("link", { name: "Sign in" }).isVisible());
+  check("header: log in and join visible", (await page.getByRole("banner").getByRole("link", { name: "Log in" }).isVisible()) && (await page.getByRole("banner").getByRole("link", { name: /^Join / }).isVisible()));
+  check("header: no pricing link (no pricing page exists)", (await page.getByRole("link", { name: /pricing/i }).count()) === 0);
   await page.locator("footer").scrollIntoViewIfNeeded();
   await page.waitForFunction(() => [...document.querySelectorAll("header img, footer img")].every((i) => i.complete && i.naturalWidth > 0), null, { timeout: 10000 }).catch(() => {});
   check("brand: header and footer logos load", await page.evaluate(() => [...document.querySelectorAll("header img, footer img")].every((i) => i.complete && i.naturalWidth > 0)));

@@ -13,16 +13,16 @@ The live, interactive reference is at **`/design-system`**. This file covers the
 ## Tokens (`src/styles/tokens.css`, mirrored in `src/lib/tokens.ts`)
 | Token | Value | Use |
 |---|---|---|
-| `--mk-ink` | #08080B | Page background |
+| `--mk-ink` | #050505 | Page background (obsidian; matches the logo's black) |
 | `--mk-ink-2` | #121217 | Raised surface: alternating sections, cards |
 | `--mk-ink-3` | #1A1921 | Elevated surface: inputs, menus, sheets |
 | `--mk-ink-4` | #24232C | Hover and pressed on elevated surfaces |
-| `--mk-gold` | #D8B86B | Primary action, active nav, VIP (10.5:1; ink label on gold 10.5:1) |
-| `--mk-gold-soft` | #F2DDA6 | Hover, focus ring, highlighted words |
+| `--mk-gold` | #D4AF37 | Metallic gold: primary action, active nav, VIP (9.7:1; ink label on gold 9.7:1) |
+| `--mk-gold-soft` | #F5D58A | Champagne: hover, focus ring, button sheen |
 | `--mk-gold-muted` | #A88B45 | Quiet ornament |
-| `--mk-pink` | #FF3CAC | Accents and selected highlights (6.2:1; ink label on pink 6.2:1) |
-| `--mk-pink-soft` | #FF6FC0 | Small pink text, hover on pink |
-| `--mk-ivory` | #F6F2EB | Primary text (17.9:1) |
+| `--mk-pink` | #FF2D96 | Hot pink, about 5–10% of accents (5.9:1; ink label on pink 5.9:1) |
+| `--mk-pink-soft` | #FF8BC8 | Soft pink: small pink text, glows |
+| `--mk-ivory` | #F8F5F0 | Warm white: primary text (18.7:1) |
 | `--mk-stone` | #B9B4C0 | Secondary text (9.9:1) |
 | `--mk-ash` | #948F9C | Meta text; AA on every surface up to ink-4 (enforced by `tests/tokens.test.ts`) |
 | `--mk-container` / `--mk-container-wide` | 1200 / 1440px | Content width / chrome width (`container-page`, `container-wide` utilities) |
@@ -30,6 +30,8 @@ The live, interactive reference is at **`/design-system`**. This file covers the
 | `--mk-shadow-1`, `--mk-shadow-2` | — | Card and raised-panel elevation |
 | `--mk-focus` | 2px soft gold | Focus ring, 3px offset |
 
+**Hero.** Cinematic split: live copy and CTAs left; the portrait artwork right (top on mobile, below the header so the logo sits on black). Headline "A Premium Space for *Exclusive* Creators" with a pink-to-champagne gradient on *Exclusive*. Motion is CSS only: staggered `mk-rise` entrances, slow `mk-drift`/`mk-glow` light, and a desktop scroll parallax (`mk-parallax`, scroll-driven, no JavaScript). All of it is off under reduced motion.
+**Buttons.** `gold` is a champagne-to-metallic gradient with a fine highlight; the hero adds a small pink glow to its primary action.
 **Type.** Jost (sans) for interface and body; Bodoni Moda for selected display moments (hero, section titles, auth titles). Eyebrows: 12px, +22% tracking, uppercase. Both fonts are self-hosted by `next/font`.
 **Radius.** 8 / 14 / 20 / 28. The `arch` utility shapes profile plates.
 **Motion.** Press 140, hover 260, sheet 520, entrance 800ms; easings `--mk-ease-out` and `--mk-ease-in-out`. Marketing entrances are CSS (`mk-rise`, and `mk-reveal`, which uses scroll-driven animation where supported); in-app reveals use Motion.

@@ -43,6 +43,15 @@ Never write `/public/...` in a URL or `src` attribute. In components, use `next/
 
 Both derived files were produced by cropping and padding only (sharp, bundled with Next.js), with no recolouring. Every use applies the `logo-art` utility (`mix-blend-mode: lighten`) so the black disappears into the dark page surface. Don't place them on light backgrounds; a transparent master would remove that limit.
 
+**Hero** (`public/images/hero/`):
+
+| Asset | File | Notes |
+|---|---|---|
+| Approved hero reference (design mock-up) | `divafans-hero-reference.png` | 1672×941. The supplied visual direction, kept for reference. Not used by any page, but publicly reachable like everything in `public/`. |
+| Hero portrait | `divafans-hero-portrait.webp` | 924×845, 117 KB. A text-free crop of the reference's right-hand artwork (portrait, gold DF art, pink light), cropped with sharp only. Rendered with `next/image` (`preload`, `fetchPriority="high"`) in `src/components/home/Hero.tsx`. |
+
+The portrait crop is limited by the reference's resolution: it is sharp at 1× but soft on high-density displays at full desktop width. Supply the original, text-free artwork at 2000px wide or more (for example `public/images/hero/divafans-hero-portrait.webp`, same name) to fix that.
+
 Every other folder holds only its `.gitkeep`.
 
 **Still to be supplied** (nothing references these yet, so no page is broken):
@@ -52,7 +61,8 @@ Every other folder holds only its `.gitkeep`.
 | Transparent master logo (PNG with alpha, or SVG) | `public/images/brand/diva-fans-logo.png` | Would allow light backgrounds and drop the blend utility |
 | Standalone wordmark artwork | `public/images/brand/diva-fans-wordmark.png` | Optional; headers use the text wordmark today |
 | Social sharing card, 1200×630 | `src/app/opengraph-image.png` | Next.js wires it into Open Graph tags automatically |
-| Creator photography with public-use permission | `public/images/creators/` | The homepage uses an illustrative preview until real, permitted images exist |
+| Original hero artwork, text-free, ≥2000px wide | `public/images/hero/divafans-hero-portrait.webp` | Replaces the lower-resolution crop |
+| Creator photography with public-use permission | `public/images/creators/` | For creator promotion beyond the hero |
 
 ## Metadata and app icons
 

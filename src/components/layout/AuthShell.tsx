@@ -14,7 +14,7 @@ export function AuthShell({ eyebrow, title, lede, children }: { eyebrow: string;
   return (
     <div className="min-h-[100svh] lg:grid lg:grid-cols-12">
       <aside className="relative hidden overflow-hidden border-r border-line bg-ink-2 lg:col-span-5 lg:flex lg:flex-col lg:justify-between lg:p-12">
-        <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_50%_at_50%_45%,rgb(216_184_107/0.07),transparent_70%),radial-gradient(40%_30%_at_70%_70%,rgb(255_60_172/0.06),transparent_70%)]" />
+        <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_50%_at_50%_45%,rgb(212_175_55/0.07),transparent_70%),radial-gradient(40%_30%_at_70%_70%,rgb(255_45_150/0.06),transparent_70%)]" />
         <Link href="/" className="relative self-start rounded-md">
           <span className="sr-only">{`${brand.name} home`}</span>
           <Wordmark decorative className="text-[14px]" />

@@ -7,36 +7,36 @@
    ================================================================== */
 :root {
   /* — Surfaces ------------------------------------------------------ */
-  --mk-ink: #08080b;        /* Page background */
+  --mk-ink: #050505;        /* Page background (obsidian; matches the logo's black) */
   --mk-ink-2: #121217;      /* Raised surface: sections, cards */
   --mk-ink-3: #1a1921;      /* Elevated surface: inputs, menus, dialogs */
   --mk-ink-4: #24232c;      /* Hover / pressed on elevated */
 
   /* — Gold (brand) -------------------------------------------------- */
-  --mk-gold: #d8b86b;       /* Primary actions, active nav — 10.5:1; ink text on gold 10.5:1 */
-  --mk-gold-soft: #f2dda6;  /* Highlights, hover — 14.9:1 */
+  --mk-gold: #d4af37;       /* Metallic gold: primary actions, active nav — 9.7:1; ink text on gold 9.7:1 */
+  --mk-gold-soft: #f5d58a;  /* Champagne: highlights, hover, button sheen — 14.3:1 */
   --mk-gold-muted: #a88b45; /* Quiet ornament, hairlines — 6.1:1 */
 
   /* — Pink (personality) -------------------------------------------- */
-  --mk-pink: #ff3cac;       /* Accents, selected highlights — 6.2:1; ink text on pink 6.2:1 */
-  --mk-pink-soft: #ff6fc0;  /* Small pink text — 7.9:1 */
+  --mk-pink: #ff2d96;       /* Hot pink: 5–10% of accents only — 5.9:1; ink text on pink 5.9:1 */
+  --mk-pink-soft: #ff8bc8;  /* Soft pink: small pink text, glows — 8.1:1 on ink-3 */
 
   /* — Text ---------------------------------------------------------- */
-  --mk-ivory: #f6f2eb;      /* Primary text — 17.9:1 */
+  --mk-ivory: #f8f5f0;      /* Warm white: primary text — 18.7:1 */
   --mk-stone: #b9b4c0;      /* Secondary text — 9.9:1 (8.6:1 on ink-3) */
   --mk-ash: #948f9c;        /* Tertiary / meta — 6.4:1 (4.9:1 on ink-4) */
 
   /* — Lines --------------------------------------------------------- */
-  --mk-line: rgb(246 242 235 / 0.08);
-  --mk-line-strong: rgb(246 242 235 / 0.16);
-  --mk-line-gold: rgb(216 184 107 / 0.4);
+  --mk-line: rgb(248 245 240 / 0.08);
+  --mk-line-strong: rgb(248 245 240 / 0.16);
+  --mk-line-gold: rgb(212 175 55 / 0.45);
 
   /* — Semantic ------------------------------------------------------ */
   --mk-success: #9ccba2;    /* 10.9:1 */
   --mk-danger: #e8a07f;     /* 9.3:1 */
 
   /* — Metal: the text wordmark only ---------------------------------- */
-  --mk-metal: linear-gradient(105deg, #b8964f 0%, #e6c987 30%, #f2dda6 48%, #d8b86b 66%, #b8964f 100%);
+  --mk-metal: linear-gradient(105deg, #a8862a 0%, #e3c062 30%, #f5d58a 48%, #d4af37 66%, #a8862a 100%);
 
   /* — Type ---------------------------------------------------------- */
   --mk-font-display: var(--font-bodoni), "Bodoni 72", "Didot", serif;  /* Selected display moments */

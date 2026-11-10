@@ -15,7 +15,7 @@ export function Logo({ className, priority, sizes = "220px" }: { className?: str
       height={brand.logo.height}
       alt={brand.name}
       sizes={sizes}
-      priority={priority}
+      preload={priority}
       className={cn("logo-art h-24 w-auto", className)}
     />
   );

@@ -16,7 +16,7 @@ export const metadata: Metadata = { alternates: { canonical: "/" } };
 export default function HomePage() {
   return (
     <>
-      <SiteHeader />
+      <SiteHeader overlay />
       <main id="main" tabIndex={-1} className="outline-none">
         <span id="top" />
         <Hero />

@@ -29,7 +29,8 @@ export function generateMetadata(): Metadata {
     description:
       `${brand.name} is ${brand.description.charAt(0).toLowerCase()}${brand.description.slice(1)}`,
     robots: isIndexable() ? { index: true, follow: true } : { index: false, follow: false },
-    openGraph: { title: brand.name, description: brand.descriptor, type: "website" },
+    applicationName: brand.name,
+    openGraph: { title: brand.name, siteName: brand.name, description: brand.descriptor, type: "website" },
     ...(google && { verification: { google } }),
   };
 }

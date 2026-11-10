@@ -1,6 +1,6 @@
 import { brand } from "@/config/brand";
+import Image from "next/image";
 import Link from "next/link";
-import { Wordmark } from "@/components/brand/Wordmark";
 
 const cols = [
   { title: "Club", links: [["The Circle", "/#circle"], ["Membership", "/#tiers"], ["The Vault", "/#vault"]] },
@@ -13,7 +13,15 @@ export function SiteFooter() {
     <footer className="border-t border-line bg-ink">
       <div className="mx-auto grid max-w-[1600px] gap-14 px-5 py-20 md:grid-cols-12 md:px-10">
         <div className="md:col-span-5">
-          <Wordmark withSymbol className="text-[18px]" />
+          {/* The stacked logo needs this height for its wordmark to stay legible; the header keeps the compact mark. */}
+          <Image
+            src={brand.logo.src}
+            alt={brand.name}
+            width={brand.logo.width}
+            height={brand.logo.height}
+            sizes="135px"
+            className="h-28 w-auto"
+          />
           <p className="mt-6 max-w-sm text-[14px] leading-relaxed text-stone">
             A private club for creators and the people who follow them closely.
           </p>

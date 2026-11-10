@@ -15,6 +15,8 @@ export const brand = {
     "An invitation-only club for creators and their most devoted members. Alias-first privacy, VIP rooms, and locked content.",
   /** Wordmark letters, rendered in Bodoni capitals. */
   wordmark: { text: "DIVA FANS" },
+  /** Approved full logo (stacked monogram over wordmark, transparent PNG). Intrinsic size, for aspect ratio. */
+  logo: { src: "/images/brand/diva-fans-logo.png", width: 1373, height: 1145 },
   /** How the platform owner is referred to in the UI. */
   houseName: "The House",
   /** Default sender display name for transactional email. */

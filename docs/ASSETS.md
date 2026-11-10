@@ -33,13 +33,15 @@ Never write `/public/...` in a URL or `src` attribute. In components, use `next/
 
 ## Status
 
-**Present:**
+**Present** (all in `public/images/brand/`):
 
-| Asset | File | Used in |
+| Asset | File | Notes |
 |---|---|---|
-| Approved full logo: gold and electric-pink DF monogram stacked over "DIVA FANS", transparent RGBA PNG, 1373×1145 | `public/images/brand/diva-fans-logo.png` (URL `/images/brand/diva-fans-logo.png`) | The site footer (`src/components/layout/SiteFooter.tsx`) at 112 px tall, through `next/image`, which serves a resized copy. Its path and intrinsic size are in `brand.logo` (`src/config/brand.ts`). |
+| Approved logo (master) | `diva-fans-logo.png` | Gold DF monogram with pink flourish and diamond, over "DIVA FANS". 1254×1254 **RGB on pure black — not transparent**. Kept unchanged as the source file. |
+| Trimmed lockup | `diva-fans-logo-trimmed.png` | 1081×877. The master with its empty black margin cropped (16px kept). Footer, auth brand panel, design system. `brand.logo` |
+| Monogram | `diva-fans-monogram.png` | 738×738. The DF mark cropped from the master and padded to a square on the same black. Headers, closing section. `brand.monogram` |
 
-The logo is a stacked lockup. At header height (about 30 px) its wordmark would be about 5 px tall and unreadable, so the header, auth and club shells keep the compact code-drawn DF monogram and `DIVA FANS` wordmark (`src/components/brand/`). A horizontal logo would let the header use artwork too. The file has some transparent margin (about 15% at the top) and faint semi-transparent specks around the artwork left over from background removal. Neither shows on the black background; both would show on a light one.
+Both derived files were produced by cropping and padding only (sharp, bundled with Next.js), with no recolouring. Every use applies the `logo-art` utility (`mix-blend-mode: lighten`) so the black disappears into the dark page surface. Don't place them on light backgrounds; a transparent master would remove that limit.
 
 Every other folder holds only its `.gitkeep`.
 
@@ -47,10 +49,10 @@ Every other folder holds only its `.gitkeep`.
 
 | Asset | Destination | Notes |
 |---|---|---|
-| Horizontal (single-line) logo for the header | `public/images/brand/diva-fans-logo-horizontal.png` | Optional; only if an approved file exists |
-| Standalone DF monogram | `public/images/brand/diva-fans-monogram.png` | Only if an approved file exists |
-| Standalone wordmark | `public/images/brand/diva-fans-wordmark.png` | Only if an approved file exists |
-| Social sharing card, 1200×630 | `public/images/brand/diva-fans-social-card.png` | Only if an approved file exists. Prefer `src/app/opengraph-image.png`, which Next.js wires into Open Graph tags automatically. |
+| Transparent master logo (PNG with alpha, or SVG) | `public/images/brand/diva-fans-logo.png` | Would allow light backgrounds and drop the blend utility |
+| Standalone wordmark artwork | `public/images/brand/diva-fans-wordmark.png` | Optional; headers use the text wordmark today |
+| Social sharing card, 1200×630 | `src/app/opengraph-image.png` | Next.js wires it into Open Graph tags automatically |
+| Creator photography with public-use permission | `public/images/creators/` | The homepage uses an illustrative preview until real, permitted images exist |
 
 ## Metadata and app icons
 
@@ -58,9 +60,9 @@ These live in `src/app/` as Next.js metadata files. They are the single source f
 
 | Item | File | Notes |
 |---|---|---|
-| Favicon / app icon | `src/app/icon.svg` | DF monogram on black |
-| Apple touch icon | none yet | To add one, place a real 180×180 PNG at `src/app/apple-icon.png`. Never rename an SVG or another format to `.png` or `.ico`. |
-| Web app manifest | none yet | Add `src/app/manifest.ts` only once real PNG app icons (192 and 512 px) exist |
+| Favicon / app icon | `src/app/icon.png` | 512×512, the monogram at 80% on black (derived from the master) |
+| Apple touch icon | `src/app/apple-icon.png` | 180×180, same artwork |
+| Web app manifest | none yet | Add `src/app/manifest.ts` if the site should be installable; it can reuse `icon.png` for 512px and needs a real 192px PNG |
 | Open Graph image | none yet | See the social card above |
 | Title, description, Open Graph, application name | `src/app/layout.tsx`, using `src/config/brand.ts` | Canonical and Open Graph URLs come from `APP_URL` |
 | `robots.txt` | `src/app/robots.ts` | Generated |

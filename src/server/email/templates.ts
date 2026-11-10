@@ -38,7 +38,7 @@ export const emails = {
       `You're invited to ${brand.name}`,
       "You've been invited.",
       [
-        `The house has invited you to join ${brand.name} as a ${p.role}.`,
+        `You've been invited to join ${brand.name} as a ${p.role}.`,
         "Open your personal link to choose an alias and request approval. Every account is reviewed personally before it opens.",
       ],
       { label: "Open your invitation", url: p.url },
@@ -56,7 +56,7 @@ export const emails = {
     ),
 
   approved: (p: { alias: string; url: string }) =>
-    make("account_approved", `Welcome to ${brand.name}`, `Welcome, ${p.alias}.`, ["The house has approved your account. The Circle is open to you."], { label: "Sign in", url: p.url }),
+    make("account_approved", `Welcome to ${brand.name}`, `Welcome, ${p.alias}.`, ["Your account has been approved. Sign in to start following creators."], { label: "Sign in", url: p.url }),
 
   security: (p: { event: SecurityEvent; at: Date; url: string }) => {
     const copy: Record<SecurityEvent, [string, string]> = {
@@ -74,7 +74,7 @@ export const emails = {
       title,
       [line, `Time: ${when(p.at)}.`],
       { label: "Review account security", url: p.url },
-      "If this wasn't you, reset your password immediately and contact the house.",
+      "If this wasn't you, reset your password now and sign out of your other sessions from your account's security settings.",
     );
   },
 
@@ -82,7 +82,7 @@ export const emails = {
     make("verification_submitted", `${brand.name}: a creator submitted verification`, "A creator is ready for review.", ["A creator completed their profile and attestations and is waiting for verification."], { label: "Review creators", url: p.url }),
 
   creatorVerified: (p: { alias: string; url: string }) =>
-    make("creator_verified", `Your ${brand.name} profile is live`, `You're verified, ${p.alias}.`, ["The house has verified your account and published your profile to members."], { label: "Open your studio", url: p.url }),
+    make("creator_verified", `Your ${brand.name} profile is live`, `You're verified, ${p.alias}.`, ["Our team has verified your account and published your profile to members."], { label: "Open your studio", url: p.url }),
 
   criticalReport: (p: { reason: string; url: string }) =>
     make(
@@ -106,7 +106,7 @@ export const emails = {
     make(
       "decision_notice",
       `${brand.name}: a decision about your content`,
-      "The house made a decision about your content.",
+      "Our moderation team made a decision about your content.",
       ["You can read the reasons, and appeal if you disagree, in your Studio."],
       { label: "Open notices", url: p.url },
       "Details are intentionally not included in email.",

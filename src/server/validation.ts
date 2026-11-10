@@ -18,7 +18,7 @@ export const applySchema = z.object({
   email,
   password,
   adult: z.literal("on", { message: "You must confirm you are 18 or older." }),
-  terms: z.literal("on", { message: "Please accept the house rules." }),
+  terms: z.literal("on", { message: "Please accept the community rules." }),
 });
 
 export const signinSchema = z.object({ email, password: z.string().min(1).max(200) });

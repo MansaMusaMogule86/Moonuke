@@ -17,11 +17,10 @@ export default async function VerifyPage() {
       eyebrow={`Two-step sign-in · ${viewer.alias}`}
       title={
         <>
-          One more <em className="text-metal">key.</em>
+          One more <em className="text-metal">step.</em>
         </>
       }
       lede={<p>Enter the 6-digit code from your authenticator app. Lost your device? Use one of your recovery codes instead.</p>}
-      study={{ hair: "bun", light: "left", tilt: -2, adorn: "crown", glow: 0.8 }}
     >
       <VerifyForm />
       <form action={signOutAction} className="mt-8">

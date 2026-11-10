@@ -4,18 +4,20 @@
  * tests/tokens.test.ts verifies parity and contrast budgets.
  */
 export const color = {
-  ink: "#050505",
-  ink2: "#101010",
-  ink3: "#171717",
-  ink4: "#1f1e1c",
-  gold: "#d6b56d",
-  goldSoft: "#e8cc91",
+  ink: "#08080b",
+  ink2: "#121217",
+  ink3: "#1a1921",
+  ink4: "#24232c",
+  gold: "#d8b86b",
+  goldSoft: "#f2dda6",
   goldMuted: "#a88b45",
-  ivory: "#f6f0e6",
-  stone: "#aaa39a",
-  ash: "#8a847b",
-  success: "#9cbf9f",
-  danger: "#e08a78",
+  pink: "#ff3cac",
+  pinkSoft: "#ff6fc0",
+  ivory: "#f6f2eb",
+  stone: "#b9b4c0",
+  ash: "#948f9c",
+  success: "#9ccba2",
+  danger: "#e8a07f",
 } as const;
 
 export const ease = {
@@ -29,8 +31,7 @@ export const duration = {
   press: 0.14,
   hover: 0.26,
   sheet: 0.52,
-  reveal: 0.9,
-  hero: 1.4,
+  reveal: 0.8,
 } as const;
 
 /** Spring used for anything that is dragged or thrown (sheets, carousels). */

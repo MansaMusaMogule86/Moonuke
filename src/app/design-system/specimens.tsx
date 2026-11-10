@@ -12,7 +12,7 @@ import { duration, ease } from "@/lib/tokens";
 export function MotionSpecimens() {
   const [run, setRun] = useState(0);
   const rows = [
-    { name: "Arrival", token: "--mk-ease-out · 900ms", t: { duration: duration.reveal, ease: ease.out } },
+    { name: "Arrival", token: "--mk-ease-out · 800ms", t: { duration: duration.reveal, ease: ease.out } },
     { name: "State change", token: "--mk-ease-in-out · 520ms", t: { duration: duration.sheet, ease: ease.inOut } },
     { name: "Drag / throw", token: "spring 260 / 32", t: { type: "spring" as const, stiffness: 260, damping: 32 } },
   ];

@@ -1,3 +1,4 @@
+import { brand } from "@/config/brand";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { CheckoutButton } from "@/components/club/CheckoutButton";
@@ -34,7 +35,7 @@ export default async function CreatorPage({ params }: { params: Promise<{ handle
         <div aria-hidden className="pointer-events-none absolute -left-[10vw] top-0 h-[70vw] w-[70vw] rounded-full bg-[radial-gradient(closest-side,rgb(214_181_109/0.09),transparent)] md:h-[50vw] md:w-[50vw]" />
         <div className="relative mx-auto grid max-w-[1600px] gap-10 px-5 pt-10 md:grid-cols-12 md:gap-6 md:px-10 md:pt-16">
           <ImageReveal className="arch relative aspect-[3/4] overflow-hidden border border-line-strong p-[6px] md:col-span-5 lg:col-span-4">
-            <Portrait alt={`Portrait study of ${p.displayName}`} study={p.cover} className="arch h-full w-full" priority />
+            <Portrait alt={`Cover for ${p.displayName}`} study={p.cover} className="arch h-full w-full" priority />
           </ImageReveal>
 
           <Reveal className="md:col-span-7 md:col-start-6 md:self-end lg:col-span-7 lg:col-start-6">
@@ -172,7 +173,7 @@ export default async function CreatorPage({ params }: { params: Promise<{ handle
         </ul>
         <p className="mt-10 max-w-2xl text-[13px] leading-relaxed text-ash">
           Media is delivered through private, short-lived links issued to you alone. Please respect the creator — sharing
-          outside the Circle breaks the house rules.
+          it outside {brand.name} breaks the community rules.
         </p>
       </section>
     </div>

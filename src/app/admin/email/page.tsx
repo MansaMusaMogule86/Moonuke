@@ -16,7 +16,7 @@ export default async function EmailLogPage() {
   return (
     <div>
       <h1 className="font-display text-[40px] leading-none text-ivory md:text-[56px]">
-        Letters <em className="text-metal">sent</em>
+        Email <em className="text-metal">log</em>
       </h1>
       <p className="mt-4 max-w-2xl text-[14px] leading-relaxed text-stone">
         Delivery log for transactional email. Message bodies are never shown here; after a real delivery they are

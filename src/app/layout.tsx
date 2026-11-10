@@ -36,7 +36,7 @@ export function generateMetadata(): Metadata {
 }
 
 export const viewport: Viewport = {
-  themeColor: "#050505",
+  themeColor: "#08080b",
   colorScheme: "dark",
   width: "device-width",
   initialScale: 1,
@@ -57,7 +57,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           Skip to content
         </a>
         <Providers>{children}</Providers>
-        <div aria-hidden className="mk-film" />
       </body>
     </html>
   );

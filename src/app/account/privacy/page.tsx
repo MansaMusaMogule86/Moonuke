@@ -16,7 +16,7 @@ export default async function PrivacyPage() {
   return (
     <div className="mx-auto max-w-[1200px] px-5 pb-28 pt-12 md:px-10">
       <h1 className="font-display text-[52px] leading-[0.98] tracking-[-0.03em] text-ivory md:text-[72px]">
-        Your <em className="text-metal">boundaries.</em>
+        Privacy <em className="text-metal">settings.</em>
       </h1>
       <div className="mt-12 grid gap-6 lg:grid-cols-2">
         <section aria-labelledby="blocks-h" className="rounded-[var(--radius-xl)] border border-line bg-ink-2 p-6 md:p-9">

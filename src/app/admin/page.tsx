@@ -15,7 +15,7 @@ export default async function AdminHome() {
   return (
     <div>
       <h1 className="font-display text-[48px] leading-none tracking-[-0.02em] text-ivory md:text-[72px]">
-        Who <em className="text-metal">enters.</em>
+        <em className="text-metal">Applications</em>
       </h1>
       <dl className="mt-10 grid grid-cols-2 gap-px overflow-hidden rounded-[var(--radius-lg)] border border-line bg-line sm:grid-cols-5">
         {[

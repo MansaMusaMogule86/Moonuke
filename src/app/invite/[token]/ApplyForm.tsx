@@ -44,15 +44,15 @@ export function ApplyForm({ token, emailLocked, role }: { token: string; emailLo
       />
       <div className="space-y-4">
         <Check key={`adult-${state.values?.adult ?? ""}`} name="adult" defaultChecked={state.values?.adult === "on"} error={state.fields?.adult}>
-          I confirm I am 18 or older. I understand the house may ask for age verification before approval.
+          I confirm I am 18 or older. I understand we may ask for an age check before approval.
         </Check>
         <Check key={`terms-${state.values?.terms ?? ""}`} name="terms" defaultChecked={state.values?.terms === "on"} error={state.fields?.terms}>
-          I accept the house rules and the privacy policy.
+          I accept the community rules and the privacy policy.
         </Check>
       </div>
       <Submit className="w-full">Request approval</Submit>
       <p className="text-[13px] leading-relaxed text-ash">
-        Applying does not grant access. The house approves every account personally.
+        Applying doesn't open your account straight away. Our team approves every new account.
       </p>
     </form>
   );

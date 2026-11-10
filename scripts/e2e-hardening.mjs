@@ -53,7 +53,7 @@ const anon = await browser.newContext(desktop);
 const ap = await anon.newPage();
 const missing = await ap.goto(`${BASE}/definitely-not-a-page`);
 check("unknown route → 404", missing.status() === 404);
-check("404 is branded", await ap.getByRole("heading", { name: /This door/ }).isVisible());
+check("404 is branded", await ap.getByRole("heading", { name: /Page not found/ }).isVisible());
 await shot(ap, "not-found-desktop");
 await axe(ap, "404 @1440");
 const missingText = (await ap.getByTestId("error-shell").innerText()).trim();

@@ -18,23 +18,32 @@ const browser = await chromium.launch();
   await page.goto(BASE + "/", { waitUntil: "networkidle" });
 
   const desktopCta = page.getByRole("banner").getByRole("link", { name: "Sign in" });
-  check("mobile: header CTAs collapse", !(await desktopCta.isVisible()));
+  check("mobile: header sign-in collapses into the menu", !(await desktopCta.isVisible()));
+  check("mobile: hero sign-in visible", await page.locator("section[aria-labelledby=hero-title]").getByRole("link", { name: "Sign in" }).isVisible());
 
   await page.getByRole("button", { name: "Open menu" }).click();
   const dialog = page.getByRole("dialog");
   await dialog.waitFor({ state: "visible" });
   check("mobile: menu sheet opens as dialog", await dialog.isVisible());
-  check("mobile: menu lists 5 sections", (await dialog.getByRole("navigation").getByRole("link").count()) === 5);
+  check("mobile: menu lists 4 sections", (await dialog.getByRole("navigation").getByRole("link").count()) === 4);
   await page.keyboard.press("Escape");
   await dialog.waitFor({ state: "hidden" });
   check("mobile: Escape closes sheet", !(await dialog.isVisible().catch(() => false)));
 
-  // Menu link navigates and closes
   await page.getByRole("button", { name: "Open menu" }).click();
-  await page.getByRole("dialog").getByRole("link", { name: /Privacy/ }).click();
+  await page.getByRole("dialog").getByRole("link", { name: "FAQ" }).click();
   await page.waitForTimeout(1200);
-  check("mobile: menu link navigates to section", page.url().endsWith("#privacy"));
+  check("mobile: menu link navigates to section", page.url().endsWith("#faq"));
+  await ctx.close();
+}
 
+// ---- Layout: no horizontal overflow at the supported widths
+for (const width of [360, 390, 768, 1024, 1440, 1920]) {
+  const ctx = await browser.newContext({ viewport: { width, height: 900 } });
+  const page = await ctx.newPage();
+  await page.goto(BASE + "/", { waitUntil: "networkidle" });
+  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+  check(`layout: no horizontal overflow @${width}`, overflow <= 0, `${overflow}px`);
   await ctx.close();
 }
 
@@ -43,28 +52,23 @@ const browser = await chromium.launch();
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
   const page = await ctx.newPage();
   await page.goto(BASE + "/", { waitUntil: "networkidle" });
-  await page.waitForTimeout(1800);
 
   const hero = page.locator("section[aria-labelledby=hero-title]");
-  await hero.getByRole("radio", { name: "Creator" }).check({ force: true });
-  check("hero: role toggle swaps secondary CTA", await hero.getByRole("link", { name: "What creators get" }).isVisible());
+  check("hero: headline states the product", /closer connection/i.test((await page.locator("#hero-title").textContent()) ?? ""));
+  check("hero: sign-in goes to the real flow", (await hero.getByRole("link", { name: "Sign in" }).getAttribute("href")) === "/signin");
   check("hero: no public registration CTA", (await page.getByRole("link", { name: /request entry|register|sign up|apply/i }).count()) === 0);
+  check("header: sign-in always visible", await page.getByRole("banner").getByRole("link", { name: "Sign in" }).isVisible());
+  await page.locator("footer").scrollIntoViewIfNeeded();
+  await page.waitForFunction(() => [...document.querySelectorAll("header img, footer img")].every((i) => i.complete && i.naturalWidth > 0), null, { timeout: 10000 }).catch(() => {});
+  check("brand: header and footer logos load", await page.evaluate(() => [...document.querySelectorAll("header img, footer img")].every((i) => i.complete && i.naturalWidth > 0)));
+  await page.evaluate(() => scrollTo(0, 0));
+  check("old anchors still resolve", await page.evaluate(() => ["circle", "tiers", "vault", "privacy", "creators"].every((id) => document.getElementById(id))));
 
-  const counter = page.getByText(/^0\d \/ 05$/).first();
-  const before = await counter.textContent();
-  await page.getByRole("button", { name: "Next creators" }).click();
-  await page.waitForTimeout(900);
-  const after = await counter.textContent();
-  check("hero: carousel advances", before !== after, `${before} → ${after}`);
-
-  await page.locator("#vault").scrollIntoViewIfNeeded();
-  await page.waitForTimeout(1200);
-  await page.getByRole("button", { name: "Unlock" }).click();
-  const sheet = page.getByRole("dialog");
-  await sheet.waitFor({ state: "visible" });
-  check("vault: PPV opens sheet", await sheet.isVisible());
-  check("vault: checkout disabled in preview", await sheet.getByRole("button", { name: /Checkout unavailable/ }).isDisabled());
-  await page.keyboard.press("Escape");
+  // FAQ: native disclosure, keyboard operable
+  const first = page.locator("#faq summary").first();
+  await first.focus();
+  await page.keyboard.press("Enter");
+  check("faq: disclosure opens with keyboard", await page.locator("#faq details").first().evaluate((d) => d.open));
 
   // Keyboard: skip link is first tab stop
   await page.goto(BASE + "/", { waitUntil: "networkidle" });
@@ -79,11 +83,9 @@ const browser = await chromium.launch();
   const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: "reduce" });
   const page = await ctx.newPage();
   await page.goto(BASE + "/", { waitUntil: "networkidle" });
-  await page.waitForTimeout(400);
-  const anim = await page.evaluate(() => getComputedStyle(document.querySelector(".mk-marquee")).animationName);
-  check("reduced motion: marquee paused", anim === "none", anim);
-  const titleOk = await page.locator("#hero-title").isVisible();
-  check("reduced motion: hero title visible", titleOk);
+  const anim = await page.evaluate(() => getComputedStyle(document.querySelector(".mk-rise")).animationName);
+  check("reduced motion: entrance animation off", anim === "none", anim);
+  check("reduced motion: hero title visible", await page.locator("#hero-title").isVisible());
   await ctx.close();
 }
 

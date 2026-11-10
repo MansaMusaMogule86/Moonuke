@@ -11,7 +11,7 @@ export default async function AuditPage() {
   return (
     <div>
       <h1 className="font-display text-[40px] leading-none text-ivory md:text-[56px]">
-        The <em className="text-metal">ledger of doors</em>
+        Audit <em className="text-metal">log</em>
       </h1>
       <p className="mt-4 max-w-2xl text-[14px] text-stone">Append-only. The database rejects any edit or deletion. Latest 200 events.</p>
       <div className="mt-8 overflow-x-auto rounded-[var(--radius-lg)] border border-line">

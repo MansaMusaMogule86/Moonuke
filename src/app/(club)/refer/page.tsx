@@ -19,7 +19,7 @@ export default async function ReferPage() {
       <Reveal className="md:col-span-5">
         <p className="eyebrow mb-5">Referrals</p>
         <h1 className="font-display text-[52px] leading-[0.98] tracking-[-0.03em] text-ivory md:text-[84px]">
-          Vouch for <em className="text-metal">someone.</em>
+          Invite <em className="text-metal">someone you know.</em>
         </h1>
         <div className="mt-6 max-w-md space-y-4 text-[16px] leading-relaxed text-stone">
           <p>You can ask the house to invite someone you know. You can&apos;t invite them yourself — every invitation is issued, and every account approved, by the house.</p>

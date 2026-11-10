@@ -4,7 +4,7 @@ import Link from "next/link";
 import { forwardRef, type ComponentPropsWithoutRef, type ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
-type Variant = "gold" | "outline" | "ghost" | "quiet";
+type Variant = "gold" | "pink" | "outline" | "ghost" | "quiet";
 type Size = "sm" | "md" | "lg";
 
 const base =
@@ -13,17 +13,15 @@ const base =
   "active:scale-[0.97] active:duration-[140ms] disabled:pointer-events-none disabled:opacity-40 aria-disabled:pointer-events-none aria-disabled:opacity-40";
 
 const variants: Record<Variant, string> = {
-  gold:
-    "bg-gold text-ink shadow-[inset_0_1px_0_rgb(255_255_255/0.35),0_10px_30px_-12px_rgb(214_181_109/0.55)] " +
-    "hover:bg-gold-soft hover:shadow-[inset_0_1px_0_rgb(255_255_255/0.45),0_16px_44px_-14px_rgb(232_204_145/0.7)]",
-  outline:
-    "border border-line-strong text-ivory hover:border-gold/70 hover:text-gold-soft bg-transparent",
+  gold: "bg-gold text-ink shadow-[inset_0_1px_0_rgb(255_255_255/0.35)] hover:bg-gold-soft",
+  pink: "bg-pink text-ink shadow-[inset_0_1px_0_rgb(255_255_255/0.3)] hover:bg-pink-soft",
+  outline: "border border-line-strong bg-transparent text-ivory hover:border-ivory/40 hover:bg-ivory/[0.04]",
   ghost: "text-ivory hover:bg-ivory/[0.06]",
   quiet: "text-stone hover:text-ivory",
 };
 
 const sizes: Record<Size, string> = {
-  sm: "h-9 px-4 text-[13px]",
+  sm: "h-10 px-4 text-[13px]",
   md: "h-11 px-6 text-sm",
   lg: "h-14 px-8 text-[15px]",
 };

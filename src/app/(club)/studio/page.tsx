@@ -41,7 +41,7 @@ export default async function StudioPage() {
     <div className="mx-auto max-w-[1200px] px-5 pb-28 pt-14 md:px-10 md:pt-20">
       <p className="eyebrow mb-5">Studio · {viewer.alias}{onboarding.whiteGlove ? " · White-glove" : ""}</p>
       <h1 className="font-display text-[52px] leading-[0.98] tracking-[-0.03em] text-ivory md:text-[84px]">
-        Your <em className="text-metal">room.</em>
+        Your <em className="text-metal">studio.</em>
       </h1>
       <p className="mt-5 max-w-2xl text-[16px] leading-relaxed text-stone">
         {onboarding.whiteGlove

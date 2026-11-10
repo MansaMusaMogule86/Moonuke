@@ -29,7 +29,7 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
         eyebrow="Invitation"
         title={
           <>
-            This door is <em className="text-metal">closed.</em>
+            This invitation is <em className="text-metal">closed.</em>
           </>
         }
         lede={
@@ -58,8 +58,8 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
       }
       lede={
         <p>
-          Choose the alias the Circle will know you by. Your email stays private. After you apply, the house
-          reviews every request personally — your account opens once approved.
+          Choose the name creators will see. Your email stays private. After you apply, our team reviews your
+          request, and your account opens once it&apos;s approved.
         </p>
       }
     >

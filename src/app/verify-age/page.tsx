@@ -15,7 +15,7 @@ export default async function VerifyAgePage() {
   const viewer = await requireViewer();
   const status = await myAgeStatus(viewer);
   return (
-    <AuthShell eyebrow="Age check" title={<>Confirm your <em className="text-metal">age</em></>} study={{ hair: "wrap", light: "left", tilt: -2, adorn: "none", glow: 0.6 }}>
+    <AuthShell eyebrow="Age check" title={<>Confirm your <em className="text-metal">age</em></>}>
       {status.passed ? (
         <p role="status" className="text-[15px] text-ivory">You&apos;re verified. You can continue to the club.</p>
       ) : (

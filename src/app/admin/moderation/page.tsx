@@ -22,7 +22,7 @@ export default async function ModerationPage({ searchParams }: { searchParams: P
   return (
     <div>
       <h1 className="font-display text-[40px] leading-none text-ivory md:text-[56px]">
-        Keeping the <em className="text-metal">peace</em>
+        <em className="text-metal">Moderation</em>
       </h1>
       <p className="mt-4 max-w-2xl text-[14px] leading-relaxed text-stone">
         Critical reports (possible minors, non-consensual sharing, illegal content) rise to the top. Reported posts in

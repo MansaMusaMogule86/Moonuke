@@ -33,7 +33,7 @@ describe("Brand", () => {
   });
   it("symbol is decorative unless titled", () => {
     const { container, rerender } = render(<Symbol />);
-    expect(container.querySelector("svg")).toHaveAttribute("aria-hidden", "true");
+    expect(container.querySelector("img")).toHaveAttribute("aria-hidden", "true");
     rerender(<Symbol title="Diva Fans" />);
     expect(screen.getByRole("img", { name: "Diva Fans" })).toBeInTheDocument();
   });

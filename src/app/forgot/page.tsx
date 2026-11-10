@@ -11,11 +11,10 @@ export default function ForgotPage() {
       eyebrow="Account recovery"
       title={
         <>
-          Forgotten <em className="text-metal">the key?</em>
+          Forgot your <em className="text-metal">password?</em>
         </>
       }
       lede={<p>Enter the email on your account. If it matches, we&apos;ll send a single-use link that expires in 30 minutes.</p>}
-      study={{ hair: "crop", light: "right", tilt: 2, adorn: "none", glow: 0.7 }}
     >
       <ForgotForm />
       <p className="mt-8 text-[14px] text-stone">

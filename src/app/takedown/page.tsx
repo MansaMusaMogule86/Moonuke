@@ -28,7 +28,6 @@ export default function TakedownPage() {
           </p>
         </>
       }
-      study={{ hair: "crop", light: "left", tilt: -2, adorn: "none", glow: 0.6 }}
     >
       <TakedownForm />
     </AuthShell>

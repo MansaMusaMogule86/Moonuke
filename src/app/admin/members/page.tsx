@@ -15,7 +15,7 @@ export default async function MembersPage() {
   return (
     <div>
       <h1 className="font-display text-[40px] leading-none text-ivory md:text-[56px]">
-        The <em className="text-metal">register</em>
+        <em className="text-metal">Members</em>
       </h1>
       <p className="mt-4 max-w-2xl text-[14px] text-stone">Suspending an account signs it out everywhere immediately. Every action is recorded in the audit log.</p>
       <ul className="mt-8 divide-y divide-line border-y border-line">

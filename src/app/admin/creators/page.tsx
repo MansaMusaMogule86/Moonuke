@@ -17,7 +17,7 @@ export default async function CreatorsAdminPage({ searchParams }: { searchParams
   return (
     <div>
       <h1 className="font-display text-[40px] leading-none text-ivory md:text-[56px]">
-        Who <em className="text-metal">performs.</em>
+        <em className="text-metal">Creators</em>
       </h1>
       <p className="mt-4 max-w-2xl text-[14px] leading-relaxed text-stone">
         An approved creator account stays invisible to members until you verify the creator and publish. Confirm each

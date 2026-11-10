@@ -13,7 +13,7 @@ export default async function ReferralsPage() {
   return (
     <div>
       <h1 className="font-display text-[40px] leading-none text-ivory md:text-[56px]">
-        Requests to <em className="text-metal">vouch</em>
+        Invitation <em className="text-metal">requests</em>
       </h1>
       <p className="mt-4 max-w-2xl text-[14px] leading-relaxed text-stone">
         Members and creators can ask you to invite someone. Approving issues a single-use invitation locked to the

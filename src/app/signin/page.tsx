@@ -22,8 +22,8 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
       }
       lede={
         <p>
-          {brand.name} is by invitation only. New here? Open the personal link you were sent — or ask a member to
-          request an invitation for you.
+          New here? {brand.name} is invitation-only for now. Open the personal link you were sent to create your
+          account, or ask a member to request an invitation for you.
         </p>
       }
     >

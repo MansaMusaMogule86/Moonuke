@@ -1,58 +1,48 @@
-import { brand } from "@/config/brand";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { Logo } from "@/components/brand/Logo";
 import { Symbol } from "@/components/brand/Symbol";
 import { Wordmark } from "@/components/brand/Wordmark";
-import { Portrait, type PortraitStudy } from "@/components/ui/Portrait";
+import { brand } from "@/config/brand";
 
 /**
- * Two-panel editorial shell for sign-in, invitation and pending screens.
- * Desktop: lit eclipse plate on the left, form on the right. Mobile: form first.
+ * Shell for sign-in, invitation, pending, reset and age-check screens.
+ * Desktop: a quiet brand panel with the full logo beside the form. Mobile: a
+ * compact header, then the form first.
  */
-export function AuthShell({
-  eyebrow,
-  title,
-  lede,
-  children,
-  study = { hair: "wrap", light: "left", tilt: -3, adorn: "hoops", glow: 0.95 },
-}: {
-  eyebrow: string;
-  title: ReactNode;
-  lede?: ReactNode;
-  children: ReactNode;
-  study?: PortraitStudy;
-}) {
+export function AuthShell({ eyebrow, title, lede, children }: { eyebrow: string; title: ReactNode; lede?: ReactNode; children: ReactNode }) {
   return (
-    <div className="relative min-h-[100svh] overflow-hidden">
-      <header className="absolute inset-x-0 top-0 z-10 mx-auto flex h-[72px] max-w-[1600px] items-center px-5 md:px-10">
-        <Link href="/" className="flex items-center gap-3 rounded-md">
-            <span className="sr-only">{`${brand.name} home`}</span>
-          <Symbol size={30} />
-          <Wordmark decorative className="text-[15px]" />
+    <div className="min-h-[100svh] lg:grid lg:grid-cols-12">
+      <aside className="relative hidden overflow-hidden border-r border-line bg-ink-2 lg:col-span-5 lg:flex lg:flex-col lg:justify-between lg:p-12">
+        <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_50%_at_50%_45%,rgb(216_184_107/0.07),transparent_70%),radial-gradient(40%_30%_at_70%_70%,rgb(255_60_172/0.06),transparent_70%)]" />
+        <Link href="/" className="relative self-start rounded-md">
+          <span className="sr-only">{`${brand.name} home`}</span>
+          <Wordmark decorative className="text-[14px]" />
         </Link>
-      </header>
-      <main id="main" className="mx-auto grid min-h-[100svh] max-w-[1600px] md:grid-cols-12">
-        <div aria-hidden className="relative hidden md:col-span-6 md:block lg:col-span-7">
-          <div className="absolute left-1/2 top-1/2 aspect-square w-[min(38vw,560px)] -translate-x-1/2 -translate-y-1/2">
-            <div className="absolute -inset-[8%] rounded-full bg-[conic-gradient(from_210deg,rgb(232_204_145/0.45),rgb(214_181_109/0.04)_25%,rgb(168_139_69/0.2)_50%,rgb(214_181_109/0.02)_72%,rgb(241_220_170/0.5))] opacity-80 blur-2xl" />
-            <div className="absolute -inset-[1.2%] rounded-full bg-[conic-gradient(from_200deg,#f1dcaa,#a88b45_25%,#2a2213_50%,#a88b45_75%,#f1dcaa)] opacity-75" />
-            <div className="absolute inset-0 overflow-hidden rounded-full bg-ink">
-              <Portrait
-                alt=""
-                study={study}
-                className="absolute inset-x-[6%] bottom-[-22%] top-[22%] bg-transparent [mask-image:radial-gradient(closest-side,black_45%,transparent_100%)]"
-              />
-            </div>
-            <div className="absolute left-[14.5%] top-[85.5%] h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white shadow-[0_0_24px_10px_rgb(255_246_223/0.55)]" />
+        <div className="relative flex flex-col items-center text-center">
+          <Logo className="h-52 xl:h-64" sizes="320px" />
+          <p className="mt-8 max-w-xs text-[15px] leading-relaxed text-stone">{brand.tagline}.</p>
+        </div>
+        <p className="relative text-[13px] text-ash">Joining is by personal invitation.</p>
+      </aside>
+
+      <div className="flex min-h-[100svh] flex-col lg:col-span-7">
+        <header className="container-wide flex h-[72px] items-center lg:hidden">
+          <Link href="/" className="flex items-center gap-3 rounded-md">
+            <span className="sr-only">{`${brand.name} home`}</span>
+            <Symbol size={40} />
+            <Wordmark decorative className="text-[14px]" />
+          </Link>
+        </header>
+        <main id="main" className="flex flex-1 flex-col justify-center px-5 pb-16 pt-6 sm:px-10 lg:px-16 lg:py-16 xl:px-24">
+          <div className="w-full max-w-md">
+            <p className="eyebrow">{eyebrow}</p>
+            <h1 className="mt-4 font-display text-[clamp(2.25rem,5vw,3.25rem)] leading-[1.05] tracking-[-0.015em] text-ivory">{title}</h1>
+            {lede && <div className="mt-4 text-[16px] leading-relaxed text-stone">{lede}</div>}
+            <div className="mt-10">{children}</div>
           </div>
-        </div>
-        <div className="flex flex-col justify-center px-5 pb-16 pt-28 md:col-span-6 md:px-12 lg:col-span-5 lg:px-16">
-          <p className="eyebrow mb-5">{eyebrow}</p>
-          <h1 className="font-display text-[44px] leading-[1.02] tracking-[-0.02em] text-ivory md:text-[60px]">{title}</h1>
-          {lede && <div className="mt-5 max-w-md text-[16px] leading-relaxed text-stone">{lede}</div>}
-          <div className="mt-10 max-w-md">{children}</div>
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 }

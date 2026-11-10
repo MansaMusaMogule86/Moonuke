@@ -1,30 +1,26 @@
-import { brand } from "@/config/brand";
 import { Symbol } from "@/components/brand/Symbol";
 import { Button } from "@/components/ui/Button";
-import { Reveal } from "@/components/ui/Reveal";
 
 export function Closing() {
   return (
-    <section aria-labelledby="closing-title" className="relative overflow-hidden py-32 md:py-48">
-      <div aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 h-[90vw] w-[90vw] -translate-x-1/2 -translate-y-1/2 rounded-full border border-gold/[0.07] md:h-[60vw] md:w-[60vw]" />
-      <div aria-hidden className="pointer-events-none absolute left-1/2 top-1/2 h-[66vw] w-[66vw] -translate-x-1/2 -translate-y-1/2 rounded-full border border-gold/[0.1] md:h-[44vw] md:w-[44vw]" />
-      <Reveal className="relative mx-auto max-w-4xl px-5 text-center">
-        <Symbol size={56} className="mx-auto" />
-        <h2 id="closing-title" className="mt-10 font-display text-[52px] italic leading-[0.98] tracking-[-0.03em] text-ivory md:text-[120px]">
-          The door opens <span className="text-metal">by name.</span>
-        </h2>
-        <p className="mx-auto mt-8 max-w-md text-[17px] text-stone">
-          {brand.name} is invitation-only. Members can ask the house to invite someone they know, and every account is approved personally. Your alias is yours from the first night.
-        </p>
-        <div className="mt-12 flex flex-wrap justify-center gap-3">
-          <Button href="/signin" size="lg" arrow>
-            Sign in
-          </Button>
-          <Button href="#tiers" size="lg" variant="outline">
-            How membership works
-          </Button>
+    <section aria-labelledby="closing-title" className="section-y border-t border-line">
+      <div className="container-page">
+        <div className="mk-reveal relative overflow-hidden rounded-[var(--radius-xl)] border border-line-strong bg-ink-2 px-6 py-14 text-center md:px-12 md:py-20">
+          <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(50%_70%_at_50%_0%,rgb(255_60_172/0.10),transparent_70%)]" />
+          <Symbol size={64} className="relative mx-auto" />
+          <h2 id="closing-title" className="relative mx-auto mt-6 max-w-[36rem] font-display text-[clamp(2rem,4.5vw,3.25rem)] leading-[1.08] text-ivory">
+            Already invited? Your creators are waiting.
+          </h2>
+          <p className="relative mx-auto mt-4 max-w-[32rem] text-[16px] leading-relaxed text-stone">
+            Sign in to see the creators you follow, or open your invitation link to create your account.
+          </p>
+          <div className="relative mt-8 flex justify-center">
+            <Button href="/signin" size="lg" arrow>
+              Sign in
+            </Button>
+          </div>
         </div>
-      </Reveal>
+      </div>
     </section>
   );
 }

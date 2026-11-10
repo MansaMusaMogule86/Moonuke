@@ -16,7 +16,7 @@ export default async function ResetPage({ params }: { params: Promise<{ token: s
       title={
         valid ? (
           <>
-            A new <em className="text-metal">key.</em>
+            Choose a new <em className="text-metal">password.</em>
           </>
         ) : (
           <>
@@ -31,7 +31,6 @@ export default async function ResetPage({ params }: { params: Promise<{ token: s
             : "Reset links work once and expire after 30 minutes. Request a new one to continue."}
         </p>
       }
-      study={{ hair: "crop", light: "right", tilt: 2, adorn: "none", glow: 0.7 }}
     >
       {valid ? <ResetForm token={token} /> : <Button href="/forgot" variant="outline">Request a new link</Button>}
     </AuthShell>

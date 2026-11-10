@@ -1,50 +1,61 @@
 import { brand } from "@/config/brand";
 import type { Metadata } from "next";
+import { Logo } from "@/components/brand/Logo";
 import { Symbol } from "@/components/brand/Symbol";
 import { Wordmark } from "@/components/brand/Wordmark";
 import { SiteFooter } from "@/components/layout/SiteFooter";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { Badge } from "@/components/ui/Badge";
 import { Portrait } from "@/components/ui/Portrait";
-import { showcase } from "@/lib/content/creators";
 import { color, contrastRatio } from "@/lib/tokens";
 import { InteractiveSpecimens, MotionSpecimens } from "./specimens";
 
 export const metadata: Metadata = { title: "Design system", robots: { index: false } };
 
 const swatches: { name: string; token: string; hex: string; role: string }[] = [
-  { name: "Ink", token: "--mk-ink", hex: color.ink, role: "Background. The canvas — 80% of every screen." },
-  { name: "Ink 2", token: "--mk-ink-2", hex: color.ink2, role: "Secondary background, alternating sections." },
-  { name: "Ink 3", token: "--mk-ink-3", hex: color.ink3, role: "Elevated surfaces: sheets, focused cards." },
-  { name: "Gold", token: "--mk-gold", hex: color.gold, role: "Primary CTA, active nav, premium indicators." },
-  { name: "Soft gold", token: "--mk-gold-soft", hex: color.goldSoft, role: "Hover, focus rings, highlights." },
-  { name: "Muted gold", token: "--mk-gold-muted", hex: color.goldMuted, role: "Hairlines and quiet ornament only." },
+  { name: "Ink", token: "--mk-ink", hex: color.ink, role: "Page background. Most of every screen." },
+  { name: "Ink 2", token: "--mk-ink-2", hex: color.ink2, role: "Raised surface: alternating sections, cards." },
+  { name: "Ink 3", token: "--mk-ink-3", hex: color.ink3, role: "Elevated surface: inputs, menus, sheets." },
+  { name: "Ink 4", token: "--mk-ink-4", hex: color.ink4, role: "Hover and pressed states on elevated surfaces." },
+  { name: "Gold", token: "--mk-gold", hex: color.gold, role: "The brand: primary action, active place, VIP." },
+  { name: "Soft gold", token: "--mk-gold-soft", hex: color.goldSoft, role: "Hover, focus rings, highlighted words." },
+  { name: "Muted gold", token: "--mk-gold-muted", hex: color.goldMuted, role: "Quiet ornament only." },
+  { name: "Pink", token: "--mk-pink", hex: color.pink, role: "Personality: a highlighted word, a sent message, a small accent." },
+  { name: "Soft pink", token: "--mk-pink-soft", hex: color.pinkSoft, role: "Small pink text and hover on pink." },
   { name: "Ivory", token: "--mk-ivory", hex: color.ivory, role: "Primary text." },
   { name: "Stone", token: "--mk-stone", hex: color.stone, role: "Secondary text." },
   { name: "Ash", token: "--mk-ash", hex: color.ash, role: "Meta text, captions (AA minimum)." },
 ];
 
 const typeScale = [
-  { name: "Display XL", cls: "font-display italic text-[96px] leading-[0.9] tracking-[-0.035em]", spec: "Bodoni Moda Italic · 96–300 · −3.5%" },
-  { name: "Display L", cls: "font-display text-[72px] leading-[1.02] tracking-[-0.02em]", spec: "Bodoni Moda · 44 → 88 · −2%" },
-  { name: "Title", cls: "font-display text-[36px] leading-none", spec: "Bodoni Moda · 28–40" },
+  { name: "Display", cls: "font-display text-[64px] leading-[1.02] tracking-[-0.02em]", spec: "Bodoni Moda · 44 → 80 · −2% · hero and section titles only" },
+  { name: "Title", cls: "font-display text-[36px] leading-[1.06]", spec: "Bodoni Moda · 28–40" },
+  { name: "Heading", cls: "text-[19px] font-medium", spec: "Jost 500 · 17–20 · cards, dashboards" },
   { name: "Body L", cls: "text-[17px] leading-relaxed", spec: "Jost 400 · 17 / 1.65" },
-  { name: "Body", cls: "text-[14px] leading-relaxed", spec: "Jost 400 · 14 / 1.6" },
-  { name: "Eyebrow", cls: "eyebrow", spec: "Jost 500 · 11 · +32% · caps" },
+  { name: "Body", cls: "text-[15px] leading-relaxed", spec: "Jost 400 · 14–15 / 1.6" },
+  { name: "Eyebrow", cls: "eyebrow", spec: "Jost 500 · 12 · +22% · caps" },
 ];
+
+const covers = [
+  { hair: "wrap", light: "left", adorn: "hoops", glow: 0.9 },
+  { hair: "bun", light: "right", adorn: "crown", glow: 0.8 },
+  { hair: "crop", light: "left", adorn: "collar", glow: 0.7 },
+  { hair: "long", light: "right", adorn: "none", glow: 0.8 },
+  { hair: "wrap", light: "right", adorn: "crown", tilt: 4, glow: 0.6 },
+] as const;
 
 export default function DesignSystemPage() {
   return (
     <>
       <SiteHeader />
-      <main id="main" className="mx-auto max-w-[1400px] px-5 pb-32 pt-36 md:px-10">
+      <main id="main" className="mx-auto max-w-[1400px] px-5 pb-32 pt-16 md:px-10">
         <header className="max-w-3xl">
           <p className="eyebrow mb-6">{brand.name} · Design system v0.1</p>
           <h1 className="font-display text-[56px] leading-[0.98] tracking-[-0.03em] text-ivory md:text-[104px]">
-            Black is the canvas. <em className="text-metal">Gold is a privilege.</em>
+            Charcoal first. <em className="text-gold-soft">Gold</em> for the brand, <em className="text-pink">pink</em> for personality.
           </h1>
           <p className="mt-8 max-w-xl text-[17px] leading-relaxed text-stone">
-            The rules that make every {brand.name} screen feel like the same private room. Tokens live in{" "}
+            The rules that make every {brand.name} screen feel like one product. Tokens live in{" "}
             <code className="text-gold-soft">src/styles/tokens.css</code>; components in{" "}
             <code className="text-gold-soft">src/components/ui</code>.
           </p>
@@ -53,9 +64,9 @@ export default function DesignSystemPage() {
         <Section n="01" title="Principles">
           <ol className="grid gap-px overflow-hidden rounded-[var(--radius-xl)] border border-line bg-line md:grid-cols-3">
             {[
-              ["Darkness first", "Deep black negative space carries the luxury. Fill less; light what matters."],
-              ["Gold is earned", "Gold marks one primary action per view, premium status, and the active place — never decoration for its own sake."],
-              ["Editorial, not dashboard", "Asymmetry, oversized serif display, and real photography. No grids of identical cards."],
+              ["Charcoal carries the page", "Black and charcoal dominate. Warm white carries the words. Fill less; highlight what matters."],
+              ["Gold and pink, sparingly", "Gold marks the primary action, the active place and VIP. Pink adds personality to one word or detail. Never every border."],
+              ["Editorial outside, efficient inside", "Marketing pages use serif display and generous space. Dashboards, forms and messages favour clear sans-serif headings and density."],
               ["One hand", "Every action reachable by thumb. 44px minimum targets. Sheets over modals on phones."],
               ["Motion with meaning", "Arrivals ease out, state changes ease in-out, drags use springs. All of it yields to reduced-motion."],
               ["Honest privacy", "Promise what we can enforce: server-side entitlements, signed links. Never “screenshot-proof”."],
@@ -71,24 +82,23 @@ export default function DesignSystemPage() {
         <Section n="02" title="Brand marks">
           <div className="grid gap-6 md:grid-cols-2">
             <div className="flex min-h-[320px] flex-col items-center justify-center gap-8 rounded-[var(--radius-xl)] border border-line bg-ink-2 p-10">
-              <Symbol size={120} title={`${brand.name} monogram`} />
-              <div className="flex items-end gap-6">
-                <Symbol size={48} />
-                <Symbol size={32} />
-                <Symbol size={20} />
-              </div>
+              <Logo className="h-40" />
               <p className="max-w-sm text-center text-[13px] text-stone">
-                <span className="text-ivory">The DF monogram.</span> Didone capitals inside a hairline ring, in the
-                metal gradient. Minimum size 16px.
+                <span className="text-ivory">Full logo.</span> The approved artwork, on pure black, with its empty margin trimmed. Use it
+                at 88px tall or more: footers, sign-in screens, splash moments.
               </p>
             </div>
             <div className="flex min-h-[320px] flex-col items-center justify-center gap-8 rounded-[var(--radius-xl)] border border-line bg-ink-2 p-10">
-              <Wordmark className="text-[40px]" />
-              <Wordmark withSymbol className="text-[20px]" />
+              <div className="flex items-end gap-6">
+                <Symbol size={96} title={`${brand.name} monogram`} />
+                <Symbol size={48} />
+                <Symbol size={32} />
+              </div>
+              <Wordmark withSymbol className="text-[18px]" />
               <Wordmark tone="ivory" className="text-[14px]" />
               <p className="max-w-sm text-center text-[13px] text-stone">
-                Bodoni capitals at +30% tracking. Use the
-                ivory tone below 14px, where the metal gradient loses fidelity.
+                <span className="text-ivory">Monogram + wordmark.</span> The DF monogram is cropped from the logo; headers pair it with the
+                Bodoni text wordmark so the name stays readable. Both art files sit on black and use <code className="text-gold-soft">logo-art</code>.
               </p>
             </div>
           </div>
@@ -115,7 +125,7 @@ export default function DesignSystemPage() {
             })}
           </ul>
           <div className="mt-6 rounded-[var(--radius-lg)] border border-line p-6">
-            <p className="eyebrow mb-4 text-stone">Metal — wordmark &amp; hairlines only</p>
+            <p className="eyebrow mb-4 text-stone">Metal — text wordmark only</p>
             <div className="h-16 rounded-md" style={{ background: "var(--mk-metal)" }} />
             <div className="hairline mt-6" />
           </div>
@@ -130,7 +140,7 @@ export default function DesignSystemPage() {
                   <p className="mt-1 text-[12px] text-ash">{t.spec}</p>
                 </div>
                 <p className={`${t.cls} min-w-0 truncate text-ivory md:col-span-9`}>
-                  {t.name === "Eyebrow" ? "A private creator club" : "The door is open tonight."}
+                  {t.name === "Eyebrow" ? "Creator memberships" : "A closer connection."}
                 </p>
               </li>
             ))}
@@ -147,18 +157,17 @@ export default function DesignSystemPage() {
 
         <Section n="07" title="Imagery">
           <div className="grid grid-cols-2 gap-4 md:grid-cols-5">
-            {showcase.map((c, i) => (
-              <figure key={c.handle}>
-                <Portrait alt={`Portrait study for ${c.name}`} study={c.study} className={`aspect-[3/4] ${i % 2 ? "arch" : "rounded-[var(--radius-xl)]"}`} />
+            {covers.map((c, i) => (
+              <figure key={i}>
+                <Portrait alt="" study={c} className={`aspect-[3/4] ${i % 2 ? "arch" : "rounded-[var(--radius-xl)]"}`} />
                 <figcaption className="mt-3 text-[12px] text-ash">{i % 2 ? "Arch plate" : "Editorial plate"}</figcaption>
               </figure>
             ))}
           </div>
           <p className="mt-6 max-w-2xl text-[14px] leading-relaxed text-stone">
-            Photography direction: single key light, deep shadow, warm skin, one gold accent. Arched plates
-            for people, rounded rectangles for content. The lit studies above are stand-ins until
-            commissioned editorial photography lands; <code className="text-gold-soft">&lt;Portrait src&gt;</code>{" "}
-            swaps them in without layout changes.
+            Creators without a photo get an abstract cover in the palette — never a figure or a made-up
+            person. Arched plates for people, rounded rectangles for content.{" "}
+            <code className="text-gold-soft">&lt;Portrait src&gt;</code> swaps in a real photo without layout changes.
           </p>
           <div className="mt-6 flex flex-wrap gap-2">
             <Badge tone="vip">VIP</Badge>

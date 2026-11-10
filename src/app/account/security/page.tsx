@@ -26,7 +26,7 @@ export default async function SecurityPage({ searchParams }: { searchParams: Pro
     <div className="mx-auto max-w-[1200px] px-5 pb-28 pt-14 md:px-10 md:pt-20">
       <p className="eyebrow mb-5">Account · {viewer.alias}</p>
       <h1 className="font-display text-[52px] leading-[0.98] tracking-[-0.03em] text-ivory md:text-[84px]">
-        Keys & <em className="text-metal">doors.</em>
+        Sign-in & <em className="text-metal">security.</em>
       </h1>
 
       {mustEnrol && (

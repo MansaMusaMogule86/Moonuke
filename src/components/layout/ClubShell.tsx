@@ -20,7 +20,7 @@ export function ClubShell({ viewer, children, unread = 0 }: { viewer: Viewer; ch
   }
   if (viewer.role === "creator" && can(viewer, "club.discover")) items.push({ href: "/studio", label: "Studio", icon: "studio" });
   if (can(viewer, "referrals.request")) items.push({ href: "/refer", label: "Invite", icon: "invite" });
-  if (can(viewer, "applications.review")) items.push({ href: "/admin", label: "House", icon: "house" });
+  if (can(viewer, "applications.review")) items.push({ href: "/admin", label: "Admin", icon: "house" });
   items.push({ href: "/account/security", label: "Account", icon: "account" });
 
   return (
@@ -29,7 +29,7 @@ export function ClubShell({ viewer, children, unread = 0 }: { viewer: Viewer; ch
         <div className="mx-auto flex h-[68px] max-w-[1600px] items-center justify-between gap-6 px-5 md:px-10">
           <Link href="/discover" className="flex items-center gap-3 rounded-md">
             <span className="sr-only">{`${brand.name} — Discover`}</span>
-            <Symbol size={28} />
+            <Symbol size={36} />
             <Wordmark decorative className="hidden text-[14px] sm:inline-flex" />
           </Link>
           <ClubNav items={items} variant="top" />

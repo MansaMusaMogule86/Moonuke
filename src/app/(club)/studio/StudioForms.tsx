@@ -206,7 +206,7 @@ export function VerificationForm() {
       <Check name="age" error={state.fields?.age}>I am 18 or older, and I&apos;ll provide proof of age when the house asks.</Check>
       <Check name="identity" error={state.fields?.identity}>I am the person this profile represents, and I&apos;ll verify my identity when asked.</Check>
       <Check name="consent" error={state.fields?.consent}>Everyone who appears in my content is 18+, has consented, and I keep the records the law requires.</Check>
-      <Check name="terms" error={state.fields?.terms}>I accept the creator terms and house rules.</Check>
+      <Check name="terms" error={state.fields?.terms}>I accept the creator terms and community rules.</Check>
       <Submit className="w-full">Request verification</Submit>
     </form>
   );

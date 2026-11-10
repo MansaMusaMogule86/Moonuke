@@ -56,7 +56,7 @@ async function axe(page, label) {
 // ---------------------------------------------------------------- owner issues an invitation
 const owner = await signIn("owner@moonuke.test");
 check("owner lands on /discover", owner.page.url().endsWith("/discover"));
-check("owner sees House nav", await owner.page.getByRole("navigation", { name: "Club" }).first().getByRole("link", { name: "House" }).isVisible());
+check("owner sees Admin nav", await owner.page.getByRole("navigation", { name: "Club" }).first().getByRole("link", { name: "Admin" }).isVisible());
 
 await owner.page.goto(`${BASE}/admin/invitations`);
 await owner.page.getByLabel("Private note").fill("e2e invite");
@@ -84,7 +84,7 @@ await visitor.getByLabel("Alias").fill("Orion");
 await visitor.getByLabel("Email").fill("orion@example.com");
 await visitor.getByLabel("Password").fill("orion-very-long-pass");
 await visitor.getByLabel(/18 or older/).check();
-await visitor.getByLabel(/house rules/).check();
+await visitor.getByLabel(/community rules/).check();
 await visitor.getByRole("button", { name: "Request approval" }).click();
 await visitor.waitForURL(/\/pending$/);
 check("application → /pending", visitor.url().endsWith("/pending"));

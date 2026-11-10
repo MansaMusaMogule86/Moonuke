@@ -12,6 +12,9 @@
   --color-gold: var(--mk-gold);
   --color-gold-soft: var(--mk-gold-soft);
   --color-gold-muted: var(--mk-gold-muted);
+  --color-pink: var(--mk-pink);
+  --color-pink-soft: var(--mk-pink-soft);
+  --color-line-gold: var(--mk-line-gold);
   --color-ivory: var(--mk-ivory);
   --color-stone: var(--mk-stone);
   --color-ash: var(--mk-ash);
@@ -59,8 +62,8 @@
     color: var(--mk-ink);
   }
   :focus-visible {
-    outline: 1.5px solid var(--mk-gold-soft);
-    outline-offset: 3px;
+    outline: var(--mk-focus);
+    outline-offset: var(--mk-focus-offset);
     border-radius: 4px;
   }
   img, svg, video { display: block; max-width: 100%; }
@@ -82,126 +85,77 @@
 
 @utility hairline {
   height: 1px;
-  background: linear-gradient(90deg, transparent, var(--mk-gold-muted) 20%, var(--mk-gold-soft) 50%, var(--mk-gold-muted) 80%, transparent);
-  opacity: 0.55;
+  background: linear-gradient(90deg, transparent, var(--mk-line-gold) 20%, var(--mk-line-gold) 80%, transparent);
 }
 
 @utility eyebrow {
   font-family: var(--mk-font-sans);
-  font-size: 0.6875rem;
-  letter-spacing: 0.32em;
+  font-size: 0.75rem;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
   font-weight: 500;
   color: var(--mk-gold);
-}
-
-@utility grain {
-  position: relative;
-  &::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    background-image: var(--mk-grain);
-    opacity: 0.07;
-    mix-blend-mode: overlay;
-  }
 }
 
 @utility arch {
   border-radius: 999px 999px var(--mk-radius-lg) var(--mk-radius-lg);
 }
 
-/* Page-level film grain — a single fixed layer, GPU friendly */
-.mk-film {
-  position: fixed;
-  inset: 0;
-  z-index: 60;
-  pointer-events: none;
-  background-image: var(--mk-grain);
-  opacity: 0.05;
-  mix-blend-mode: overlay;
+/* Layout helpers for marketing pages */
+@utility container-page {
+  width: 100%;
+  max-width: var(--mk-container);
+  margin-inline: auto;
+  padding-inline: var(--mk-gutter);
+}
+@utility container-wide {
+  width: 100%;
+  max-width: var(--mk-container-wide);
+  margin-inline: auto;
+  padding-inline: var(--mk-gutter);
+}
+@utility section-y {
+  padding-block: var(--mk-section);
 }
 
-/* Marquee — paused for reduced motion */
-@keyframes mk-marquee {
-  from { transform: translate3d(0, 0, 0); }
-  to { transform: translate3d(-50%, 0, 0); }
+/* The approved logo art sits on pure black. "lighten" lets the page surface
+   show where the art is black and keeps the gold and pink exactly as drawn. */
+@utility logo-art {
+  mix-blend-mode: lighten;
 }
-.mk-marquee { animation: mk-marquee 48s linear infinite; }
 
+/* Loading shimmer (Skeleton) */
 @keyframes mk-sheen {
   0% { background-position: 120% 50%; }
   100% { background-position: -20% 50%; }
 }
 .mk-sheen {
-  animation: mk-sheen 7s var(--mk-ease-in-out) infinite alternate;
+  animation: mk-sheen 1.6s var(--mk-ease-in-out) infinite alternate;
 }
 
-@keyframes mk-breathe {
-  0%, 100% { opacity: 0.55; transform: scale(1); }
-  50% { opacity: 0.85; transform: scale(1.04); }
+/* Entrances. Content is visible by default; motion is an enhancement that
+   never waits for JavaScript and switches off for reduced motion. */
+@keyframes mk-rise {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: none; }
 }
-.mk-breathe { animation: mk-breathe 9s var(--mk-ease-in-out) infinite; }
+@media (prefers-reduced-motion: no-preference) {
+  .mk-rise { animation: mk-rise var(--mk-dur-4) var(--mk-ease-out) both; }
+  .mk-rise-2 { animation: mk-rise var(--mk-dur-4) var(--mk-ease-out) 120ms both; }
+  .mk-rise-3 { animation: mk-rise var(--mk-dur-4) var(--mk-ease-out) 240ms both; }
+  @supports (animation-timeline: view()) {
+    .mk-reveal {
+      animation: mk-rise linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 40%;
+    }
+  }
+}
 
 @media (prefers-reduced-motion: reduce) {
-  .mk-marquee, .mk-sheen, .mk-breathe { animation: none !important; }
   *, *::before, *::after {
     transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
   }
-}
-
-/* ------------------------------------------------------------------
-   Hero stage geometry. All values in container-query units so the
-   eclipse, its clip-path, and the title stay locked together at any width.
-   ------------------------------------------------------------------ */
-.mk-stage {
-  container-type: inline-size;
-  --t-size: 22cqw;   /* title font size: "Diva Fans" spans ~90% of the stage */
-  --t-top: 26cqw;    /* title top */
-  --r: 34cqw;        /* eclipse radius */
-  --cx: 50cqw;       /* eclipse centre x */
-  --cy: 44cqw;       /* eclipse centre y */
-  --art-h: 92cqw;
-}
-@media (min-width: 768px) {
-  .mk-stage {
-    --t-size: 19.5cqw;
-    --t-top: 7.5cqw;
-    --r: 16cqw;
-    --cx: 53cqw;
-    --cy: 18cqw;
-    --art-h: 46cqw;
-  }
-}
-.mk-title {
-  position: absolute;
-  inset-inline: 0;
-  top: var(--t-top);
-  font-family: var(--mk-font-display);
-  font-style: italic;
-  font-weight: 400;
-  font-size: var(--t-size);
-  line-height: 0.9;
-  letter-spacing: -0.035em;
-  text-align: center;
-  white-space: nowrap;
-}
-.mk-title-outline {
-  color: transparent;
-  -webkit-text-stroke: 1px rgb(232 204 145 / 0.8);
-}
-.mk-clip {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  clip-path: circle(calc(var(--r) - 1px) at var(--cx) var(--cy));
-}
-.mk-eclipse {
-  position: absolute;
-  width: calc(var(--r) * 2);
-  height: calc(var(--r) * 2);
-  left: calc(var(--cx) - var(--r));
-  top: calc(var(--cy) - var(--r));
 }

@@ -56,7 +56,7 @@ export default async function DiscoverPage({ searchParams }: { searchParams: SP 
             <em className="text-metal">{activeCategory.label}</em>
           ) : (
             <>
-              Discover <em className="text-metal">the Circle</em>
+              Discover <em className="text-metal">creators</em>
             </>
           )}
         </h1>

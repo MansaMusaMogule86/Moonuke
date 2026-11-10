@@ -18,16 +18,15 @@ export default async function PendingPage() {
       eyebrow={`Application · ${viewer.alias}`}
       title={
         <>
-          The house is <em className="text-metal">reviewing.</em>
+          Your account is <em className="text-metal">in review.</em>
         </>
       }
       lede={
         <p>
-          Thank you, {viewer.alias}. Every new account is approved personally. You&apos;ll be able to enter the
-          Circle as soon as yours is — simply sign in again.
+          Thank you, {viewer.alias}. Our team approves every new account. Once yours is approved, sign in again
+          to start following creators.
         </p>
       }
-      study={{ hair: "bun", light: "right", tilt: 2, adorn: "collar", glow: 0.8 }}
     >
       <ol className="space-y-5 border-l border-line-strong pl-6 text-[14px]">
         <li className="relative">
@@ -41,7 +40,7 @@ export default async function PendingPage() {
         </li>
         <li className="relative">
           <span aria-hidden className="absolute -left-[29px] top-1.5 h-2.5 w-2.5 rounded-full border border-line-strong bg-ink" />
-          <p className="text-stone">Welcome to the Circle</p>
+          <p className="text-stone">Your account opens</p>
         </li>
       </ol>
       <form action={signOutAction} className="mt-10">

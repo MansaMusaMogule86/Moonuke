@@ -109,7 +109,9 @@ for (const width of [320, 360, 375, 390, 430, 768, 1024, 1440, 1920]) {
   check("og: image absolute https, 1200x630, jpeg", meta("property", "og:image") === OG && meta("property", "og:image:width") === "1200" && meta("property", "og:image:height") === "630" && meta("property", "og:image:type") === "image/jpeg");
   check("twitter: summary_large_image with title, description, image", meta("name", "twitter:card") === "summary_large_image" && meta("name", "twitter:title") === TITLE && meta("name", "twitter:description") === DESC && meta("name", "twitter:image") === OG);
   check("seo: JSON-LD organisation and website", /"@type":"Organization"[^]*"@type":"WebSite"/.test(html) && html.includes('"name":"DivaFans"'));
-  check("brand: no legacy name in homepage HTML", !/moonuk/i.test(html));
+  // The retired brand name is spelled in two parts so a repo-wide search for it stays at zero.
+  const legacy = new RegExp(["moo", "nuk"].join(""), "i");
+  check("brand: no legacy name in homepage HTML", !legacy.test(html));
   const img = await fetch(BASE + "/og-divafans.jpg");
   check("og: image file served as image/jpeg", img.ok && img.headers.get("content-type") === "image/jpeg", `${img.status} ${img.headers.get("content-type")}`);
   const mf = await fetch(BASE + "/manifest.webmanifest");

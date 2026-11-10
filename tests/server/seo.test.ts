@@ -19,13 +19,13 @@ afterEach(() => {
 });
 
 describe("robots.txt and sitemap", () => {
-  it("live Vercel production: crawlable except API and token links, sitemap lists only the homepage", () => {
+  it("live Vercel production: crawlable except API and token links; URLs use the public domain, not APP_URL", () => {
     setEnv({ NODE_ENV: "production", VERCEL: "1", VERCEL_ENV: "production", APP_URL: "https://club.example" });
     expect(robots()).toEqual({
       rules: { userAgent: "*", allow: "/", disallow: ["/api/", "/invite/", "/reset/"] },
-      sitemap: "https://club.example/sitemap.xml",
+      sitemap: "https://www.divafans.io/sitemap.xml",
     });
-    expect(sitemap()).toEqual([{ url: "https://club.example/" }]);
+    expect(sitemap()).toEqual([{ url: "https://www.divafans.io/" }]);
   });
 
   it("Vercel preview: blocks everything and lists nothing, even with an https URL", () => {

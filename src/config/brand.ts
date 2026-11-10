@@ -6,12 +6,19 @@
  */
 export const brand = {
   /** Display name used in prose, titles and emails. */
-  name: "Diva Fans",
-  /** Short descriptor that follows the name in page titles. */
-  descriptor: "Closer to the creators you love",
+  name: "DivaFans",
+  /** Short descriptor that follows the name in the homepage title. */
+  descriptor: "Your World. Your Fans. Your Rules.",
   tagline: "Exclusive content, memberships and conversations with creators",
-  description:
-    "A membership platform where creators share exclusive content, memberships and conversations with the fans who follow them. Joining is by invitation.",
+  /** Meta and social description. */
+  description: "Exclusive content. Real connections. A private world for creators and their fans.",
+  /**
+   * Public canonical origin for SEO and social metadata (metadataBase, canonical,
+   * robots, sitemap). Operational links (invitations, emails) use APP_URL instead.
+   */
+  siteUrl: "https://www.divafans.io",
+  /** Social preview card (public/og-divafans.jpg). */
+  ogImage: { url: "/og-divafans.jpg", width: 1200, height: 630, type: "image/jpeg", alt: "DivaFans — Your World. Your Fans. Your Rules." },
   /** Wordmark letters, rendered in Bodoni capitals. */
   wordmark: { text: "DIVA FANS" },
   /**
@@ -24,14 +31,14 @@ export const brand = {
   /** How the platform owner is referred to in the UI. */
   houseName: "The House",
   /** Default sender display name for transactional email. */
-  emailSenderName: "Diva Fans",
+  emailSenderName: "DivaFans",
   /**
    * Issuer label shown in authenticator apps for new MFA enrolments.
    * It is a label only: existing enrolments keep their old label and their codes still work.
    */
-  mfaIssuer: "Diva Fans",
+  mfaIssuer: "DivaFans",
   /** Prefix for cookie and storage keys. Kept from the old name: changing it signs everyone out. */
   cookiePrefix: "mk",
 } as const;
 
-export const pageTitle = (page?: string) => (page ? `${page} · ${brand.name}` : `${brand.name} — ${brand.descriptor}`);
+export const pageTitle = (page?: string) => (page ? `${page} | ${brand.name}` : `${brand.name} | ${brand.descriptor}`);

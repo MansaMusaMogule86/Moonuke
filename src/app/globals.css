@@ -2,7 +2,7 @@
 @import "../styles/tokens.css";
 
 /* ------------------------------------------------------------------
-   Tailwind theme bridge — every utility maps back to a Diva Fans token.
+   Tailwind theme bridge — every utility maps back to a DivaFans token.
    ------------------------------------------------------------------ */
 @theme inline {
   --color-ink: var(--mk-ink);

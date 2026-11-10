@@ -3,7 +3,8 @@ import { headers } from "next/headers";
 import { Bodoni_Moda, Jost } from "next/font/google";
 import { Providers } from "@/components/Providers";
 import { brand, pageTitle } from "@/config/brand";
-import { appUrl, env, isIndexable } from "@/server/env";
+import { socialOpenGraph, socialTwitter } from "@/config/seo";
+import { env, isIndexable } from "@/server/env";
 import "./globals.css";
 
 const bodoni = Bodoni_Moda({
@@ -24,13 +25,15 @@ const jost = Jost({
 export function generateMetadata(): Metadata {
   const google = env().GOOGLE_SITE_VERIFICATION;
   return {
-    metadataBase: new URL(appUrl()),
-    title: { default: pageTitle(), template: `%s · ${brand.name}` },
-    description:
-      `${brand.name} is ${brand.description.charAt(0).toLowerCase()}${brand.description.slice(1)}`,
+    // Absolute URLs (canonical, og:image, og:url) resolve against the public domain in every environment.
+    metadataBase: new URL(brand.siteUrl),
+    title: { default: pageTitle(), template: `%s | ${brand.name}` },
+    description: brand.description,
     robots: isIndexable() ? { index: true, follow: true } : { index: false, follow: false },
     applicationName: brand.name,
-    openGraph: { title: brand.name, siteName: brand.name, description: brand.descriptor, type: "website" },
+    appleWebApp: { title: brand.name },
+    openGraph: socialOpenGraph,
+    twitter: socialTwitter,
     ...(google && { verification: { google } }),
   };
 }

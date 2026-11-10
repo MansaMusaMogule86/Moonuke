@@ -1,6 +1,6 @@
-# Diva Fans Design System v0.2
+# DivaFans Design System v0.2
 
-The live, interactive reference is at **`/design-system`**. This file covers the rules. v0.2 (2026-11-10) replaced the black-and-gold "private club" look with the Diva Fans gold-and-pink identity.
+The live, interactive reference is at **`/design-system`**. This file covers the rules. v0.2 (2026-11-10) replaced the black-and-gold "private club" look with the DivaFans gold-and-pink identity.
 
 ## Principles
 1. **Charcoal carries the page.** Black and charcoal surfaces dominate; warm white carries readable content.

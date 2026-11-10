@@ -89,14 +89,14 @@ The research sources are listed at the end.
 
 ## 2. Infrastructure compatibility matrix
 
-Diva Fans' security model depends on **PostgreSQL features**:
+DivaFans's security model depends on **PostgreSQL features**:
 - row-level security on 44 tables;
 - `SET ROLE mk_app` per transaction, with `app.user_id` and `app.aal` settings;
 - 47 SECURITY DEFINER functions;
 - invoker guard triggers, and a deferred constraint trigger for the ledger;
 - `citext`, plpgsql and partial indexes.
 
-| Component | Fit for Diva Fans | Evidence | Verdict |
+| Component | Fit for DivaFans | Evidence | Verdict |
 |---|---|---|---|
 | **Cloudflare D1** (SQLite) | No RLS, no roles, no plpgsql, no SECURITY DEFINER, no deferred constraint triggers | SQLite feature set; D1 docs | **Incompatible.** Using it would mean rewriting the whole authorization layer and every security test. **Not recommended.** |
 | **Supabase Postgres** | Plain SQL migrations apply as-is; a custom `mk_app` role and `citext` are available in Postgres | Standard Postgres | **Compatible.** A staging dry-run is needed (role creation and pooler `SET ROLE` behaviour) |
@@ -136,9 +136,9 @@ Diva Fans' security model depends on **PostgreSQL features**:
 
 ## 4. Legal and safety blockers
 
-An **18+ checkbox is not age verification.** Diva Fans' current fan check (confirmed default D5: an attestation plus owner approval of each account) is **insufficient** wherever the laws below apply. Invitation-only access doesn't remove the obligation.
+An **18+ checkbox is not age verification.** DivaFans's current fan check (confirmed default D5: an attestation plus owner approval of each account) is **insufficient** wherever the laws below apply. Invitation-only access doesn't remove the obligation.
 
-| Jurisdiction or rule | Requirement | Status | Diva Fans gap |
+| Jurisdiction or rule | Requirement | Status | DivaFans gap |
 |---|---|---|---|
 | **UK: Online Safety Act** | Services that allow pornography (user-to-user, Part 3) must use **highly effective age assurance**, from 25 July 2025. Self-declaration is not enough. Ofcom is enforcing | **VERIFIED** (Ofcom) | A HEAA vendor, or geo-block the UK |
 | **EU: Digital Services Act** | The Commission's guidelines expect high-certainty age verification for porn; preliminary findings against platforms relying on self-declaration (March 2026) | **REPORTED** (secondary, preliminary) | A vendor; DSA transparency, notice-and-action and statement-of-reasons duties also apply (UNRESOLVED scope) |

@@ -17,7 +17,7 @@ describe("design tokens", () => {
     }
   });
 
-  it("matches the Diva Fans palette", () => {
+  it("matches the DivaFans palette", () => {
     expect(color.ink).toBe("#050505");
     expect(color.ink2).toBe("#121217");
     expect(color.ink3).toBe("#1a1921");

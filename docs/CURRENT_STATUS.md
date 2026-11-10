@@ -2,7 +2,7 @@
 
 **Branch:** `claude/cool-noether-uvf5h7`. **Last code commit:** `96dd1d2`. **Deployed:** no. **Payments active:** no.
 
-**Brand:** **Diva Fans** (gold DF logo, black, gold and pink design system). See `docs/design-system.md` and `docs/deployment.md` §7.
+**Brand:** **DivaFans** (gold DF logo, black, gold and pink design system). See `docs/design-system.md` and `docs/deployment.md` §7.
 
 ## Completed phases
 

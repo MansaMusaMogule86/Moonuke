@@ -77,13 +77,15 @@ These items, all from Phase 8, are code-complete and need an owner decision rath
 - [ ] Payments remain disabled until a processor approves the business (Phase 6).
 
 ## 7. Rebranding
-The product is **Diva Fans**. The name, wordmark letters, descriptors, email sender name, MFA issuer and cookie prefix all live in `src/config/brand.ts`. Changing `cookiePrefix` signs everyone out, so it stays `mk`. The logo files are in `public/images/brand/` and the app icons in `src/app/` (see `docs/ASSETS.md`). Database identifiers (schema `app`, role `mk_app`) are brand-neutral.
+The product is **DivaFans**. The name, wordmark letters, descriptors, email sender name, MFA issuer and cookie prefix all live in `src/config/brand.ts`. Changing `cookiePrefix` signs everyone out, so it stays `mk`. The logo files are in `public/images/brand/` and the app icons in `src/app/` (see `docs/ASSETS.md`). Database identifiers (schema `app`, role `mk_app`) are brand-neutral.
 
 **Secrets.** Only `APP_SECRET` is read. If a host still sets an older secret variable under another name, copy its value into `APP_SECRET`; startup fails loudly until it is set.
 
-**MFA.** New authenticator enrolments show the issuer "Diva Fans". Existing enrolments keep the label they were created with; their codes still work.
+**MFA.** New authenticator enrolments show the issuer "DivaFans". Existing enrolments keep the label they were created with; their codes still work.
 
 **Outside the repository (not changed or verified from here):**
-- `EMAIL_FROM` on the host sets the email sender's display name. Change its name part to `Diva Fans` while keeping the same, verified address.
-- The GitHub repository name, the Vercel project name and any `*.vercel.app` hostname are set in those dashboards. `APP_URL` stays whatever is configured; canonical, sitemap and Open Graph URLs come from it.
+- `EMAIL_FROM` on the host sets the email sender's display name. Change its name part to `DivaFans` while keeping the same, verified address.
+- The GitHub repository name, the Vercel project name and any `*.vercel.app` hostname are set in those dashboards.
+- **Public domain.** SEO and social metadata (metadataBase, canonical, `og:url`, `og:image`, robots, sitemap) always use `brand.siteUrl` = `https://www.divafans.io`. Invitation, reset and email links use `APP_URL`; set `APP_URL=https://www.divafans.io` in Vercel production so those links use the same domain. `divafans.io` → `www.divafans.io` and http → https redirects are handled by Vercel's domain settings (both return 308 today).
+- **Link previews.** WhatsApp, Facebook, X and LinkedIn cache previews. After a deploy, re-scrape with the Facebook Sharing Debugger (WhatsApp uses the same crawler) or share the URL with a query string (e.g. `https://www.divafans.io/?v=2`) to see the new card; old chats may keep the cached preview.
 - Supabase Auth email templates and site name only matter once `AUTH_PROVIDER=supabase`; update them in the Supabase dashboard before switching.

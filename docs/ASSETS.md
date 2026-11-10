@@ -6,7 +6,7 @@ Everything under `public/` is served as-is to **anyone, with no sign-in, age che
 
 | Folder | Purpose |
 |---|---|
-| `public/images/brand/` | Approved Diva Fans logo files |
+| `public/images/brand/` | Approved DivaFans logo files |
 | `public/images/creators/` | Promotional creator images **with written permission for public use** |
 | `public/images/illustrations/` | Decorative illustrations used by the interface |
 | `public/images/placeholders/` | Generic fallback images that a component actually uses |
@@ -60,7 +60,6 @@ Every other folder holds only its `.gitkeep`.
 |---|---|---|
 | Transparent master logo (PNG with alpha, or SVG) | `public/images/brand/diva-fans-logo.png` | Would allow light backgrounds and drop the blend utility |
 | Standalone wordmark artwork | `public/images/brand/diva-fans-wordmark.png` | Optional; headers use the text wordmark today |
-| Social sharing card, 1200×630 | `src/app/opengraph-image.png` | Next.js wires it into Open Graph tags automatically |
 | Original hero artwork, text-free, ≥2000px wide | `public/images/hero/divafans-hero-portrait.webp` | Replaces the lower-resolution crop |
 | Creator photography with public-use permission | `public/images/creators/` | For creator promotion beyond the hero |
 
@@ -70,11 +69,12 @@ These live in `src/app/` as Next.js metadata files. They are the single source f
 
 | Item | File | Notes |
 |---|---|---|
-| Favicon / app icon | `src/app/icon.png` | 512×512, the monogram at 80% on black (derived from the master) |
+| Favicon (`/favicon.ico`) | `src/app/favicon.ico` | ICO holding 16, 32 and 48px PNGs of the monogram on black |
+| App icon | `src/app/icon.png` | 512×512, the monogram at 80% on black (derived from the master) |
 | Apple touch icon | `src/app/apple-icon.png` | 180×180, same artwork |
-| Web app manifest | none yet | Add `src/app/manifest.ts` if the site should be installable; it can reuse `icon.png` for 512px and needs a real 192px PNG |
-| Open Graph image | none yet | See the social card above |
-| Title, description, Open Graph, application name | `src/app/layout.tsx`, using `src/config/brand.ts` | Canonical and Open Graph URLs come from `APP_URL` |
+| Web app manifest (`/manifest.webmanifest`) | `src/app/manifest.ts` | Name DivaFans; icons `public/icons/icon-192.png` and `icon-512.png` (same artwork) |
+| Social preview (Open Graph and X) | `public/og-divafans.jpg` | 1200×630 JPEG, 72 KB: the full logo, "Your World. Your Fans. Your Rules.", black/gold/pink. Declared in `brand.ogImage`; served at `https://www.divafans.io/og-divafans.jpg` |
+| Title, description, Open Graph, X card, application name | `src/app/layout.tsx` and `src/config/seo.ts`, using `src/config/brand.ts` | Absolute URLs use `brand.siteUrl` (`https://www.divafans.io`), not `APP_URL`. The homepage adds its canonical, `og:url` and JSON-LD (`src/app/page.tsx`) |
 | `robots.txt` | `src/app/robots.ts` | Generated |
 | `sitemap.xml` | `src/app/sitemap.ts` | Generated |
 

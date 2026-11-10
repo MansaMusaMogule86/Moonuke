@@ -17,7 +17,7 @@
 - **Never trust the client** for prices, entitlements, balances, roles or ids of other users.
 - **Locked content never leaves the server.** Media is served only through short-lived signed URLs (`/api/media`).
 - **No money or deployment without explicit approval.** That covers live payments, crypto, production deployment, paid services, paid photography, and GitHub Actions or billing.
-- **Brand name.** The product is **Diva Fans**. All brand strings live in `src/config/brand.ts`; never hard-code the name.
+- **Brand name.** The product is **DivaFans**. All brand strings live in `src/config/brand.ts`; never hard-code the name.
 - **Don't invent requirements.** If something isn't in `docs/MASTER_PRD.md` or `docs/DECISIONS.md`, ask or mark it UNKNOWN.
 - **Be honest.** Never claim tests passed without running them. `pnpm verify` is a **local** run, not CI.
 

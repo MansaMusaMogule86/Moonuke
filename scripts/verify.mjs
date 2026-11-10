@@ -114,7 +114,7 @@ async function waitFor(url, ms = 60_000) {
 }
 
 // ---------------------------------------------------------------- main
-console.log(`\nDiva Fans local verification${QUICK ? " (quick)" : ""} — ${new Date().toISOString()}\n`);
+console.log(`\nDivaFans local verification${QUICK ? " (quick)" : ""} — ${new Date().toISOString()}\n`);
 
 // 1. Preflight
 {

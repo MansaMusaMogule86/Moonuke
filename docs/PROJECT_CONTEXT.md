@@ -1,7 +1,7 @@
 # Project context (one-page summary)
 
 ## What it is
-**Diva Fans** (the name is centralised in `src/config/brand.ts`) is a private, **invitation-only** creator membership platform for adults (18+). It competes with Fanfix, OnlyFans, Fansly and Fanvue. It sets itself apart in four ways:
+**DivaFans** (the name is centralised in `src/config/brand.ts`) is a private, **invitation-only** creator membership platform for adults (18+). It competes with Fanfix, OnlyFans, Fansly and Fanvue. It sets itself apart in four ways:
 - A luxury black-and-gold editorial design.
 - Pseudonymous fan identities (aliases).
 - VIP memberships and locked content.

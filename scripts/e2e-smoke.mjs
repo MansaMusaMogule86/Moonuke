@@ -94,6 +94,31 @@ for (const width of [320, 360, 375, 390, 430, 768, 1024, 1440, 1920]) {
   await ctx.close();
 }
 
+// ---- SEO and social metadata, read from the raw server HTML (no JavaScript)
+{
+  const html = await (await fetch(BASE + "/")).text();
+  const meta = (attr, key) => (html.match(new RegExp(`<meta[^>]*${attr}="${key}"[^>]*content="([^"]*)"`)) ?? [])[1];
+  const TITLE = "DivaFans | Your World. Your Fans. Your Rules.";
+  const DESC = "Exclusive content. Real connections. A private world for creators and their fans.";
+  const OG = "https://www.divafans.io/og-divafans.jpg";
+  check("seo: <title>", html.includes(`<title>${TITLE}</title>`));
+  check("seo: meta description", meta("name", "description") === DESC);
+  const HOME = ["https://www.divafans.io", "https://www.divafans.io/"];
+  check("seo: canonical", HOME.some((u) => html.includes(`<link rel="canonical" href="${u}"/>`)));
+  check("og: title, description, site_name, url, type", meta("property", "og:title") === TITLE && meta("property", "og:description") === DESC && meta("property", "og:site_name") === "DivaFans" && HOME.includes(meta("property", "og:url")) && meta("property", "og:type") === "website");
+  check("og: image absolute https, 1200x630, jpeg", meta("property", "og:image") === OG && meta("property", "og:image:width") === "1200" && meta("property", "og:image:height") === "630" && meta("property", "og:image:type") === "image/jpeg");
+  check("twitter: summary_large_image with title, description, image", meta("name", "twitter:card") === "summary_large_image" && meta("name", "twitter:title") === TITLE && meta("name", "twitter:description") === DESC && meta("name", "twitter:image") === OG);
+  check("seo: JSON-LD organisation and website", /"@type":"Organization"[^]*"@type":"WebSite"/.test(html) && html.includes('"name":"DivaFans"'));
+  check("brand: no legacy name in homepage HTML", !/moonuk/i.test(html));
+  const img = await fetch(BASE + "/og-divafans.jpg");
+  check("og: image file served as image/jpeg", img.ok && img.headers.get("content-type") === "image/jpeg", `${img.status} ${img.headers.get("content-type")}`);
+  const mf = await fetch(BASE + "/manifest.webmanifest");
+  const manifest = mf.ok ? await mf.json() : {};
+  check("manifest: DivaFans with 192 and 512 icons", manifest.name === "DivaFans" && manifest.icons?.length === 2 && html.includes('rel="manifest"'));
+  const assets = await Promise.all(["/favicon.ico", "/icon.png", "/apple-icon.png", "/icons/icon-192.png", "/icons/icon-512.png"].map((p) => fetch(BASE + p).then((r) => r.ok)));
+  check("icons: favicon, icon, apple-icon and manifest icons served", assets.every(Boolean));
+}
+
 // ---- axe-core WCAG 2.1 AA scan
 for (const route of ["/", "/design-system"]) {
   for (const vp of [{ width: 1440, height: 900 }, { width: 390, height: 844 }]) {

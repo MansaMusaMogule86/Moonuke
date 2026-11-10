@@ -14,7 +14,7 @@
 | A6 | Discovery behind authenticated, approved membership; the public sees marketing only | Phase 3 brief |
 | A7 | Design ID and age verification, but **don't select or activate** a vendor before review | Phase 3 brief |
 | A8 | Mandatory owner MFA | Phase 3 brief |
-| A9 | Keep branding centralised in `src/config/brand.ts` (the product is Diva Fans) | Phase 3 brief |
+| A9 | Keep branding centralised in `src/config/brand.ts` (the product is DivaFans) | Phase 3 brief |
 | A10 | **No spending:** no GitHub Actions or billing, paid CI, live payments, deployment, paid photography or purchased services without approval | Phase 3 and 4 directives |
 | A11 | GitHub-hosted CI paused; run all verification locally | Phase 4 directive |
 | A12 | Keep integrations configurable; buy no third-party services | Phase 4 directive |

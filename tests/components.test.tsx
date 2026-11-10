@@ -29,13 +29,13 @@ describe("Button", () => {
 describe("Brand", () => {
   it("wordmark exposes a single accessible name", () => {
     render(<Wordmark />);
-    expect(screen.getByRole("img", { name: "Moonuke" })).toBeInTheDocument();
+    expect(screen.getByRole("img", { name: "Diva Fans" })).toBeInTheDocument();
   });
   it("symbol is decorative unless titled", () => {
     const { container, rerender } = render(<Symbol />);
     expect(container.querySelector("svg")).toHaveAttribute("aria-hidden", "true");
-    rerender(<Symbol title="Moonuke" />);
-    expect(screen.getByRole("img", { name: "Moonuke" })).toBeInTheDocument();
+    rerender(<Symbol title="Diva Fans" />);
+    expect(screen.getByRole("img", { name: "Diva Fans" })).toBeInTheDocument();
   });
 });
 

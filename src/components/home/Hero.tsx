@@ -11,7 +11,8 @@ import { showcase } from "@/lib/content/creators";
 import { ease } from "@/lib/tokens";
 import { HeroCarousel } from "./HeroCarousel";
 
-const TITLE = brand.name;
+// Non-breaking space: each letter is an inline-block, where a plain space collapses to nothing.
+const TITLE = brand.name.replace(/ /g, String.fromCharCode(160));
 
 export function Hero() {
   const ref = useRef<HTMLElement>(null);

@@ -2,7 +2,7 @@
   "name": "moonuke",
   "version": "0.1.0",
   "private": true,
-  "description": "MOONUKE — a private creator club. Black & gold.",
+  "description": "Diva Fans — a private creator club. Black & gold.",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

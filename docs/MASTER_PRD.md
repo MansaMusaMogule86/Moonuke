@@ -1,5 +1,7 @@
 # Master PRD (confirmed requirements only)
 
+> **Renamed.** The product formerly called MOONUKE is now **Diva Fans** (2026-11-10). Historical entries below keep their original wording.
+
 **Sources:** the owner's written briefs for Phases 1–4, plus the approved decisions in `docs/DECISIONS.md`. **The original "MOONUKE PRD" referenced in the first brief was never supplied to the repository.** Anything it may contain is unknown.
 
 **Status key:**

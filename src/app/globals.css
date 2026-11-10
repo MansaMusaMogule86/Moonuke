@@ -2,7 +2,7 @@
 @import "../styles/tokens.css";
 
 /* ------------------------------------------------------------------
-   Tailwind theme bridge — every utility maps back to a MOONUKE token.
+   Tailwind theme bridge — every utility maps back to a Diva Fans token.
    ------------------------------------------------------------------ */
 @theme inline {
   --color-ink: var(--mk-ink);
@@ -158,7 +158,7 @@
    ------------------------------------------------------------------ */
 .mk-stage {
   container-type: inline-size;
-  --t-size: 25cqw;   /* title font size */
+  --t-size: 22cqw;   /* title font size: "Diva Fans" spans ~90% of the stage */
   --t-top: 26cqw;    /* title top */
   --r: 34cqw;        /* eclipse radius */
   --cx: 50cqw;       /* eclipse centre x */

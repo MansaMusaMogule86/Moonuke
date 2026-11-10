@@ -9,9 +9,9 @@ type SymbolProps = {
 };
 
 /**
- * The MOONUKE symbol — "the Diamond Ring".
- * A total eclipse at the instant of second contact: a dark moon, a thin
- * corona, and one point of light. Private, rare, and only for a moment.
+ * The Diva Fans monogram: Didone "DF" capitals inside a hairline ring.
+ * Drawn as paths, not text, so it never depends on a loaded font.
+ * Keep in step with app/icon.svg.
  */
 export function Symbol({ size = 32, className, title }: SymbolProps) {
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
@@ -32,23 +32,15 @@ export function Symbol({ size = 32, className, title }: SymbolProps) {
           <stop offset="0.6" stopColor="#d6b56d" />
           <stop offset="1" stopColor="#8a6f33" />
         </linearGradient>
-        <radialGradient id={`g-${id}`} cx="0.5" cy="0.5" r="0.5">
-          <stop offset="0" stopColor="#fff6df" />
-          <stop offset="0.35" stopColor="#e8cc91" stopOpacity="0.9" />
-          <stop offset="1" stopColor="#d6b56d" stopOpacity="0" />
-        </radialGradient>
-        <mask id={`c-${id}`}>
-          <circle cx="24" cy="24" r="17" fill="white" />
-          <circle cx="26.6" cy="21.6" r="16.2" fill="black" />
-        </mask>
       </defs>
-      {/* corona ring */}
       <circle cx="24" cy="24" r="21.5" fill="none" stroke={`url(#m-${id})`} strokeWidth="0.9" opacity="0.7" />
-      {/* lit crescent */}
-      <circle cx="24" cy="24" r="17" fill={`url(#m-${id})`} mask={`url(#c-${id})`} />
-      {/* the diamond */}
-      <circle cx="11.2" cy="34.6" r="5.2" fill={`url(#g-${id})`} />
-      <circle cx="11.2" cy="34.6" r="1.25" fill="#fffaf0" />
+      <path fill={`url(#m-${id})`} d={MONOGRAM} />
     </svg>
   );
 }
+
+/** D: stem, hairline serifs and a bowl that thickens at the waist. F: stem, hairline arms with beak serifs. */
+const MONOGRAM =
+  "M12.6 15h3.4v18h-3.4z M11 15h5v1.1h-5z M11 31.9h5V33h-5z " +
+  "M16 15h1C21.6 15 24 19 24 24s-2.4 9-7 9h-1v-1.1h1c3.2 0 4.4-3.6 4.4-7.9S20.2 16.1 17 16.1h-1z " +
+  "M28.4 15h3.4v18h-3.4z M26.8 15h10.4v1.1H26.8z M36.2 15h1v4.4h-1z M26.8 31.9h6.6V33h-6.6z M31.8 23.4h4v1.1h-4z M35.1 21.6h0.9v4.8h-0.9z";

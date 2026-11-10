@@ -15,7 +15,7 @@ async function main() {
   await closePool();
   const base = process.env.APP_URL ?? "http://localhost:3000";
   console.log(`
-Seeded MOONUKE (development data — fictional people).
+Seeded Diva Fans (development data — fictional people).
 
   Password for every seeded account: ${DEV_PASSWORD}
 

@@ -71,15 +71,15 @@ export default function DesignSystemPage() {
         <Section n="02" title="Brand marks">
           <div className="grid gap-6 md:grid-cols-2">
             <div className="flex min-h-[320px] flex-col items-center justify-center gap-8 rounded-[var(--radius-xl)] border border-line bg-ink-2 p-10">
-              <Symbol size={120} title={`${brand.name} symbol — the Diamond Ring`} />
+              <Symbol size={120} title={`${brand.name} monogram`} />
               <div className="flex items-end gap-6">
                 <Symbol size={48} />
                 <Symbol size={32} />
                 <Symbol size={20} />
               </div>
               <p className="max-w-sm text-center text-[13px] text-stone">
-                <span className="text-ivory">The Diamond Ring.</span> A total eclipse at second contact — a dark
-                moon, a corona, and one point of light. Minimum size 16px.
+                <span className="text-ivory">The DF monogram.</span> Didone capitals inside a hairline ring, in the
+                metal gradient. Minimum size 16px.
               </p>
             </div>
             <div className="flex min-h-[320px] flex-col items-center justify-center gap-8 rounded-[var(--radius-xl)] border border-line bg-ink-2 p-10">
@@ -87,7 +87,7 @@ export default function DesignSystemPage() {
               <Wordmark withSymbol className="text-[20px]" />
               <Wordmark tone="ivory" className="text-[14px]" />
               <p className="max-w-sm text-center text-[13px] text-stone">
-                Bodoni capitals at +30% tracking. The second O is a new moon — a hairline circle. Use the
+                Bodoni capitals at +30% tracking. Use the
                 ivory tone below 14px, where the metal gradient loses fidelity.
               </p>
             </div>

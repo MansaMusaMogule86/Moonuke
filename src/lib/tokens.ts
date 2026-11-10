@@ -1,5 +1,5 @@
 /**
- * MOONUKE design tokens for JS consumers (Motion, canvas, charts).
+ * Diva Fans design tokens for JS consumers (Motion, canvas, charts).
  * The CSS source of truth lives in src/styles/tokens.css — keep in sync.
  * tests/tokens.test.ts verifies parity and contrast budgets.
  */

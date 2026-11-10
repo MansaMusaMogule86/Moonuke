@@ -1,4 +1,4 @@
-# MOONUKE Design System v0.1
+# Diva Fans Design System v0.1
 
 The live, interactive reference is at **`/design-system`**. This file covers the rules.
 
@@ -29,8 +29,8 @@ The live, interactive reference is at **`/design-system`**. This file covers the
 **Motion.** Durations are press 140, hover 260, sheet 520, reveal 900 and hero 1400ms. Two easings: `--mk-ease-out` `(0.16,1,0.3,1)` and `--mk-ease-in-out` `(0.65,0,0.35,1)`. Draggable UI uses the spring 260/32.
 
 ## Brand
-- **Symbol, "the Diamond Ring".** A total eclipse at second contact: a dark moon, a corona and one point of light. Minimum size is 16px.
-- **Wordmark.** Bodoni capitals at +30% tracking. The second O is a hairline "new moon" circle. Below 14px, use `tone="ivory"`.
+- **Monogram.** Didone "DF" capitals drawn as paths inside a hairline ring, in the metal gradient (`src/components/brand/Symbol.tsx`; the favicon `src/app/icon.svg` is the same letters without the ring). Minimum size is 16px.
+- **Wordmark.** "DIVA FANS" in Bodoni capitals at +30% tracking, never wrapped. Below 14px, use `tone="ivory"`.
 
 ## Components (`src/components/ui`)
 | Component | Notes |

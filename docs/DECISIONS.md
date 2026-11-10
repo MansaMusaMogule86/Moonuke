@@ -1,5 +1,7 @@
 # Decisions
 
+> **Renamed.** The product formerly called MOONUKE is now **Diva Fans** (2026-11-10). Historical entries below keep their original wording.
+
 **Approved** means the owner stated it in writing. **Confirmed defaults** were built as defaults and then confirmed in bulk by the owner on 2026-11-05 ("confirm the 40 defaults"). Detailed rationale is in the phase docs.
 
 ## Approved by the owner

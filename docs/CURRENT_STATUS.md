@@ -2,6 +2,8 @@
 
 **Branch:** `claude/cool-noether-uvf5h7`. **Last code commit:** `96dd1d2`. **Deployed:** no. **Payments active:** no.
 
+**Brand:** renamed from MOONUKE to **Diva Fans** on 2026-11-10 (public branding, DF monogram, favicon, docs). Technical identifiers that still say `moonuke` are kept on purpose; see `docs/deployment.md` §7.
+
 ## Completed phases
 
 | Phase | What | Commits |

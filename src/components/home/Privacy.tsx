@@ -9,7 +9,7 @@ import { ease } from "@/lib/tokens";
 const ALIASES = ["Nocturne", "Velvet Hour", "Satellite", "The Quiet One", "Umbra", "Amber Room"];
 
 /**
- * Privacy — the pseudonymous member card. Creators see the alias; Moonuke
+ * Privacy — the pseudonymous member card. Creators see the alias; Diva Fans
  * keeps the legal identity and payment records private and separate.
  */
 export function Privacy() {

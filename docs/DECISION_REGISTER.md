@@ -1,5 +1,7 @@
 # Decision register and production-readiness assessment
 
+> **Renamed.** The product formerly called MOONUKE is now **Diva Fans** (2026-11-10). Historical entries below keep their original wording.
+
 **Date:** 2026-11-05. **Reviewed against:** commit `1656a55` and the 52 defaults confirmed in `docs/DECISIONS.md`, which are unchanged by this document.
 **Nature:** a report only. Nothing was deployed, migrated, purchased or enabled.
 **Not legal advice.** Each legal item is marked:

@@ -1,4 +1,4 @@
-# MOONUKE
+# Diva Fans
 
 An invitation-only private creator club, styled in black and gold.
 
@@ -83,7 +83,7 @@ Detailed references are linked below.
 - **Phase 5:** [`docs/phase-5-architecture.md`](docs/phase-5-architecture.md). Covers the creator studio: posts, tiers and analytics.
 - **Phase 6:** [`docs/phase-6-architecture.md`](docs/phase-6-architecture.md). Covers the fan app: library, vault, purchases, memberships and notifications.
 - **Phase 7:** [`docs/phase-7-messaging.md`](docs/phase-7-messaging.md). Covers messaging, moderation, and the plan for Blasts, attachments and paid features.
-- **Branding:** "Moonuke" is a working name. Everything brand-specific lives in `src/config/brand.ts`.
+- **Branding:** the product is **Diva Fans** (formerly MOONUKE). Everything brand-specific lives in `src/config/brand.ts`. Dev fixtures (`@moonuke.test` accounts, the `moonuke` databases, the `Moonuke` repository name) keep the old name on purpose; see `docs/deployment.md` §7.
 
 ```
 supabase/migrations/    SQL schema, RLS policies, SECURITY DEFINER entitlement helpers

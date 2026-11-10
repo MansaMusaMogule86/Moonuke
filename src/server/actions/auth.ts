@@ -9,6 +9,8 @@ import { clearSession, requestMeta, setSessionCookie } from "@/server/auth/reque
 import { bucketKey } from "@/server/auth/crypto";
 import { isAppError } from "@/server/errors";
 import { redeemInvitation, signIn } from "@/server/services/accounts";
+import { confirmEmail } from "@/server/services/emailVerification";
+import { recordLoginFailure } from "@/server/security/monitor";
 import { hit, hitIp, LIMITS } from "@/server/services/rateLimit";
 import { applySchema, fieldErrors, forgotSchema, resetSchema, signinSchema } from "@/server/validation";
 
@@ -32,6 +34,7 @@ export async function signInAction(_prev: FormState, fd: FormData): Promise<Form
     mfa = r.viewer.mfa;
     role = r.viewer.role;
   } catch (e) {
+    if (isAppError(e) && e.code === "rate_limited") await recordLoginFailure(parsed.data.email, null, meta.security, "rate_limited");
     if (isAppError(e)) return { status: "error", message: e.message, values };
     throw e;
   }
@@ -65,6 +68,21 @@ export async function applyAction(token: string, _prev: FormState, fd: FormData)
     throw e;
   }
   redirect("/pending");
+}
+
+/** Confirm an email address from its link. A POST (the page's button), so link scanners can't confirm by prefetching. */
+export async function confirmEmailAction(token: string, _prev: FormState): Promise<FormState> {
+  const meta = await requestMeta();
+  try {
+    await hitIp("verify_email", meta.ipHash, LIMITS.verifyEmail);
+    const ok = await confirmEmail(token, meta);
+    return ok
+      ? { status: "success", message: "Thanks, your email address is confirmed." }
+      : { status: "error", message: "This confirmation link is no longer valid." };
+  } catch (e) {
+    if (isAppError(e)) return { status: "error", message: e.message };
+    throw e;
+  }
 }
 
 export async function signOutAction() {

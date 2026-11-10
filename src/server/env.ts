@@ -20,9 +20,22 @@ const schema = z.object({
   APP_SECRET: z.string().min(32, "APP_SECRET must be at least 32 characters").optional(),
   APP_URL: z.string().url().default("http://localhost:3000"),
   TRUSTED_PROXY: trustedProxy.default("none"),
-  EMAIL_TRANSPORT: z.enum(["dev", "smtp", "disabled"]).default("dev"),
+  EMAIL_TRANSPORT: z.enum(["dev", "smtp", "resend", "disabled"]).default("dev"),
   SMTP_URL: z.string().optional(),
   EMAIL_FROM: z.string().optional(),
+  // Resend (EMAIL_TRANSPORT=resend). Server-only: never prefix with NEXT_PUBLIC_.
+  RESEND_API_KEY: z.string().regex(/^re_[A-Za-z0-9_]{16,}$/, "RESEND_API_KEY must be a Resend API key (re_…)").optional(),
+  // Sender addresses by purpose (bare addresses on a domain verified in the provider).
+  WELCOME_EMAIL_FROM: z.email("WELCOME_EMAIL_FROM must be an email address").optional(),
+  SECURITY_EMAIL_FROM: z.email("SECURITY_EMAIL_FROM must be an email address").optional(),
+  // Platform security alerts go here (default: the owner account's email).
+  SECURITY_EMAIL_TO: z.email("SECURITY_EMAIL_TO must be an email address").optional(),
+  // Live security notifications stay OFF until approved: alerts are still recorded and shown in /admin/security.
+  SECURITY_ALERTS_ENABLED: z.enum(["true", "false"]).optional(),
+  SECURITY_DIGEST_TIMEZONE: z
+    .string()
+    .refine((tz) => { try { new Intl.DateTimeFormat("en", { timeZone: tz }); return true; } catch { return false; } }, "SECURITY_DIGEST_TIMEZONE must be an IANA time zone")
+    .optional(),
   // AI-assisted profile drafting. "template" is local and free; "anthropic" is opt-in and billed by Anthropic.
   AI_PROVIDER: z.enum(["template", "anthropic", "disabled"]).default("template"),
   ANTHROPIC_API_KEY: z.string().optional(),
@@ -52,6 +65,9 @@ const schema = z.object({
 
 export type Env = z.infer<typeof schema> & { APP_SECRET: string };
 
+/** Live security emails are off unless SECURITY_ALERTS_ENABLED is exactly "true". */
+export const securityAlertsEnabled = () => env().SECURITY_ALERTS_ENABLED === "true";
+
 /** Problems that make a configuration unsafe for production. */
 export function productionProblems(e: z.infer<typeof schema>): string[] {
   const p: string[] = [];
@@ -61,6 +77,11 @@ export function productionProblems(e: z.infer<typeof schema>): string[] {
   if (!process.env.TRUSTED_PROXY && process.env.VERCEL !== "1") p.push("TRUSTED_PROXY must be set explicitly (none | vercel | cloudflare | hops:N).");
   if (e.EMAIL_TRANSPORT === "dev") p.push("EMAIL_TRANSPORT=dev is not allowed in production (use smtp or disabled).");
   if (e.EMAIL_TRANSPORT === "smtp" && (!e.SMTP_URL || !e.EMAIL_FROM)) p.push("EMAIL_TRANSPORT=smtp requires SMTP_URL and EMAIL_FROM.");
+  if (e.EMAIL_TRANSPORT === "resend" && !e.RESEND_API_KEY) p.push("EMAIL_TRANSPORT=resend requires RESEND_API_KEY.");
+  if (e.EMAIL_TRANSPORT === "resend" && !(e.EMAIL_FROM || (e.WELCOME_EMAIL_FROM && e.SECURITY_EMAIL_FROM))) {
+    p.push("EMAIL_TRANSPORT=resend requires EMAIL_FROM, or both WELCOME_EMAIL_FROM and SECURITY_EMAIL_FROM.");
+  }
+  if (e.SECURITY_ALERTS_ENABLED === "true" && e.EMAIL_TRANSPORT === "disabled") p.push("SECURITY_ALERTS_ENABLED=true needs a working EMAIL_TRANSPORT.");
   if (e.AI_PROVIDER === "anthropic" && !e.ANTHROPIC_API_KEY) p.push("AI_PROVIDER=anthropic requires ANTHROPIC_API_KEY.");
   // No real provider is integrated or approved, so these can't be enabled in production yet.
   if (e.FEATURE_PAYMENTS === "on") p.push("FEATURE_PAYMENTS=on: no payment provider is integrated or approved (A10).");

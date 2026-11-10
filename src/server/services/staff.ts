@@ -1,4 +1,5 @@
 import "server-only";
+import { recordAdminAction } from "@/server/security/monitor";
 import { asViewer } from "@/server/db";
 import { can, type Viewer } from "@/server/auth/permissions";
 import { isStaffCapability, type StaffCapability } from "@/server/auth/staff";
@@ -51,7 +52,8 @@ export async function grantStaff(v: Viewer, email: string, caps: string[], note:
       if ((e as { code?: string }).code === "22023") throw new AppError("validation", "Moderators must be active members (not creators) with two-step sign-in set up.", "email");
       throw e;
     });
-  });
+    return u.id;
+  }).then((id) => recordAdminAction({ kind: "staff_grant", severity: "high", subjectUserId: id, summary: `The owner granted moderator capabilities: ${list.join(", ")}.` }));
 }
 
 export async function revokeStaff(v: Viewer, userId: string, reason: string) {
@@ -62,6 +64,7 @@ export async function revokeStaff(v: Viewer, userId: string, reason: string) {
       throw e;
     }),
   );
+  await recordAdminAction({ kind: "staff_revoke", severity: "medium", subjectUserId: userId, summary: "The owner revoked an account's moderator capabilities." });
 }
 
 export async function setModeratorsEnabled(v: Viewer, on: boolean, o: Opts = {}) {

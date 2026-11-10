@@ -1,4 +1,5 @@
 import "server-only";
+import { recordAdminAction } from "@/server/security/monitor";
 import { system } from "@/server/db";
 import { hashPassword, verifyPassword } from "@/server/auth/crypto";
 import type { Viewer } from "@/server/auth/permissions";
@@ -61,4 +62,5 @@ export async function changePassword(viewer: Viewer, current: string, next: stri
     await notifySecurity(q, viewer.id, "password_changed");
     await audit(q, { actorId: viewer.id, action: "auth.password_change", targetType: "user", targetId: viewer.id });
   });
+  if (viewer.role === "owner") await recordAdminAction({ kind: "owner_password_change", severity: "high", subjectUserId: viewer.id, summary: "The owner account's password was changed." });
 }

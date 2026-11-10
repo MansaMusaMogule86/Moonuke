@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 export default function robots(): MetadataRoute.Robots {
   if (!isIndexable()) return { rules: { userAgent: "*", disallow: "/" } };
   return {
-    rules: { userAgent: "*", allow: "/", disallow: ["/api/", "/invite/", "/reset/"] },
+    rules: { userAgent: "*", allow: "/", disallow: ["/api/", "/invite/", "/reset/", "/verify-email/"] },
     sitemap: `${brand.siteUrl}/sitemap.xml`,
   };
 }

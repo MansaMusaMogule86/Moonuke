@@ -6,21 +6,34 @@ export type Rendered = { template: string; subject: string; text: string; html: 
 const esc = (s: string) =>
   s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
 
-/** One restrained, dark, inline-styled layout. All dynamic values are escaped. */
+const C = { bg: "#050505", card: "#121217", text: "#f8f5f0", muted: "#b9b4c0", faint: "#948f9c", gold: "#d4af37", goldSoft: "#f5d58a", pink: "#ff2d96", line: "#24232c" };
+const SERIF = "Georgia,'Times New Roman',serif";
+const SANS = "Arial,Helvetica,sans-serif";
+
+/**
+ * One dark, inline-styled, table-based layout (Gmail, Apple Mail, Outlook).
+ * All dynamic values are escaped. The logo has alt text, and every message
+ * also has a plain-text part.
+ */
 function layout(title: string, paragraphs: string[], cta?: { label: string; url: string }, footnote?: string): string {
-  const p = paragraphs.map((t) => `<p style="margin:0 0 16px;font:16px/1.6 Georgia,serif;color:#f6f0e6">${esc(t)}</p>`).join("");
+  const p = paragraphs.map((t) => `<p style="margin:0 0 16px;font:16px/1.6 ${SANS};color:${C.text}">${esc(t)}</p>`).join("");
   const button = cta
-    ? `<p style="margin:28px 0"><a href="${esc(cta.url)}" style="display:inline-block;background:#d6b56d;color:#050505;text-decoration:none;font:600 15px/1 Arial,sans-serif;padding:16px 28px;border-radius:999px">${esc(cta.label)}</a></p>
-       <p style="margin:0 0 16px;font:13px/1.6 Arial,sans-serif;color:#aaa39a">Or paste this link into your browser:<br><span style="color:#e8cc91;word-break:break-all">${esc(cta.url)}</span></p>`
+    ? `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:28px 0 20px"><tr><td style="border-radius:999px;background:${C.gold}">
+<a href="${esc(cta.url)}" style="display:inline-block;padding:15px 28px;border-radius:999px;font:600 15px/1 ${SANS};color:#050505;text-decoration:none">${esc(cta.label)}</a></td></tr></table>
+<p style="margin:0 0 16px;font:13px/1.6 ${SANS};color:${C.muted}">Or paste this link into your browser:<br><span style="color:${C.goldSoft};word-break:break-all">${esc(cta.url)}</span></p>`
     : "";
-  const foot = footnote ? `<p style="margin:24px 0 0;font:12px/1.6 Arial,sans-serif;color:#8a847b">${esc(footnote)}</p>` : "";
-  return `<!doctype html><html><body style="margin:0;background:#050505;padding:32px 16px">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
+  const foot = footnote ? `<p style="margin:20px 0 0;font:13px/1.6 ${SANS};color:${C.faint}">${esc(footnote)}</p>` : "";
+  const logo = `${brand.siteUrl}${brand.logo.src}`;
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="dark light"><meta name="supported-color-schemes" content="dark light"><title>${esc(title)}</title></head>
+<body style="margin:0;padding:0;background:${C.bg}">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0">${esc(paragraphs[0] ?? title)}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${C.bg}"><tr><td align="center" style="padding:32px 16px">
 <table role="presentation" width="560" cellpadding="0" cellspacing="0" style="max-width:560px;width:100%">
-<tr><td style="padding:0 0 28px;font:500 13px/1 Georgia,serif;letter-spacing:.3em;color:#d6b56d;text-transform:uppercase">${esc(brand.name)}</td></tr>
-<tr><td style="padding:0 0 20px;font:400 30px/1.15 Georgia,serif;color:#f6f0e6">${esc(title)}</td></tr>
-<tr><td>${p}${button}${foot}</td></tr>
-<tr><td style="padding:32px 0 0;border-top:1px solid #222;font:12px/1.6 Arial,sans-serif;color:#8a847b">${esc(brand.name)} — ${esc(brand.tagline)}. 18+ only. You received this because of activity on your account or an invitation addressed to you.</td></tr>
+<tr><td align="center" style="padding:0 0 24px"><img src="${esc(logo)}" width="120" height="97" alt="${esc(brand.name)}" style="display:block;border:0;width:120px;height:auto;color:${C.gold};font:600 18px ${SERIF}"></td></tr>
+<tr><td style="background:${C.card};border:1px solid ${C.line};border-radius:20px;padding:32px 28px">
+<h1 style="margin:0 0 20px;font:400 28px/1.2 ${SERIF};color:${C.text}">${esc(title)}</h1>${p}${button}${foot}</td></tr>
+<tr><td style="padding:24px 8px 0;font:12px/1.6 ${SANS};color:${C.faint}"><span style="color:${C.pink}">&#9670;</span> ${esc(brand.name)} — ${esc(brand.tagline)}. Accounts are for people aged 18 and over. You received this because of activity on your account or an invitation addressed to you.</td></tr>
 </table></td></tr></table></body></html>`;
 }
 
@@ -55,8 +68,50 @@ export const emails = {
       "If you didn't ask for this, ignore this email; your password stays the same. Two-step sign-in, if enabled, is still required.",
     ),
 
-  approved: (p: { alias: string; url: string }) =>
-    make("account_approved", `Welcome to ${brand.name}`, `Welcome, ${p.alias}.`, ["Your account has been approved. Sign in to start following creators."], { label: "Sign in", url: p.url }),
+  /** Welcome to DivaFans: sent only when the owner approves the account. Creators get their onboarding step. */
+  approved: (p: { alias: string; url: string; role?: "member" | "creator" }) =>
+    p.role === "creator"
+      ? make(
+          "account_approved",
+          `Welcome to ${brand.name}`,
+          `Welcome, ${p.alias}.`,
+          ["Your creator account has been approved.", "Next, set up your studio: your profile, your Member and VIP levels, and your first posts. Our team reviews your profile before it goes live."],
+          { label: "Set up your studio", url: p.url },
+        )
+      : make("account_approved", `Welcome to ${brand.name}`, `Welcome, ${p.alias}.`, ["Your account has been approved. Sign in to start following creators."], { label: "Sign in", url: p.url }),
+
+  /** After an invitation is redeemed: the account exists and waits for approval; confirm the address. */
+  accountCreated: (p: { alias: string; verifyUrl: string }) =>
+    make(
+      "account_created",
+      `Your ${brand.name} account was created`,
+      `Thanks for joining, ${p.alias}.`,
+      ["Your account was created and is waiting for our team's approval. We'll email you as soon as it opens.", "Please confirm this is your email address."],
+      { label: "Confirm my email", url: p.verifyUrl },
+      "This link is personal and expires in 7 days. If you didn't create an account, you can ignore this email.",
+    ),
+
+  /** Account-specific: a completed sign-in from a kind of device not seen before on this account. */
+  newDevice: (p: { at: Date; device: string; country: string | null; url: string }) =>
+    make(
+      "security_new_device",
+      `${brand.name} security: new sign-in on your account`,
+      "New sign-in to your account",
+      [`Your account was signed in from ${p.device}${p.country ? ` (approximate location: ${p.country})` : ""}.`, `Time: ${when(p.at)}.`, "If this was you, there's nothing to do."],
+      { label: "Review your sessions", url: p.url },
+      "Not you? Change your password and sign out other sessions from your security settings.",
+    ),
+
+  /** Account-specific: repeated failed sign-ins against this account. */
+  failedAttempts: (p: { count: number; minutes: number; url: string }) =>
+    make(
+      "security_failed_attempts",
+      `${brand.name} security: failed sign-in attempts`,
+      "Several failed sign-in attempts",
+      [`There were ${p.count} failed attempts to sign in to your account in ${p.minutes} minutes.`, "Your account was not accessed. Sign-in attempts are limited automatically."],
+      { label: "Review your security settings", url: p.url },
+      "If it wasn't you, consider changing your password and turning on two-step sign-in.",
+    ),
 
   security: (p: { event: SecurityEvent; at: Date; url: string }) => {
     const copy: Record<SecurityEvent, [string, string]> = {
@@ -119,6 +174,38 @@ export const emails = {
       ["The content was withheld and preserved automatically. A trained person must assess it now.", "Do not download, forward or copy the content."],
       { label: "Open safeguarding", url: p.url },
       "Details are intentionally not included in email.",
+    ),
+  /** Immediate security alert. Carries only the alert summary (built from allowlisted fields), never IPs, emails or tokens. */
+  securityAlert: (p: { severity: "low" | "medium" | "high" | "critical"; summary: string; at: Date; url: string }) =>
+    make(
+      "security_alert",
+      `${brand.name} security: ${p.severity} alert`,
+      `A ${p.severity} security alert needs review.`,
+      [p.summary, `Raised at ${when(p.at)}.`],
+      { label: "Review in the security console", url: p.url },
+      "Sign-in is required, and the console asks for your second factor. Details are intentionally kept out of email.",
+    ),
+  /** Daily summary: counts only. */
+  securityDigest: (p: {
+    day: string;
+    timezone: string;
+    totals: { logins: number; accounts: number; registrations: number; creatorApplications: number; failed: number; alerts: number; high: number; openAlerts: number };
+    countries: { country: string; n: number }[];
+    url: string;
+  }) =>
+    make(
+      "security_digest",
+      `${brand.name} daily security summary · ${p.day}`,
+      `Security summary for the 24 hours to ${p.day} (${p.timezone}).`,
+      [
+        `Successful sign-ins: ${p.totals.logins} across ${p.totals.accounts} accounts.`,
+        `New registrations: ${p.totals.registrations}. New creator applications: ${p.totals.creatorApplications}.`,
+        `Failed sign-in attempts: ${p.totals.failed}. Alerts raised: ${p.totals.alerts} (${p.totals.high} high or critical).`,
+        `Alerts waiting for review: ${p.totals.openAlerts}.`,
+        `Approximate countries: ${p.countries.length ? p.countries.map((c) => `${c.country} ${c.n}`).join(", ") : "none recorded"}.`,
+      ],
+      { label: "Open the security console", url: p.url },
+      "Countries come from the hosting provider's network data and are approximate.",
     ),
 };
 

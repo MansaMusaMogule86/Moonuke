@@ -213,6 +213,7 @@ if (!QUICK) {
         ["Browser: notices + appeals + axe", "scripts/e2e-notices.mjs", { SHOTS: path.join(REPORT_DIR, "screens/notices") }],
         ["Browser: age + regional rules (off) + axe", "scripts/e2e-access.mjs", { SHOTS: path.join(REPORT_DIR, "screens/access") }],
         ["Browser: moderator role (off) + axe", "scripts/e2e-staff.mjs", { SHOTS: path.join(REPORT_DIR, "screens/staff") }],
+        ["Browser: security monitoring + axe", "scripts/e2e-security.mjs", { SHOTS: path.join(REPORT_DIR, "screens/security") }],
       ];
       for (const [name, file, extra] of suites) {
         if (!fs.existsSync(path.join(ROOT, file))) {

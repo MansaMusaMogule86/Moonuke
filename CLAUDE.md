@@ -37,7 +37,7 @@ pnpm lint             # tsc --noEmit (strict)
 ## Engineering conventions
 - **Database access.**
   - `asViewer(viewer, fn)` is the default.
-  - `system(fn)` is privileged and only for the narrow call sites listed in the phase docs: sessions, invitation redemption, rate limits, MFA material, email delivery.
+  - `system(fn)` is privileged and only for the narrow call sites listed in the phase docs: sessions, invitation redemption, rate limits, MFA material, email delivery, security monitoring writes (`src/server/security`).
 - **RLS.**
   - Look-ups inside policies must go through `SECURITY DEFINER` helpers, because a plain subquery is filtered by RLS and silently passes or fails.
   - Guard triggers must be **`SECURITY INVOKER`**, because `current_user` has to be the caller.

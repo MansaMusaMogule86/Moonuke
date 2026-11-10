@@ -1,4 +1,5 @@
 import "server-only";
+import { recordAdminAction } from "@/server/security/monitor";
 import { system, type Q } from "@/server/db";
 import { hashPassword, randomToken, sha256 } from "@/server/auth/crypto";
 import { appUrl } from "@/server/env";
@@ -54,7 +55,7 @@ export async function inspectResetToken(token: string): Promise<boolean> {
 export async function resetPassword(token: string, newPassword: string, meta: { ipHash: string | null }): Promise<void> {
   if (!TOKEN_RE.test(token)) throw new AppError("invalid_invitation", "This reset link is no longer valid.");
   const hash = await hashPassword(newPassword);
-  await system(async (q) => {
+  const owner = await system(async (q) => {
     const r = await q.one<{ user_id: string }>(
       `update app.password_resets r set used_at = now()
          from app.users u
@@ -68,5 +69,8 @@ export async function resetPassword(token: string, newPassword: string, meta: { 
     await revokeAllSessions(r.user_id, q);
     await notifySecurity(q, r.user_id, "password_changed");
     await audit(q, { actorId: r.user_id, action: "auth.password_reset", targetType: "user", targetId: r.user_id, ipHash: meta.ipHash });
+    const u = await q.one<{ role: string }>(`select role from app.users where id = $1`, [r.user_id]);
+    return u?.role === "owner" ? r.user_id : null;
   });
+  if (owner) await recordAdminAction({ kind: "owner_password_reset", severity: "high", subjectUserId: owner, summary: "The owner account's password was reset with an email link." });
 }

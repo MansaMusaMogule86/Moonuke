@@ -1,4 +1,5 @@
 import "server-only";
+import { recordAdminAction } from "@/server/security/monitor";
 import { asViewer, type Q } from "@/server/db";
 import { randomToken, sha256 } from "@/server/auth/crypto";
 import { can, type Permission, type Viewer } from "@/server/auth/permissions";
@@ -164,9 +165,10 @@ export async function decideApplication(
       ipHash: meta.ipHash,
     });
     if (decision === "approve") {
-      const u = await q.one<{ email: string; alias: string }>(`select email::text as email, alias::text as alias from app.users where id = $1`, [app.user_id]);
+      const u = await q.one<{ email: string; alias: string; role: string }>(`select email::text as email, alias::text as alias, role from app.users where id = $1`, [app.user_id]);
       if (u) {
-        await enqueue(q, u.email, emails.approved({ alias: u.alias, url: `${appUrl()}/signin` }), app.user_id);
+        const creator = u.role === "creator";
+        await enqueue(q, u.email, emails.approved({ alias: u.alias, role: creator ? "creator" : "member", url: `${appUrl()}${creator ? "/studio" : "/signin"}` }), app.user_id);
         approvedEmail = { to: u.email, alias: u.alias };
       }
     }
@@ -288,6 +290,7 @@ export async function setSuspended(viewer: Viewer, userId: string, suspend: bool
     });
   });
   if (suspend) await revokeAllSessions(userId);
+  await recordAdminAction({ kind: suspend ? "suspend" : "reactivate", severity: "medium", subjectUserId: userId, summary: suspend ? "The owner suspended an account." : "The owner reactivated a suspended account." });
 }
 
 // ---------------------------------------------------------------- audit + overview

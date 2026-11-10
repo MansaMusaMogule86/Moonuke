@@ -13,7 +13,7 @@ const axePath = require.resolve("axe-core/axe.min.js");
 
 const BASE = process.env.BASE ?? "http://localhost:3000";
 const SHOTS = process.env.SHOTS;
-const PW = "moonuke-dev-password";
+const PW = "divafans-dev-password";
 if (SHOTS) fs.mkdirSync(SHOTS, { recursive: true });
 
 const db = new Client({ connectionString: process.env.DATABASE_URL });
@@ -74,14 +74,14 @@ async function fillNotice(page, { category, role, location, email = "requester@e
 const bodyText = (pg) => pg.locator("body").innerText();
 const visible = (loc) => loc.first().waitFor({ timeout: 10_000 }).then(() => true, () => false);
 
-const m = await signIn("velvet@moonuke.test");
+const m = await signIn("velvet@divafans.test");
 check("/verify-age is 404 while age checks are off", (await m.page.goto(`${BASE}/verify-age`)).status() === 404);
 check("/verify-age/mock is 404", (await m.page.goto(`${BASE}/verify-age/mock?check=00000000-0000-0000-0000-000000000000`)).status() === 404);
 const cb = await m.page.request.post(`${BASE}/api/age/callback/mock`, { data: "{}", headers: { "x-signature": "t=1,v1=00" } });
 check("age callback is a bare 404 while off", cb.status() === 404 && (await cb.text()) === "Not found");
 check("member → /admin/safety/access is 404", (await m.page.goto(`${BASE}/admin/safety/access`)).status() === 404);
 
-const o = await signIn("owner@moonuke.test");
+const o = await signIn("owner@divafans.test");
 await o.page.goto(`${BASE}/admin/safety/access`);
 const status = await o.page.getByTestId("access-status").innerText();
 check("owner page shows both features off, awaiting approval", /regional rules: off \(awaiting approval\)/i.test(status) && /age checks: off \(awaiting approval\)/i.test(status));
@@ -101,7 +101,7 @@ const u = await (await browser.newContext(desktop)).newPage();
 check("/unavailable renders", (await u.goto(`${BASE}/unavailable`)).status() === 200);
 await axe(u, "unavailable @1440");
 
-const om = await signIn("owner@moonuke.test", mobile);
+const om = await signIn("owner@divafans.test", mobile);
 await om.page.goto(`${BASE}/admin/safety/access`);
 await axe(om.page, "access rules @390");
 await noOverflow(om.page, "access rules @390");

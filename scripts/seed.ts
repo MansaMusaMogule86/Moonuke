@@ -19,12 +19,12 @@ Seeded Diva Fans (development data — fictional people).
 
   Password for every seeded account: ${DEV_PASSWORD}
 
-  owner     owner@moonuke.test       (The House — two-step sign-in required)
+  owner     owner@divafans.test       (The House — two-step sign-in required)
             authenticator secret: ${DEV_OWNER_TOTP_SECRET}  (add to any TOTP app; dev only)
-  member    nocturne@moonuke.test    (VIP of Isadora, member of Zara & Orsolya, bought a PPV)
-  member    velvet@moonuke.test      (no memberships)
-  pending   satellite@moonuke.test   (awaiting approval)
-  creator   isadora@moonuke.test     (and <handle>@moonuke.test for every creator)
+  member    nocturne@divafans.test    (VIP of Isadora, member of Zara & Orsolya, bought a PPV)
+  member    velvet@divafans.test      (no memberships)
+  pending   satellite@divafans.test   (awaiting approval)
+  creator   isadora@divafans.test     (and <handle>@divafans.test for every creator)
 
   Member invitation (3 uses):  ${base}/invite/${r.inviteToken}
   Creator invitation (1 use):  ${base}/invite/${r.creatorInviteToken}

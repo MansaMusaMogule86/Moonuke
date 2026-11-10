@@ -4,9 +4,9 @@ import { hashPassword, randomToken, sha256 } from "@/server/auth/crypto";
 import { encryptSecret } from "@/server/auth/totp";
 import { categories, creators, memberPerks, postsFor, vipPerks } from "./data";
 
-export const DEV_PASSWORD = "moonuke-dev-password";
+export const DEV_PASSWORD = "divafans-dev-password";
 /** Dev-only owner authenticator (base32). Mirrors scripts/lib/totp.mjs. */
-export const DEV_OWNER_TOTP_SECRET = "JBSWY3DPEHPK3PXPMOONUKEDEVSEED22";
+export const DEV_OWNER_TOTP_SECRET = "JBSWY3DPEHPK3PXPDIVAFANSDEVSEED2";
 
 export type SeedResult = {
   ownerId: string;
@@ -35,10 +35,10 @@ export async function seed(): Promise<SeedResult> {
         [email, pw, role, status, alias],
       ))!.id;
 
-    const ownerId = await user("owner@moonuke.test", "The House", "owner", "active");
+    const ownerId = await user("owner@divafans.test", "The House", "owner", "active");
     await q.query(`insert into app.mfa_factors (user_id, secret_enc, confirmed_at) values ($1, $2, now())`, [ownerId, encryptSecret(DEV_OWNER_TOTP_SECRET)]);
-    const memberId = await user("nocturne@moonuke.test", "Nocturne", "member", "active");
-    const member2Id = await user("velvet@moonuke.test", "Velvet Hour", "member", "active");
+    const memberId = await user("nocturne@divafans.test", "Nocturne", "member", "active");
+    const member2Id = await user("velvet@divafans.test", "Velvet Hour", "member", "active");
 
     for (const c of categories) {
       await q.query(`insert into app.categories (slug, label, sort) values ($1, $2, $3)`, [c.slug, c.label, c.sort]);
@@ -48,7 +48,7 @@ export async function seed(): Promise<SeedResult> {
     const tierIds: Record<string, { member: string; vip: string }> = {};
     const postIds: Record<string, string[]> = {};
     for (const [i, c] of creators.entries()) {
-      const id = await user(`${c.handle}@moonuke.test`, c.name, "creator", "active");
+      const id = await user(`${c.handle}@divafans.test`, c.name, "creator", "active");
       creatorIds[c.handle] = id;
       await q.query(
         `insert into app.creators (user_id, handle, display_name, discipline, category, city, tagline, bio, visibility, featured, cover, created_at, published_at)
@@ -91,7 +91,7 @@ export async function seed(): Promise<SeedResult> {
     await sub(memberId, "orsolya", "member");
     // Background members so counts look alive
     for (let n = 0; n < 6; n++) {
-      const fid = await user(`fan${n}@moonuke.test`, `Guest ${n + 1}`, "member", "active");
+      const fid = await user(`fan${n}@divafans.test`, `Guest ${n + 1}`, "member", "active");
       await sub(fid, ["isadora", "kaiasol", "zara", "noor", "isadora", "aurelio"][n], n % 2 ? "vip" : "member");
     }
     // PPV purchase: mireille's ppv post is index 3
@@ -99,7 +99,7 @@ export async function seed(): Promise<SeedResult> {
     await q.query(`insert into app.follows (fan_id, creator_id) values ($1, $2), ($1, $3)`, [memberId, creatorIds.kaiasol, creatorIds.valentin]);
 
     // A creator whose profile is drafted and awaiting verification (not visible to members).
-    const rheaId = await user("rhea@moonuke.test", "Rhea Calder", "creator", "active");
+    const rheaId = await user("rhea@divafans.test", "Rhea Calder", "creator", "active");
     creatorIds.rhea = rheaId;
     await q.query(
       `insert into app.creators (user_id, handle, display_name, discipline, category, city, tagline, bio, cover)
@@ -115,7 +115,7 @@ export async function seed(): Promise<SeedResult> {
     // White-glove onboarding: Rhea has a concierge case; Lio was invited but hasn't applied yet.
     await q.query(
       `insert into app.onboarding_cases (user_id, invitee_name, invitee_email, concierge_notes, welcome_call_at, created_by)
-       values ($1, 'Rhea Calder', 'rhea@moonuke.test', 'Prefers email. Kiln schedule: mornings only.', now() + interval '2 days', $2)`,
+       values ($1, 'Rhea Calder', 'rhea@divafans.test', 'Prefers email. Kiln schedule: mornings only.', now() + interval '2 days', $2)`,
       [rheaId, ownerId],
     );
     await q.query(
@@ -148,7 +148,7 @@ export async function seed(): Promise<SeedResult> {
     );
 
     // A pending applicant who came through the member invitation
-    const pendingId = await user("satellite@moonuke.test", "Satellite", "member", "pending");
+    const pendingId = await user("satellite@divafans.test", "Satellite", "member", "pending");
     await q.query(`update app.users set invitation_id = $2 where id = $1`, [pendingId, inv!.id]);
     await q.query(`update app.invitations set use_count = 1 where id = $1`, [inv!.id]);
     await q.query(`insert into app.applications (user_id, invitation_id) values ($1, $2)`, [pendingId, inv!.id]);

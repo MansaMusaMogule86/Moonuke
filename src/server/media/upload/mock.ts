@@ -30,7 +30,7 @@ export class MemoryStorage implements StorageAdapter {
 }
 
 /** Flags any file containing the marker below, so tests can exercise quarantine. */
-export const MOCK_MATCH_MARKER = "MOONUKE-TEST-HASH-MATCH";
+export const MOCK_MATCH_MARKER = "DIVAFANS-TEST-HASH-MATCH";
 export class MockScanner implements SafetyScanner {
   readonly id = "mock-scanner";
   constructor(private readonly failNext = false) {

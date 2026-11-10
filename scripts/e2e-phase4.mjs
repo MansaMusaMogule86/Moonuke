@@ -12,7 +12,7 @@ const axePath = require.resolve("axe-core/axe.min.js");
 
 const BASE = process.env.BASE ?? "http://localhost:3000";
 const SHOTS = process.env.SHOTS;
-const PW = "moonuke-dev-password";
+const PW = "divafans-dev-password";
 if (SHOTS) fs.mkdirSync(SHOTS, { recursive: true });
 
 const results = [];
@@ -50,7 +50,7 @@ async function signIn(email, opts = desktop, password = PW) {
 }
 
 // ================================================================ pipeline + open a case
-const o = await signIn("owner@moonuke.test");
+const o = await signIn("owner@divafans.test");
 await o.page.goto(`${BASE}/admin/onboarding`);
 const col = (label) => o.page.locator("section").filter({ has: o.page.getByRole("heading", { name: label, exact: true }) });
 check("board: Lio waits in Invited", (await col("Invited").getByText("Lio Marchand").count()) === 1);
@@ -176,7 +176,7 @@ await vc.getByText("Verified and published").waitFor();
 await o.page.goto(`${BASE}/admin/onboarding`);
 check("board: Nova is Live", (await col("Live").getByText("Nova Reyes").count()) === 1);
 
-const m = await signIn("velvet@moonuke.test");
+const m = await signIn("velvet@divafans.test");
 const prof = await m.page.goto(`${BASE}/c/nova`);
 check("member sees the new profile", prof.status() === 200);
 check("verified social chip shown", await m.page.getByRole("list", { name: "Verified social profiles" }).getByText("@nova.moves").isVisible());
@@ -187,7 +187,7 @@ const memberAdmin = await m.page.goto(`${BASE}/admin/onboarding/case/00000000-00
 check("member /admin/onboarding/case → 404", memberAdmin.status() === 404);
 
 // ================================================================ profile import (creator, export file → proposal → consent)
-const ri = await signIn("rhea@moonuke.test");
+const ri = await signIn("rhea@divafans.test");
 await ri.page.goto(`${BASE}/studio`);
 const imp = ri.page.locator("section").filter({ has: ri.page.getByRole("heading", { name: "Import a profile" }) });
 await imp.locator('input[type="file"]').setInputFiles({
@@ -223,13 +223,13 @@ check("member /studio → 404 (no import surface)", memberStudio.status() === 40
 await ri.ctx.close();
 
 // ================================================================ mobile
-const om = await signIn("owner@moonuke.test", mobile);
+const om = await signIn("owner@divafans.test", mobile);
 await om.page.goto(`${BASE}/admin/onboarding`);
 await shot(om.page, "onboarding-board-mobile");
 await axe(om.page, "/admin/onboarding @390");
 const overflow = await om.page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
 check("mobile board: no horizontal overflow", overflow <= 0, String(overflow));
-const rm = await signIn("rhea@moonuke.test", mobile);
+const rm = await signIn("rhea@divafans.test", mobile);
 await rm.page.goto(`${BASE}/studio`);
 await shot(rm.page, "studio-mobile");
 await axe(rm.page, "/studio @390");

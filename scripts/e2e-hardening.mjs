@@ -11,7 +11,7 @@ const axePath = require.resolve("axe-core/axe.min.js");
 
 const BASE = process.env.BASE ?? "http://localhost:3000";
 const SHOTS = process.env.SHOTS;
-const PW = "moonuke-dev-password";
+const PW = "divafans-dev-password";
 if (SHOTS) fs.mkdirSync(SHOTS, { recursive: true });
 
 const results = [];
@@ -58,7 +58,7 @@ await shot(ap, "not-found-desktop");
 await axe(ap, "404 @1440");
 const missingText = (await ap.getByTestId("error-shell").innerText()).trim();
 
-const m = await signIn("velvet@moonuke.test");
+const m = await signIn("velvet@divafans.test");
 const forbidden = await m.page.goto(`${BASE}/admin/onboarding/case/00000000-0000-0000-0000-000000000000`);
 check("forbidden admin page → 404", forbidden.status() === 404);
 check("forbidden 404 looks identical to a missing page", (await m.page.getByTestId("error-shell").innerText()).trim() === missingText);

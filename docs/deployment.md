@@ -77,13 +77,13 @@ These items, all from Phase 8, are code-complete and need an owner decision rath
 - [ ] Payments remain disabled until a processor approves the business (Phase 6).
 
 ## 7. Rebranding
-The product is **Diva Fans** (renamed from MOONUKE on 2026-11-10). The name, wordmark letters, descriptors, email sender name, MFA issuer and cookie prefix all live in `src/config/brand.ts`. Changing `cookiePrefix` signs everyone out, so it stays `mk`. The monogram artwork is in `src/components/brand/Symbol.tsx` and `src/app/icon.svg`. Database identifiers (schema `app`, role `mk_app`) are brand-neutral.
+The product is **Diva Fans**. The name, wordmark letters, descriptors, email sender name, MFA issuer and cookie prefix all live in `src/config/brand.ts`. Changing `cookiePrefix` signs everyone out, so it stays `mk`. The logo files are in `public/images/brand/` and the app icons in `src/app/` (see `docs/ASSETS.md`). Database identifiers (schema `app`, role `mk_app`) are brand-neutral.
 
-**Kept on purpose (renaming would break continuity):** the GitHub repository and remote (`Moonuke`), the Supabase project, local database names (`moonuke`, `moonuke_test`, `moonuke_e2e`), the legacy env var `MOONUKE_SECRET`, the package name `moonuke`, dev-seed accounts (`*@moonuke.test`), the dev password and dev TOTP secret, the mock scanner marker, and migration comments.
+**Secrets.** Only `APP_SECRET` is read. If a host still sets an older secret variable under another name, copy its value into `APP_SECRET`; startup fails loudly until it is set.
 
-**MFA.** New authenticator enrolments show the issuer "Diva Fans". Existing enrolments keep their old label; their codes still work.
+**MFA.** New authenticator enrolments show the issuer "Diva Fans". Existing enrolments keep the label they were created with; their codes still work.
 
 **Outside the repository (not changed or verified from here):**
 - `EMAIL_FROM` on the host sets the email sender's display name. Change its name part to `Diva Fans` while keeping the same, verified address.
-- The Vercel project name and any `*.vercel.app` hostname still say moonuke. `APP_URL` stays whatever is configured; canonical, sitemap and Open Graph URLs come from it.
+- The GitHub repository name, the Vercel project name and any `*.vercel.app` hostname are set in those dashboards. `APP_URL` stays whatever is configured; canonical, sitemap and Open Graph URLs come from it.
 - Supabase Auth email templates and site name only matter once `AUTH_PROVIDER=supabase`; update them in the Supabase dashboard before switching.

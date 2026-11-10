@@ -1,7 +1,5 @@
 # Decisions
 
-> **Renamed.** The product formerly called MOONUKE is now **Diva Fans** (2026-11-10). Historical entries below keep their original wording.
-
 **Approved** means the owner stated it in writing. **Confirmed defaults** were built as defaults and then confirmed in bulk by the owner on 2026-11-05 ("confirm the 40 defaults"). Detailed rationale is in the phase docs.
 
 ## Approved by the owner
@@ -16,7 +14,7 @@
 | A6 | Discovery behind authenticated, approved membership; the public sees marketing only | Phase 3 brief |
 | A7 | Design ID and age verification, but **don't select or activate** a vendor before review | Phase 3 brief |
 | A8 | Mandatory owner MFA | Phase 3 brief |
-| A9 | "Moonuke" is a working name; keep branding centralised | Phase 3 brief |
+| A9 | Keep branding centralised in `src/config/brand.ts` (the product is Diva Fans) | Phase 3 brief |
 | A10 | **No spending:** no GitHub Actions or billing, paid CI, live payments, deployment, paid photography or purchased services without approval | Phase 3 and 4 directives |
 | A11 | GitHub-hosted CI paused; run all verification locally | Phase 4 directive |
 | A12 | Keep integrations configurable; buy no third-party services | Phase 4 directive |
@@ -113,7 +111,7 @@ Phase 9 (creator statements of reasons and appeals) adds proposed defaults **AP1
 - **Visual identity.** The Phase 8 brief asks for an identity "distinct from the competitor's black-and-gold identity". The approved identity (Phase 1, `MASTER_PRD.md` §1) *is* black and gold, with fixed tokens. Changing it is a rebrand, and the brief also says "do not perform a full visual rebrand without approval". **Nothing was changed.** The owner should decide whether to keep the approved palette or commission a new direction.
 
 ## Open questions (unresolved — do not assume)
-1. **Missing PRD.** The original "MOONUKE PRD" was never supplied. Should it be added to `docs/`?
+1. **Missing PRD.** The original product PRD was never supplied. Should it be added to `docs/`?
 2. **Creator studio, remaining slices.** Which analytics metrics (5c)? Should Blasts and messaging wait for the fan app? Are exclusive drops wanted? Should media storage be approved (which provider)?
 3. **Profile imports, later.** Per-platform export adapters or OAuth (app review on each platform)? Avatar import once storage exists?
 4. **Supabase Auth.** Can it import scrypt hashes? How should recovery codes work? Is per-session revocation needed? What JWT lifetime is acceptable for suspensions? See `docs/supabase-auth-migration.md` §10.

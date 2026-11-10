@@ -50,4 +50,4 @@ export async function verifyPassword(password: string, stored: string): Promise<
 
 /** Pre-computed hash used to equalise timing when an email does not exist. */
 let dummy: Promise<string> | null = null;
-export const dummyHash = () => (dummy ??= hashPassword("not-a-real-password-moonuke"));
+export const dummyHash = () => (dummy ??= hashPassword("not-a-real-password-divafans"));

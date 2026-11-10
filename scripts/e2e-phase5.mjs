@@ -11,7 +11,7 @@ const axePath = require.resolve("axe-core/axe.min.js");
 
 const BASE = process.env.BASE ?? "http://localhost:3000";
 const SHOTS = process.env.SHOTS;
-const PW = "moonuke-dev-password";
+const PW = "divafans-dev-password";
 if (SHOTS) fs.mkdirSync(SHOTS, { recursive: true });
 
 const results = [];
@@ -49,7 +49,7 @@ async function signIn(email, opts = desktop, password = PW) {
 }
 
 // ================================================================ creator: posts list + composer
-const c = await signIn("isadora@moonuke.test");
+const c = await signIn("isadora@divafans.test");
 await c.page.goto(`${BASE}/studio`);
 await c.page.getByRole("link", { name: "Posts", exact: true }).click();
 await c.page.waitForURL(/\/studio\/posts$/);
@@ -92,7 +92,7 @@ const row = (t) => c.page.getByRole("listitem").filter({ hasText: t });
 check("list shows states", /published/i.test(await row("E2E live letter").innerText()) && /scheduled/i.test(await row("E2E scheduled letter").innerText()) && /draft/i.test(await row("E2E draft letter").innerText()));
 
 // ================================================================ member view: only published posts
-const m = await signIn("nocturne@moonuke.test");
+const m = await signIn("nocturne@divafans.test");
 await m.page.goto(`${BASE}/c/isadora`);
 const html = await m.page.content();
 check("member sees the published post", html.includes("E2E live letter"));
@@ -116,14 +116,14 @@ await c.page.getByRole("button", { name: "Delete post…" }).click();
 await c.page.getByRole("button", { name: "Yes, delete" }).click();
 await c.page.getByText("Post deleted.").waitFor();
 check("draft deleted", (await c.page.goto(draftUrl)).status() === 404);
-const otherCreator = await signIn("zara@moonuke.test");
+const otherCreator = await signIn("zara@divafans.test");
 const live = await c.page.goto(`${BASE}/studio/posts`);
 await row("E2E live letter").getByRole("link", { name: /Edit/ }).click();
 await c.page.waitForURL(/\/studio\/posts\/[0-9a-f-]{36}$/);
 check("another creator can't open the edit page", (await otherCreator.page.goto(c.page.url())).status() === 404 && live.ok());
 
 // ================================================================ bought post is locked
-const mi = await signIn("mireille@moonuke.test");
+const mi = await signIn("mireille@divafans.test");
 await mi.page.goto(`${BASE}/studio/posts`);
 const ppvRow = mi.page.getByRole("listitem").filter({ hasText: "Pay per view" }).first();
 await ppvRow.getByRole("link", { name: /Edit/ }).click();
@@ -155,7 +155,7 @@ check("tier: added", await salon.isVisible());
 const vipForm = c.page.getByRole("form", { name: /^Tier VIP/ }).first();
 check("tier: subscribed VIP type locked, no delete", (await vipForm.getByLabel("Type").isDisabled()) && (await vipForm.getByRole("button", { name: /Delete/ }).count()) === 0);
 
-const v2 = await signIn("velvet@moonuke.test");
+const v2 = await signIn("velvet@divafans.test");
 await v2.page.goto(`${BASE}/c/isadora`);
 check("member sees the new tier and its price", (await v2.page.getByText("E2E Salon").count()) > 0 && (await v2.page.content()).includes("$25"));
 
@@ -179,12 +179,12 @@ await axe(c.page, "/studio/analytics @1440");
 check("analytics: shows audience stats", await c.page.getByText("Active members").isVisible());
 check("analytics: scheduled post counted", (await c.page.locator("dl div").filter({ hasText: "Scheduled" }).innerText()).includes("1"));
 const analyticsHtml = await c.page.content();
-check("analytics: no fan identities", !/nocturne|velvet|satellite|@moonuke\.test/i.test(analyticsHtml.replace(/isadora/gi, "")));
+check("analytics: no fan identities", !/nocturne|velvet|satellite|@divafans\.test/i.test(analyticsHtml.replace(/isadora/gi, "")));
 const memberAnalytics = await v2.page.goto(`${BASE}/studio/analytics`);
 check("member /studio/analytics → 404", memberAnalytics.status() === 404);
 
 // ================================================================ mobile
-const cm = await signIn("isadora@moonuke.test", mobile);
+const cm = await signIn("isadora@divafans.test", mobile);
 await cm.page.goto(`${BASE}/studio/posts`);
 await shot(cm.page, "studio-posts-mobile");
 await axe(cm.page, "/studio/posts @390");

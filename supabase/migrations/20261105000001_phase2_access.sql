@@ -1,5 +1,5 @@
 -- =====================================================================
--- MOONUKE · Phase 2 · Invitation-only access, discovery, profiles
+-- Diva Fans · Phase 2 · Invitation-only access, discovery, profiles
 -- Plain PostgreSQL 15+ (Supabase compatible). Everything lives in `app`.
 -- Defence in depth: the application connects as the schema owner for a
 -- narrow set of "system" operations (sessions, invitation redemption,

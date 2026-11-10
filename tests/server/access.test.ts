@@ -66,14 +66,14 @@ describe("approval workflow", () => {
 
 describe("suspension & owner", () => {
   it("suspending revokes every session immediately; reactivation restores access", async () => {
-    const { sessionToken } = await signIn("velvet@moonuke.test", DEV_PASSWORD, meta);
+    const { sessionToken } = await signIn("velvet@divafans.test", DEV_PASSWORD, meta);
     expect(await resolveSession(sessionToken)).not.toBeNull();
     const owner = await viewer(s.ownerId);
     await setSuspended(owner, s.member2Id, true, "Test");
     expect(await resolveSession(sessionToken)).toBeNull();
-    await expect(signIn("velvet@moonuke.test", DEV_PASSWORD, meta)).rejects.toMatchObject({ code: "forbidden" });
+    await expect(signIn("velvet@divafans.test", DEV_PASSWORD, meta)).rejects.toMatchObject({ code: "forbidden" });
     await setSuspended(owner, s.member2Id, false, undefined);
-    await expect(signIn("velvet@moonuke.test", DEV_PASSWORD, meta)).resolves.toBeTruthy();
+    await expect(signIn("velvet@divafans.test", DEV_PASSWORD, meta)).resolves.toBeTruthy();
   });
 
   it("only the owner can suspend, and never themselves", async () => {
@@ -159,7 +159,7 @@ describe("audit log", () => {
 describe("sign-in & rate limiting", () => {
   it("returns one generic error for unknown email and wrong password", async () => {
     const a = await signIn("nobody@example.com", "whatever-password", meta).catch((e) => e.message);
-    const b = await signIn("nocturne@moonuke.test", "wrong-password-here", meta).catch((e) => e.message);
+    const b = await signIn("nocturne@divafans.test", "wrong-password-here", meta).catch((e) => e.message);
     expect(a).toBe(b);
   });
 

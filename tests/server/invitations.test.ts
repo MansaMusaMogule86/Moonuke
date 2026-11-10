@@ -96,7 +96,7 @@ describe("redemption", () => {
   });
 
   it("rejects duplicate emails and aliases without consuming a use", async () => {
-    await expect(redeemInvitation(s.inviteToken, { ...applicant(1), email: "nocturne@moonuke.test" }, meta)).rejects.toMatchObject({ code: "conflict", field: "email" });
+    await expect(redeemInvitation(s.inviteToken, { ...applicant(1), email: "nocturne@divafans.test" }, meta)).rejects.toMatchObject({ code: "conflict", field: "email" });
     await expect(redeemInvitation(s.inviteToken, { ...applicant(1), alias: "nocturne" }, meta)).rejects.toMatchObject({ code: "conflict", field: "alias" });
     const row = await system((q) => q.one<{ use_count: number }>(`select use_count from app.invitations where note = 'Dev seed — members'`));
     expect(row!.use_count).toBe(1); // the seeded pending applicant only

@@ -11,7 +11,7 @@ import { freshCode, DEV_OWNER_TOTP_SECRET } from "./lib/totp.mjs";
 
 const BASE = process.env.BASE ?? "http://localhost:3000";
 const SHOTS = process.env.SHOTS;
-const PW = "moonuke-dev-password";
+const PW = "divafans-dev-password";
 const results = [];
 const check = (name, ok, detail = "") => results.push({ name, ok: !!ok, detail });
 if (SHOTS) fs.mkdirSync(SHOTS, { recursive: true });
@@ -54,7 +54,7 @@ async function axe(page, label) {
 }
 
 // ---------------------------------------------------------------- owner issues an invitation
-const owner = await signIn("owner@moonuke.test");
+const owner = await signIn("owner@divafans.test");
 check("owner lands on /discover", owner.page.url().endsWith("/discover"));
 check("owner sees Admin nav", await owner.page.getByRole("navigation", { name: "Club" }).first().getByRole("link", { name: "Admin" }).isVisible());
 
@@ -162,7 +162,7 @@ await visitor.goto(`${BASE}/c/amaya`);
 check("discreet profile reachable by link", await visitor.getByRole("heading", { level: 1 }).isVisible());
 
 // ---------------------------------------------------------------- member with entitlements
-const noct = await signIn("nocturne@moonuke.test");
+const noct = await signIn("nocturne@divafans.test");
 await noct.page.goto(`${BASE}/c/isadora`);
 const nhtml = await noct.page.content();
 check("VIP sees VIP body", nhtml.includes("For the VIP room only"));
@@ -204,17 +204,17 @@ await noct.page.goto(`${BASE}/refer`);
 check("requester sees approved status, no link", (await noct.page.getByText("Invitation issued").count()) > 0 && !(await noct.page.content()).includes("/invite/"));
 
 // ---------------------------------------------------------------- suspension
-const velvet = await signIn("velvet@moonuke.test");
+const velvet = await signIn("velvet@divafans.test");
 await owner.page.goto(`${BASE}/admin/members`);
 await axe(owner.page, "/admin/members @1440");
-const vrow = owner.page.getByRole("listitem").filter({ hasText: "velvet@moonuke.test" });
+const vrow = owner.page.getByRole("listitem").filter({ hasText: "velvet@divafans.test" });
 await vrow.getByRole("button", { name: "Suspend Velvet Hour" }).click();
 await vrow.getByLabel("Reason").fill("e2e test");
 await vrow.getByRole("button", { name: "Confirm suspension" }).click();
 await owner.page.getByText("Account suspended").waitFor();
 await velvet.page.goto(`${BASE}/discover`);
 check("suspended session is revoked immediately", velvet.page.url().endsWith("/signin"), velvet.page.url());
-await velvet.page.getByLabel("Email").fill("velvet@moonuke.test");
+await velvet.page.getByLabel("Email").fill("velvet@divafans.test");
 await velvet.page.getByLabel("Password").fill(PW);
 await velvet.page.getByRole("button", { name: "Sign in" }).click();
 await velvet.page.locator("form [role=alert]").waitFor();
@@ -231,14 +231,14 @@ const bad = await browser.newContext(desktop);
 const badPage = await bad.newPage();
 await badPage.goto(`${BASE}/signin`);
 await axe(badPage, "/signin @1440");
-await badPage.getByLabel("Email").fill("nocturne@moonuke.test");
+await badPage.getByLabel("Email").fill("nocturne@divafans.test");
 await badPage.getByLabel("Password").fill("not-the-password");
 await badPage.getByRole("button", { name: "Sign in" }).click();
 await badPage.locator("form [role=alert]").waitFor();
 check("wrong password → generic error", (await badPage.locator("form [role=alert]").textContent()).includes("don't match"));
 
 // ---------------------------------------------------------------- mobile pass
-const m = await signIn("nocturne@moonuke.test", mobile);
+const m = await signIn("nocturne@divafans.test", mobile);
 check("mobile bottom tab bar", await m.page.locator("nav[aria-label=Club].fixed").isVisible());
 await shot(m.page, "discover-mobile");
 await axe(m.page, "/discover @390");
@@ -249,7 +249,7 @@ await m.page.goto(`${BASE}/refer`);
 await axe(m.page, "/refer @390");
 const overflow = await m.page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
 check("mobile: no horizontal overflow", overflow <= 0, String(overflow));
-const om = await signIn("owner@moonuke.test", mobile);
+const om = await signIn("owner@divafans.test", mobile);
 await om.page.goto(`${BASE}/admin`);
 await shot(om.page, "admin-mobile");
 await axe(om.page, "/admin @390");
@@ -263,7 +263,7 @@ await axe(smp, "/signin @390");
 
 // ---------------------------------------------------------------- CSP: no violations, hydration works
 {
-  const c = await signIn("nocturne@moonuke.test");
+  const c = await signIn("nocturne@divafans.test");
   const violations = [];
   c.page.on("console", (m) => /Content Security Policy|Refused to (execute|load|apply)/i.test(m.text()) && violations.push(m.text()));
   for (const path of ["/", "/design-system", "/discover", "/c/isadora", "/refer"]) {

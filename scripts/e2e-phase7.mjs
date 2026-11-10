@@ -11,7 +11,7 @@ const axePath = require.resolve("axe-core/axe.min.js");
 
 const BASE = process.env.BASE ?? "http://localhost:3000";
 const SHOTS = process.env.SHOTS;
-const PW = "moonuke-dev-password";
+const PW = "divafans-dev-password";
 if (SHOTS) fs.mkdirSync(SHOTS, { recursive: true });
 
 const results = [];
@@ -49,7 +49,7 @@ async function signIn(email, opts = desktop, password = PW) {
 }
 
 // ================================================================ member opens a conversation from the profile
-const n = await signIn("nocturne@moonuke.test");
+const n = await signIn("nocturne@divafans.test");
 await n.page.goto(`${BASE}/c/isadora`);
 await n.page.getByRole("button", { name: /^Message Isadora Lune$/ }).click();
 await n.page.waitForURL(/\/messages\/[0-9a-f-]{36}$/);
@@ -72,7 +72,7 @@ check("draft kept after refusal", (await box.inputValue()) === "find me at examp
 await box.fill("");
 
 // ================================================================ creator sees it, replies; member receives by polling
-const c = await signIn("isadora@moonuke.test");
+const c = await signIn("isadora@divafans.test");
 await c.page.goto(`${BASE}/notifications`);
 check("creator notified (no message text)", (await c.page.getByText("New message from Nocturne").count()) > 0 && !(await c.page.content()).includes("Hello from the e2e member"));
 await c.page.goto(`${BASE}/messages`);
@@ -92,14 +92,14 @@ await shot(n.page, "messages-thread-desktop");
 await axe(n.page, "/messages/[id] @1440");
 
 // ================================================================ access control
-const v = await signIn("velvet@moonuke.test");
+const v = await signIn("velvet@divafans.test");
 await v.page.goto(`${BASE}/c/isadora`);
 check("non-member sees no Message button", (await v.page.getByRole("button", { name: /^Message Isadora Lune$/ }).count()) === 0);
 check("non-member: conversation page → 404", (await v.page.goto(convUrl)).status() === 404);
 check("non-member: messages API → 404", (await v.ctx.request.get(`${BASE}/api/messages/${convId}`)).status() === 404);
 const anon = await browser.newContext(desktop);
 check("signed out: messages API → 404", (await anon.request.get(`${BASE}/api/messages/${convId}`)).status() === 404);
-const z = await signIn("zara@moonuke.test");
+const z = await signIn("zara@divafans.test");
 check("other creator: conversation page → 404", (await z.page.goto(convUrl)).status() === 404);
 const own = await n.ctx.request.get(`${BASE}/api/messages/${convId}`);
 check("participant API works and is not cacheable", own.ok() && /no-store/.test(own.headers()["cache-control"] ?? ""));
@@ -113,7 +113,7 @@ await sheet.getByRole("button", { name: "Send report" }).click();
 await sheet.getByText("The house will review your report").waitFor();
 check("creator reports a message", true);
 await c.page.keyboard.press("Escape");
-const o = await signIn("owner@moonuke.test");
+const o = await signIn("owner@divafans.test");
 check("owner can't use messaging", (await o.page.goto(`${BASE}/messages`)).status() === 404);
 await o.page.goto(`${BASE}/admin/moderation`);
 await o.page.getByRole("link", { name: "Review message (logged)" }).first().click();
@@ -204,7 +204,7 @@ await n.page.goto(`${BASE}/messages`);
 check("overturned appeal lifts the pause", (await n.page.getByRole("heading", { name: /Messaging is paused/ }).count()) === 0);
 
 // ================================================================ mobile
-const nm = await signIn("nocturne@moonuke.test", mobile);
+const nm = await signIn("nocturne@divafans.test", mobile);
 for (const p of ["/messages", convUrl.replace(BASE, "")]) {
   await nm.page.goto(`${BASE}${p}`);
   await axe(nm.page, `${p.startsWith("/messages/") ? "/messages/[id]" : p} @390`);

@@ -33,7 +33,7 @@ describe("creator analytics (existing data, aggregates only)", () => {
     // Aggregates only: nothing in the payload names or identifies a fan.
     const json = JSON.stringify(a);
     for (const id of [s.memberId, s.member2Id]) expect(json).not.toContain(id);
-    expect(json).not.toMatch(/nocturne|velvet|@moonuke\.test/i);
+    expect(json).not.toMatch(/nocturne|velvet|@divafans\.test/i);
   });
 
   it("only creators get analytics; the unlock helper never reveals other creators' posts", async () => {

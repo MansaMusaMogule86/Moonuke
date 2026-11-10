@@ -22,13 +22,13 @@ For whoever runs the platform once deployment is approved. **Nothing is deployed
 ## Backups and restore
 - **Backups:** use the database host's daily backups plus point-in-time recovery. Self-hosted, the minimum is:
   ```bash
-  pg_dump --format=custom --file "moonuke-$(date +%F).dump" "$DATABASE_URL"
+  pg_dump --format=custom --file "divafans-$(date +%F).dump" "$DATABASE_URL"
   ```
   Store dumps encrypted, off the database host. The audit log is append-only, so back it up and never prune it.
 - **Restore** into a new database, never over the live one:
   ```bash
-  createdb moonuke_restore
-  pg_restore --exit-on-error --dbname "postgres://…/moonuke_restore" moonuke-YYYY-MM-DD.dump
+  createdb divafans_restore
+  pg_restore --exit-on-error --dbname "postgres://…/divafans_restore" divafans-YYYY-MM-DD.dump
   ```
   The role `mk_app` is cluster-level and **not** in a dump. Create it on a new cluster first, exactly as the first migration does (`supabase/migrations/20261105000001_phase2_access.sql`). Then point `DATABASE_URL` at the restored database and check `/api/health`.
 - **Drill:** `pnpm verify` runs `scripts/backup-drill.mjs` against the local e2e database on every run. It dumps, restores into a scratch database, and checks row counts, RLS-enabled tables, policies, definer functions, triggers and `mk_app` grants. It then drops the scratch database. To drill a local copy by hand, run `node scripts/backup-drill.mjs postgres://localhost/…`. It refuses remote hosts. For production, drill with the host's restore tooling at least quarterly.

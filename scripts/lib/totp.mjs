@@ -3,7 +3,7 @@
 import { createHmac } from "node:crypto";
 
 /** Dev-seed owner authenticator secret (base32). Development data only. */
-export const DEV_OWNER_TOTP_SECRET = "JBSWY3DPEHPK3PXPMOONUKEDEVSEED22";
+export const DEV_OWNER_TOTP_SECRET = "JBSWY3DPEHPK3PXPDIVAFANSDEVSEED2";
 
 export function base32Decode(s) {
   const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";

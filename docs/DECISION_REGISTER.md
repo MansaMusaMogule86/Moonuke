@@ -1,7 +1,5 @@
 # Decision register and production-readiness assessment
 
-> **Renamed.** The product formerly called MOONUKE is now **Diva Fans** (2026-11-10). Historical entries below keep their original wording.
-
 **Date:** 2026-11-05. **Reviewed against:** commit `1656a55` and the 52 defaults confirmed in `docs/DECISIONS.md`, which are unchanged by this document.
 **Nature:** a report only. Nothing was deployed, migrated, purchased or enabled.
 **Not legal advice.** Each legal item is marked:
@@ -41,7 +39,7 @@ The research sources are listed at the end.
 | B-4 | Currency | USD at launch | Proposed, and consistent with confirmed P1 | No change needed |
 | B-5 | Refunds revoke purchased access "where legally and technically appropriate" | — | **Conflict** with confirmed **PAY2** (a purchase stays after a refund or chargeback) and adjacent to **P2** | Needs an explicit owner override of PAY2. Technically simple: delete the purchase row on `refunded` or `charged_back`. "Legally appropriate" (consumer-law rights to content already delivered) is UNRESOLVED and needs counsel |
 | B-6 | Moderator role | Restricted permissions with audit logs | Proposed, and consistent with the design in `src/server/auth/staff.ts` | Needs the owner to decide who moderators are, how they're vetted, and which capabilities each gets. Implementation is about one slice: a `moderator` role, capability checks, RLS helpers and tests |
-| B-7 | Branding | Avoid black and gold; keep "Moonuke" as the working name | **Conflict** with the confirmed Phase 1 identity (fixed tokens in `MASTER_PRD.md` §1) | A rebrand needs explicit approval and a new direction. Tokens are centralised (`src/styles/tokens.css`, `src/config/brand.ts`), so it's mechanically contained |
+| B-7 | Branding | Avoid black and gold; keep the working product name | **Conflict** with the confirmed Phase 1 identity (fixed tokens in `MASTER_PRD.md` §1) | A rebrand needs explicit approval and a new direction. Tokens are centralised (`src/styles/tokens.css`, `src/config/brand.ts`), so it's mechanically contained |
 | B-8 | Payout schedule (weekly or monthly), payout methods | — | Open | Constrained by the processor |
 | B-9 | Tips, paid messages and paid-Blast pricing ranges | — | Open | Inherit P1 ($1–$1,000) unless the owner decides otherwise |
 | B-10 | Exclusive drops, creator referral programme | — | Open | Never defined |
@@ -91,14 +89,14 @@ The research sources are listed at the end.
 
 ## 2. Infrastructure compatibility matrix
 
-MOONUKE's security model depends on **PostgreSQL features**:
+Diva Fans' security model depends on **PostgreSQL features**:
 - row-level security on 44 tables;
 - `SET ROLE mk_app` per transaction, with `app.user_id` and `app.aal` settings;
 - 47 SECURITY DEFINER functions;
 - invoker guard triggers, and a deferred constraint trigger for the ledger;
 - `citext`, plpgsql and partial indexes.
 
-| Component | Fit for MOONUKE | Evidence | Verdict |
+| Component | Fit for Diva Fans | Evidence | Verdict |
 |---|---|---|---|
 | **Cloudflare D1** (SQLite) | No RLS, no roles, no plpgsql, no SECURITY DEFINER, no deferred constraint triggers | SQLite feature set; D1 docs | **Incompatible.** Using it would mean rewriting the whole authorization layer and every security test. **Not recommended.** |
 | **Supabase Postgres** | Plain SQL migrations apply as-is; a custom `mk_app` role and `citext` are available in Postgres | Standard Postgres | **Compatible.** A staging dry-run is needed (role creation and pooler `SET ROLE` behaviour) |
@@ -138,9 +136,9 @@ MOONUKE's security model depends on **PostgreSQL features**:
 
 ## 4. Legal and safety blockers
 
-An **18+ checkbox is not age verification.** MOONUKE's current fan check (confirmed default D5: an attestation plus owner approval of each account) is **insufficient** wherever the laws below apply. Invitation-only access doesn't remove the obligation.
+An **18+ checkbox is not age verification.** Diva Fans' current fan check (confirmed default D5: an attestation plus owner approval of each account) is **insufficient** wherever the laws below apply. Invitation-only access doesn't remove the obligation.
 
-| Jurisdiction or rule | Requirement | Status | MOONUKE gap |
+| Jurisdiction or rule | Requirement | Status | Diva Fans gap |
 |---|---|---|---|
 | **UK: Online Safety Act** | Services that allow pornography (user-to-user, Part 3) must use **highly effective age assurance**, from 25 July 2025. Self-declaration is not enough. Ofcom is enforcing | **VERIFIED** (Ofcom) | A HEAA vendor, or geo-block the UK |
 | **EU: Digital Services Act** | The Commission's guidelines expect high-certainty age verification for porn; preliminary findings against platforms relying on self-declaration (March 2026) | **REPORTED** (secondary, preliminary) | A vendor; DSA transparency, notice-and-action and statement-of-reasons duties also apply (UNRESOLVED scope) |

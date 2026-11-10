@@ -26,7 +26,7 @@ const notice = (o: Partial<TakedownInput> = {}): TakedownInput => ({
   name: "Test Requester",
   email: "requester@example.test",
   signature: "Test Requester",
-  location: "https://moonuke.test/c/isadora",
+  location: "https://divafans.test/c/isadora",
   description: "Fictional test notice.",
   goodFaith: true,
   ...o,
@@ -43,7 +43,7 @@ const newPost = async (creatorId: string, teaser = "A fictional study") =>
 describe("public takedown notices", () => {
   it("anyone can file; contact is encrypted; the 48-hour clock starts; urgent categories withhold the post", async () => {
     const post = await postOf("isadora", "preview");
-    const r = await submitTakedown(notice({ location: `https://moonuke.test/c/isadora#${post}` }));
+    const r = await submitTakedown(notice({ location: `https://divafans.test/c/isadora#${post}` }));
     expect(r.reference).toMatch(/^TD-[A-Z2-7]{10}$/);
     const row = (await system((q) => q.one<{ contact_enc: string; hours: number; target_post_id: string; status: string }>(
       `select contact_enc, extract(epoch from due_at - received_at) / 3600 as hours, target_post_id, status from app.takedown_notices where reference = $1`, [r.reference])))!;
@@ -58,7 +58,7 @@ describe("public takedown notices", () => {
 
   it("gives the same answer whether or not the content exists (no oracle)", async () => {
     const a = await submitTakedown(notice({ location: "https://elsewhere.test/not-here", email: "a@example.test" }));
-    const b = await submitTakedown(notice({ location: `https://moonuke.test/c/isadora`, email: "b@example.test" }));
+    const b = await submitTakedown(notice({ location: `https://divafans.test/c/isadora`, email: "b@example.test" }));
     expect(Object.keys(a)).toEqual(Object.keys(b));
   });
 

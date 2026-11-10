@@ -23,25 +23,25 @@ async function lastResetToken(email: string) {
 
 describe("password recovery", () => {
   it("issues a single-use link, revokes sessions, notifies, and the old password stops working", async () => {
-    const { sessionToken } = await signIn("velvet@moonuke.test", DEV_PASSWORD, meta);
-    await requestPasswordReset("velvet@moonuke.test", meta);
-    const token = (await lastResetToken("velvet@moonuke.test"))!;
+    const { sessionToken } = await signIn("velvet@divafans.test", DEV_PASSWORD, meta);
+    await requestPasswordReset("velvet@divafans.test", meta);
+    const token = (await lastResetToken("velvet@divafans.test"))!;
     expect(token).toBeTruthy();
     expect(await inspectResetToken(token)).toBe(true);
 
     await resetPassword(token, "a-brand-new-password", meta);
     expect(await resolveSession(sessionToken)).toBeNull();
-    await expect(signIn("velvet@moonuke.test", DEV_PASSWORD, meta)).rejects.toMatchObject({ code: "invalid_credentials" });
-    await expect(signIn("velvet@moonuke.test", "a-brand-new-password", meta)).resolves.toBeTruthy();
+    await expect(signIn("velvet@divafans.test", DEV_PASSWORD, meta)).rejects.toMatchObject({ code: "invalid_credentials" });
+    await expect(signIn("velvet@divafans.test", "a-brand-new-password", meta)).resolves.toBeTruthy();
     await expect(resetPassword(token, "another-new-password", meta)).rejects.toThrow(/no longer valid/);
 
-    const notice = await system((q) => q.one(`select 1 from app.email_outbox where to_email = 'velvet@moonuke.test' and template = 'security_password_changed'`));
+    const notice = await system((q) => q.one(`select 1 from app.email_outbox where to_email = 'velvet@divafans.test' and template = 'security_password_changed'`));
     expect(notice).toBeTruthy();
   });
 
   it("stores only the token hash", async () => {
-    await requestPasswordReset("velvet@moonuke.test", meta);
-    const token = (await lastResetToken("velvet@moonuke.test"))!;
+    await requestPasswordReset("velvet@divafans.test", meta);
+    const token = (await lastResetToken("velvet@divafans.test"))!;
     const dump = await system((q) => q.one<{ t: string }>(`select string_agg(row_to_json(r)::text, '') as t from app.password_resets r`));
     expect(dump!.t).not.toContain(token);
   });
@@ -49,16 +49,16 @@ describe("password recovery", () => {
   it("does not reveal whether an account exists, and never sends to suspended accounts", async () => {
     await expect(requestPasswordReset("nobody@example.com", meta)).resolves.toBeUndefined();
     await system((q) => q.query(`update app.users set status = 'suspended' where id = $1`, [s.member2Id]));
-    await requestPasswordReset("velvet@moonuke.test", meta);
-    expect(await lastResetToken("velvet@moonuke.test")).toBeUndefined();
+    await requestPasswordReset("velvet@divafans.test", meta);
+    expect(await lastResetToken("velvet@divafans.test")).toBeUndefined();
   });
 
   it("a new request invalidates the previous link; expired links are refused", async () => {
-    await requestPasswordReset("velvet@moonuke.test", meta);
-    const first = (await lastResetToken("velvet@moonuke.test"))!;
+    await requestPasswordReset("velvet@divafans.test", meta);
+    const first = (await lastResetToken("velvet@divafans.test"))!;
     await new Promise((r) => setTimeout(r, 5));
-    await requestPasswordReset("velvet@moonuke.test", meta);
-    const second = (await lastResetToken("velvet@moonuke.test"))!;
+    await requestPasswordReset("velvet@divafans.test", meta);
+    const second = (await lastResetToken("velvet@divafans.test"))!;
     expect(await inspectResetToken(first)).toBe(false);
     expect(await inspectResetToken(second)).toBe(true);
     await system((q) => q.query(`update app.password_resets set expires_at = now() - interval '1 minute'`));
@@ -90,14 +90,14 @@ describe("transactional email", () => {
     await decideApplication(owner, app.id, "approve", undefined);
     expect(await deliverPending()).toBeGreaterThan(0);
     const log = await listEmailLog(owner);
-    expect(log.find((l) => l.template === "account_approved")).toMatchObject({ to_email: "satellite@moonuke.test", status: "sent" });
+    expect(log.find((l) => l.template === "account_approved")).toMatchObject({ to_email: "satellite@divafans.test", status: "sent" });
   });
 
   it("a member cannot use the outbox to mail anyone but themselves (RLS)", async () => {
     const ins = `insert into app.email_outbox (user_id, to_email, template, subject) values ($1, $2, 'spam', 'x')`;
     expect(await rlsError(s.memberId, ins, [s.memberId, "victim@example.com"])).toBe("42501");
-    expect(await rlsError(s.memberId, ins, [s.ownerId, "owner@moonuke.test"])).toBe("42501");
-    expect(await rlsError(s.memberId, ins, [s.memberId, "nocturne@moonuke.test"])).toBeNull();
+    expect(await rlsError(s.memberId, ins, [s.ownerId, "owner@divafans.test"])).toBe("42501");
+    expect(await rlsError(s.memberId, ins, [s.memberId, "nocturne@divafans.test"])).toBeNull();
   });
 
   it("only the owner can read the email log", async () => {

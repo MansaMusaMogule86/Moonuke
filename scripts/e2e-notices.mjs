@@ -13,7 +13,7 @@ const axePath = require.resolve("axe-core/axe.min.js");
 
 const BASE = process.env.BASE ?? "http://localhost:3000";
 const SHOTS = process.env.SHOTS;
-const PW = "moonuke-dev-password";
+const PW = "divafans-dev-password";
 if (SHOTS) fs.mkdirSync(SHOTS, { recursive: true });
 
 const db = new Client({ connectionString: process.env.DATABASE_URL });
@@ -77,7 +77,7 @@ const visible = (loc) => loc.first().waitFor({ timeout: 10_000 }).then(() => tru
 // A post waiting for review; the owner rejects it in the UI.
 const post = await postOf("isadora", "preview");
 await db.query(`update app.posts set review_state = 'pending', review_reasons = '{all_content}' where id = $1`, [post.id]);
-const o = await signIn("owner@moonuke.test");
+const o = await signIn("owner@divafans.test");
 await o.page.goto(`${BASE}/admin/safety/review`);
 const card = o.page.locator("li", { hasText: post.teaser });
 await card.getByLabel(/Note for the creator/).fill("The frame shows a third-party logo.");
@@ -86,7 +86,7 @@ await o.page.getByText(/^Rejected/).waitFor();
 check("rejection issues a notice", (await one(`select count(*)::int as n from app.moderation_notices where post_id = $1`, [post.id])).n === 1);
 
 // Creator sees and reads it.
-const c = await signIn("isadora@moonuke.test");
+const c = await signIn("isadora@divafans.test");
 await c.page.goto(`${BASE}/studio`);
 check("studio shows new notices", await visible(c.page.getByRole("link", { name: "Notices (1 new)" })));
 await c.page.goto(`${BASE}/notifications`);
@@ -106,13 +106,13 @@ await c.page.getByText(/^Appeal sent/).waitFor();
 await c.page.reload();
 check("one appeal only: the form is gone", (await c.page.getByLabel("Why should this decision change?").count()) === 0 && /appeal under review/i.test(await bodyText(c.page)));
 
-const cm = await signIn("isadora@moonuke.test", mobile);
+const cm = await signIn("isadora@divafans.test", mobile);
 await cm.page.goto(`${BASE}/studio/notices`);
 await axe(cm.page, "studio notices @390");
 await noOverflow(cm.page, "studio notices @390");
 
 // Access control.
-const m = await signIn("velvet@moonuke.test");
+const m = await signIn("velvet@divafans.test");
 check("member → /studio/notices is 404", (await m.page.goto(`${BASE}/studio/notices`)).status() === 404);
 check("creator → /admin/safety/appeals is 404", (await c.page.goto(`${BASE}/admin/safety/appeals`)).status() === 404);
 await m.page.goto(`${BASE}/c/isadora`);
@@ -132,7 +132,7 @@ await c.page.goto(`${BASE}/studio/notices`);
 check("creator sees the outcome and note", /appeal: decision reversed/i.test(await bodyText(c.page)) && (await bodyText(c.page)).includes("Agreed: it is your own mark."));
 check("appeal decision audited", (await one(`select count(*)::int as n from app.audit_log where action = 'appeal.overturn'`)).n === 1);
 
-const om = await signIn("owner@moonuke.test", mobile);
+const om = await signIn("owner@divafans.test", mobile);
 await om.page.goto(`${BASE}/admin/safety/appeals`);
 await axe(om.page, "admin appeals @390");
 await noOverflow(om.page, "admin appeals @390");

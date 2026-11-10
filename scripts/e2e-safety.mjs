@@ -14,7 +14,7 @@ const axePath = require.resolve("axe-core/axe.min.js");
 
 const BASE = process.env.BASE ?? "http://localhost:3000";
 const SHOTS = process.env.SHOTS;
-const PW = "moonuke-dev-password";
+const PW = "divafans-dev-password";
 if (SHOTS) fs.mkdirSync(SHOTS, { recursive: true });
 
 const db = new Client({ connectionString: process.env.DATABASE_URL });
@@ -112,16 +112,16 @@ await shot(mp, "takedown-mobile");
 // ================================================================ access control
 await ap.goto(`${BASE}/admin/safety`);
 check("signed out → /admin/safety redirects to sign-in", ap.url().includes("/signin"));
-const member = await signIn("velvet@moonuke.test");
+const member = await signIn("velvet@divafans.test");
 check("member → /admin/safety is 404", (await member.page.goto(`${BASE}/admin/safety`)).status() === 404);
 await member.page.goto(`${BASE}/c/isadora`);
 const bodyText = (pg) => pg.locator("body").innerText();
 check("member can't see the withheld post", (await bodyText(member.page)).includes("Isadora") && !(await bodyText(member.page)).includes(target.teaser));
-const creator = await signIn("isadora@moonuke.test");
+const creator = await signIn("isadora@divafans.test");
 check("creator → /admin/safety/safeguarding is 404", (await creator.page.goto(`${BASE}/admin/safety/safeguarding`)).status() === 404);
 
 // ================================================================ owner: takedown queue
-const o = await signIn("owner@moonuke.test");
+const o = await signIn("owner@divafans.test");
 await o.page.goto(`${BASE}/admin/safety`);
 check("owner sees the notice in the queue", await o.page.getByRole("link", { name: ref }).isVisible());
 await axe(o.page, "admin safety @1440");
@@ -209,7 +209,7 @@ await cp.getByRole("button", { name: "Withdraw consent" }).click();
 await cp.getByText(/Consent withdrawn\. 1 post was hidden\./).waitFor();
 check("consent withdrawal hides the post at once", (await one(`select hidden_at is not null as h from app.posts where id = $1`, [duo.id])).h === true);
 
-const cm = await signIn("isadora@moonuke.test", mobile);
+const cm = await signIn("isadora@divafans.test", mobile);
 await cm.page.goto(`${BASE}/studio/participants`);
 await axe(cm.page, "studio participants @390");
 await noOverflow(cm.page, "studio participants @390");
@@ -246,7 +246,7 @@ await o.page.getByText("Case is now assessing.").waitFor();
 check("case moved to assessing (audited)", (await one(`select status from app.safeguarding_cases`)).status === "assessing");
 check("no external request was made: no report number recorded", (await one(`select external_ref from app.safeguarding_cases`)).external_ref === null);
 
-const om = await signIn("owner@moonuke.test", mobile);
+const om = await signIn("owner@divafans.test", mobile);
 await om.page.goto(`${BASE}/admin/safety`);
 await axe(om.page, "admin safety @390");
 await noOverflow(om.page, "admin safety @390");

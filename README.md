@@ -13,16 +13,16 @@ pnpm db:seed                    # DEV ONLY: resets schema `app`, migrates, loads
 pnpm dev                        # http://localhost:3000
 ```
 
-`pnpm db:seed` prints every dev account and two invitation links. Every seeded account uses the password `moonuke-dev-password`:
+`pnpm db:seed` prints every dev account and two invitation links. Every seeded account uses the password `divafans-dev-password`:
 
 | Account | Email | State |
 |---|---|---|
-| Owner | `owner@moonuke.test` | The House. Two-step sign-in is required; the seed prints a dev-only TOTP secret |
-| Member | `nocturne@moonuke.test` | VIP of Isadora, member of Zara and Orsolya, one PPV purchase |
-| Member | `velvet@moonuke.test` | No memberships |
-| Pending | `satellite@moonuke.test` | Awaiting approval |
-| Creator (unverified) | `rhea@moonuke.test` | Draft profile awaiting verification |
-| Creator | `<handle>@moonuke.test` | e.g. `isadora@…` |
+| Owner | `owner@divafans.test` | The House. Two-step sign-in is required; the seed prints a dev-only TOTP secret |
+| Member | `nocturne@divafans.test` | VIP of Isadora, member of Zara and Orsolya, one PPV purchase |
+| Member | `velvet@divafans.test` | No memberships |
+| Pending | `satellite@divafans.test` | Awaiting approval |
+| Creator (unverified) | `rhea@divafans.test` | Draft profile awaiting verification |
+| Creator | `<handle>@divafans.test` | e.g. `isadora@…` |
 
 For a real database, run `pnpm db:migrate` and then create the single owner:
 
@@ -83,7 +83,7 @@ Detailed references are linked below.
 - **Phase 5:** [`docs/phase-5-architecture.md`](docs/phase-5-architecture.md). Covers the creator studio: posts, tiers and analytics.
 - **Phase 6:** [`docs/phase-6-architecture.md`](docs/phase-6-architecture.md). Covers the fan app: library, vault, purchases, memberships and notifications.
 - **Phase 7:** [`docs/phase-7-messaging.md`](docs/phase-7-messaging.md). Covers messaging, moderation, and the plan for Blasts, attachments and paid features.
-- **Branding:** the product is **Diva Fans** (formerly MOONUKE). Everything brand-specific lives in `src/config/brand.ts`. Dev fixtures (`@moonuke.test` accounts, the `moonuke` databases, the `Moonuke` repository name) keep the old name on purpose; see `docs/deployment.md` §7.
+- **Branding:** the product is **Diva Fans** (formerly Diva Fans). Everything brand-specific lives in `src/config/brand.ts`. Dev fixtures (`@divafans.test` accounts, the `divafans` databases, the `Diva Fans` repository name) keep the old name on purpose; see `docs/deployment.md` §7.
 
 ```
 supabase/migrations/    SQL schema, RLS policies, SECURITY DEFINER entitlement helpers

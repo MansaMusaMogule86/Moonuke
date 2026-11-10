@@ -70,7 +70,7 @@ describe("reporting", () => {
     expect(vip.posts.map((p) => p.id)).not.toContain(post);
     const owner = (await getProfile(await viewer(s.ownerId), "isadora"))!;
     expect(owner.posts.map((p) => p.id)).toContain(post);
-    const alert = await system((q) => q.one(`select 1 from app.email_outbox where template = 'critical_report' and to_email = 'owner@moonuke.test'`));
+    const alert = await system((q) => q.one(`select 1 from app.email_outbox where template = 'critical_report' and to_email = 'owner@divafans.test'`));
     expect(alert).toBeTruthy();
     const [top] = await moderationQueue(await viewer(s.ownerId));
     expect(top).toMatchObject({ severity: 3, post_hidden: true });
@@ -109,7 +109,7 @@ describe("moderation is owner-only — app layer and RLS", () => {
 
     const r2 = await fileReport(await viewer(s.member2Id), { targetType: "creator", targetId: s.creatorIds.valentin, reason: "harassment" });
     await expect(moderate(owner, r2.id, "escalate", {})).rejects.toMatchObject({ field: "escalationRef" });
-    const { sessionToken } = await signIn("valentin@moonuke.test", DEV_PASSWORD, meta);
+    const { sessionToken } = await signIn("valentin@divafans.test", DEV_PASSWORD, meta);
     expect(await moderate(owner, r2.id, "suspend_user", { note: "Repeated harassment" })).toMatchObject({ status: "actioned" });
     expect(await resolveSession(sessionToken)).toBeNull();
     const actions = await system((q) => q.query<{ action: string }>(`select action from app.moderation_actions where report_id = $1`, [r2.id]));

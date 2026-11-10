@@ -38,7 +38,7 @@ describe("TOTP primitives", () => {
 
 describe("owner MFA is mandatory — app layer AND database", () => {
   it("an owner session without a verified second factor has no owner powers", async () => {
-    const { v } = await session("owner@moonuke.test");
+    const { v } = await session("owner@divafans.test");
     expect(v).toMatchObject({ role: "owner", mfa: "pending", aal: 1 });
     expect(can(v, "invitations.manage")).toBe(false);
     expect(can(v, "club.discover")).toBe(false);
@@ -57,7 +57,7 @@ describe("owner MFA is mandatory — app layer AND database", () => {
   });
 
   it("verifying the challenge raises the session to AAL2 and unlocks owner tools", async () => {
-    const { token, v } = await session("owner@moonuke.test");
+    const { token, v } = await session("owner@divafans.test");
     await verifyChallenge(v, codeAt(DEV_OWNER_TOTP_SECRET, currentStep()), meta);
     const after = (await resolveSession(token))!;
     expect(after).toMatchObject({ mfa: "verified", aal: 2 });
@@ -87,7 +87,7 @@ describe("member enrolment, challenge, recovery codes", () => {
   }
 
   it("enrolment verifies the current session and returns 10 one-time recovery codes", async () => {
-    const { token, codes, v } = await enrol("velvet@moonuke.test");
+    const { token, codes, v } = await enrol("velvet@divafans.test");
     expect(codes).toHaveLength(10);
     expect((await resolveSession(token))!.aal).toBe(2);
     expect((await mfaStatus(v)).enrolled).toBe(true);
@@ -95,27 +95,27 @@ describe("member enrolment, challenge, recovery codes", () => {
   });
 
   it("new sign-ins require the second factor; a code cannot be replayed", async () => {
-    const { secret } = await enrol("velvet@moonuke.test");
-    const a = await session("velvet@moonuke.test");
+    const { secret } = await enrol("velvet@divafans.test");
+    const a = await session("velvet@divafans.test");
     expect(a.v.mfa).toBe("pending");
     // The enrolment already consumed the current step; use the next one.
     const next = codeAt(secret, currentStep() + 1);
     await verifyChallenge(a.v, next, meta);
-    const b = await session("velvet@moonuke.test");
+    const b = await session("velvet@divafans.test");
     await expect(verifyChallenge(b.v, next, meta)).rejects.toMatchObject({ code: "validation" });
   });
 
   it("a recovery code works exactly once", async () => {
-    const { codes } = await enrol("velvet@moonuke.test");
-    const a = await session("velvet@moonuke.test");
+    const { codes } = await enrol("velvet@divafans.test");
+    const a = await session("velvet@divafans.test");
     await verifyChallenge(a.v, codes[0].toLowerCase(), meta);
     expect((await resolveSession(a.token))!.aal).toBe(2);
-    const b = await session("velvet@moonuke.test");
+    const b = await session("velvet@divafans.test");
     await expect(verifyChallenge(b.v, codes[0], meta)).rejects.toMatchObject({ code: "validation" });
   });
 
   it("disabling requires a valid current code and an AAL2 session", async () => {
-    const { v, secret } = await enrol("velvet@moonuke.test");
+    const { v, secret } = await enrol("velvet@divafans.test");
     const verified = { ...v, aal: 2 as const, mfa: "verified" as const };
     await expect(disableMfa(verified, "000000")).rejects.toMatchObject({ code: "validation" });
     await disableMfa(verified, codeAt(secret, currentStep() + 1));
@@ -126,9 +126,9 @@ describe("member enrolment, challenge, recovery codes", () => {
 
 describe("session management", () => {
   it("lists only the viewer's own sessions and cannot revoke someone else's", async () => {
-    const mine = await session("velvet@moonuke.test");
-    await session("velvet@moonuke.test");
-    const theirs = await session("nocturne@moonuke.test");
+    const mine = await session("velvet@divafans.test");
+    await session("velvet@divafans.test");
+    const theirs = await session("nocturne@divafans.test");
     const list = await listSessions(mine.v);
     expect(list).toHaveLength(2);
     expect(list[0].current).toBe(true);
@@ -137,20 +137,20 @@ describe("session management", () => {
   });
 
   it("sign out others keeps the current session", async () => {
-    const a = await session("velvet@moonuke.test");
-    const b = await session("velvet@moonuke.test");
+    const a = await session("velvet@divafans.test");
+    const b = await session("velvet@divafans.test");
     expect(await revokeOtherSessions(a.v)).toBe(1);
     expect(await resolveSession(a.token)).not.toBeNull();
     expect(await resolveSession(b.token)).toBeNull();
   });
 
   it("password change needs the current password and signs out other sessions", async () => {
-    const a = await session("velvet@moonuke.test");
-    const b = await session("velvet@moonuke.test");
+    const a = await session("velvet@divafans.test");
+    const b = await session("velvet@divafans.test");
     await expect(changePassword(a.v, "wrong-password", "new-password-123")).rejects.toMatchObject({ field: "current" });
     await changePassword(a.v, DEV_PASSWORD, "new-password-123");
     expect(await resolveSession(a.token)).not.toBeNull();
     expect(await resolveSession(b.token)).toBeNull();
-    await expect(signIn("velvet@moonuke.test", "new-password-123", meta)).resolves.toBeTruthy();
+    await expect(signIn("velvet@divafans.test", "new-password-123", meta)).resolves.toBeTruthy();
   });
 });

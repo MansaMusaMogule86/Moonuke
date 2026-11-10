@@ -13,7 +13,7 @@ const axePath = require.resolve("axe-core/axe.min.js");
 
 const BASE = process.env.BASE ?? "http://localhost:3000";
 const SHOTS = process.env.SHOTS;
-const PW = "moonuke-dev-password";
+const PW = "divafans-dev-password";
 if (SHOTS) fs.mkdirSync(SHOTS, { recursive: true });
 
 const db = new Client({ connectionString: process.env.DATABASE_URL });
@@ -74,32 +74,32 @@ async function fillNotice(page, { category, role, location, email = "requester@e
 const bodyText = (pg) => pg.locator("body").innerText();
 const visible = (loc) => loc.first().waitFor({ timeout: 10_000 }).then(() => true, () => false);
 
-const o = await signIn("owner@moonuke.test");
+const o = await signIn("owner@divafans.test");
 await o.page.goto(`${BASE}/admin/staff`);
 const st = await o.page.getByTestId("staff-status").innerText();
 check("owner page: server flag off, awaiting approval", /server flag: off \(awaiting approval\)/i.test(st) && /your switch: off/i.test(st));
 check("no switch offered while the flag is off", (await o.page.getByRole("button", { name: /Switch moderator access/ }).count()) === 0);
 await axe(o.page, "admin staff @1440");
 await shot(o.page, "admin-staff");
-await o.page.getByLabel("Member's email").fill("velvet@moonuke.test");
+await o.page.getByLabel("Member's email").fill("velvet@divafans.test");
 await o.page.getByLabel(/See the report queue/).check();
 await o.page.getByRole("button", { name: "Grant" }).click();
 check("granting is refused until approved", await visible(o.page.getByText("Moderator access isn't approved yet.")));
 check("no grant stored", (await one(`select count(*)::int as n from app.staff_grants`)).n === 0);
 
 // Even a grant and the owner's switch set directly in the database don't open anything while the server flag is off.
-await db.query(`insert into app.mfa_factors (user_id, secret_enc, confirmed_at) select id, 'x', now() from app.users where email = 'velvet@moonuke.test' on conflict do nothing`);
-await db.query(`insert into app.staff_grants (user_id, capabilities, granted_by) select u.id, array['reports.view','reports.decide','content.hide','review.decide','takedowns.decide','appeals.decide'], (select id from app.users where role = 'owner') from app.users u where u.email = 'velvet@moonuke.test'`);
+await db.query(`insert into app.mfa_factors (user_id, secret_enc, confirmed_at) select id, 'x', now() from app.users where email = 'velvet@divafans.test' on conflict do nothing`);
+await db.query(`insert into app.staff_grants (user_id, capabilities, granted_by) select u.id, array['reports.view','reports.decide','content.hide','review.decide','takedowns.decide','appeals.decide'], (select id from app.users where role = 'owner') from app.users u where u.email = 'velvet@divafans.test'`);
 await db.query(`update app.safety_settings set moderators_enabled = true`);
-await db.query(`delete from app.mfa_factors where user_id = (select id from app.users where email = 'velvet@moonuke.test')`);
-const m = await signIn("velvet@moonuke.test");
+await db.query(`delete from app.mfa_factors where user_id = (select id from app.users where email = 'velvet@divafans.test')`);
+const m = await signIn("velvet@divafans.test");
 check("member with a grant → /staff is 404 (flag off)", (await m.page.goto(`${BASE}/staff`)).status() === 404);
 check("member with a grant → /admin/staff is 404", (await m.page.goto(`${BASE}/admin/staff`)).status() === 404);
 check("member with a grant → /admin/moderation is 404", (await m.page.goto(`${BASE}/admin/moderation`)).status() === 404);
-const c = await signIn("isadora@moonuke.test");
+const c = await signIn("isadora@divafans.test");
 check("creator → /staff is 404", (await c.page.goto(`${BASE}/staff`)).status() === 404);
 
-const om = await signIn("owner@moonuke.test", mobile);
+const om = await signIn("owner@divafans.test", mobile);
 await om.page.goto(`${BASE}/admin/staff`);
 await axe(om.page, "admin staff @390");
 await noOverflow(om.page, "admin staff @390");

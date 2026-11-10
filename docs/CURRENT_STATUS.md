@@ -2,7 +2,7 @@
 
 **Branch:** `claude/cool-noether-uvf5h7`. **Last code commit:** `96dd1d2`. **Deployed:** no. **Payments active:** no.
 
-**Brand:** renamed from MOONUKE to **Diva Fans** on 2026-11-10 (public branding, DF monogram, favicon, docs). Technical identifiers that still say `moonuke` are kept on purpose; see `docs/deployment.md` §7.
+**Brand:** **Diva Fans** (gold DF logo, black, gold and pink design system). See `docs/design-system.md` and `docs/deployment.md` §7.
 
 ## Completed phases
 
@@ -158,8 +158,8 @@ This was a **local** run. GitHub Actions did not run.
 - **CI:** GitHub Actions is paused. The workflow lives at `ci/github-actions.disabled.yml`. Its earlier runs never got a runner, which looked like a repository or account Actions/billing block. **Verification is local only (`pnpm verify`).**
 - **Environment used for development:** an ephemeral cloud container with a local PostgreSQL 16 cluster.
   - Data directory `/home/user/pgdata`, port `54329`.
-  - Databases: `moonuke` (dev), `moonuke_test`, `moonuke_e2e`.
+  - Databases: `divafans` (dev), `divafans_test`, `divafans_e2e`.
   - Container restarts stop Postgres. Restart it with:
     `su postgres -c "/usr/lib/postgresql/16/bin/pg_ctl -D /home/user/pgdata -l /home/user/pgdata/log.txt -o '-p 54329 -k /tmp' start"`
   - `.env.local` (not committed) holds `DATABASE_URL`, `APP_SECRET`, `TRUSTED_PROXY=none`, `ALLOW_LOCAL_PRODUCTION=true`, `EMAIL_TRANSPORT=dev`. Recreate it from `.env.example` if missing.
-- **Dev logins:** printed by `pnpm db:seed`. The password is `moonuke-dev-password`. The owner needs the dev TOTP secret, which is printed too and lives in `scripts/lib/totp.mjs`.
+- **Dev logins:** printed by `pnpm db:seed`. The password is `divafans-dev-password`. The owner needs the dev TOTP secret, which is printed too and lives in `scripts/lib/totp.mjs`.

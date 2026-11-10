@@ -1,8 +1,7 @@
 /**
  * Single source of truth for the product's identity.
- * The product was renamed from "Moonuke" to "Diva Fans". To rebrand again,
- * change this file (and the logo files under public/images/brand, plus the
- * app icons in src/app, if the mark changes). Nothing else in the app should
+ * To rebrand, change this file (and the logo files under public/images/brand,
+ * plus the app icons in src/app, if the mark changes). Nothing else in the app should
  * hard-code the name, domain, or sender identity.
  */
 export const brand = {

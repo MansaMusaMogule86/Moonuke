@@ -117,7 +117,7 @@ scripts/                   migrate, seed, create-owner, env-check, email-drain,
 | Variable | Purpose |
 |---|---|
 | `DATABASE_URL` | Postgres connection |
-| `APP_SECRET` | 32+ characters; legacy name `MOONUKE_SECRET` is still accepted |
+| `APP_SECRET` | 32+ characters |
 | `APP_URL` | Public base URL |
 | `TRUSTED_PROXY` | Which proxy header to trust for client IPs |
 | `EMAIL_TRANSPORT`, `SMTP_URL`, `EMAIL_FROM` | Email delivery |

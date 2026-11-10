@@ -11,7 +11,7 @@ const axePath = require.resolve("axe-core/axe.min.js");
 
 const BASE = process.env.BASE ?? "http://localhost:3000";
 const SHOTS = process.env.SHOTS;
-const PW = "moonuke-dev-password";
+const PW = "divafans-dev-password";
 if (SHOTS) fs.mkdirSync(SHOTS, { recursive: true });
 
 const results = [];
@@ -49,7 +49,7 @@ async function signIn(email, opts = desktop, password = PW) {
 }
 
 // ================================================================ dashboard
-const n = await signIn("nocturne@moonuke.test");
+const n = await signIn("nocturne@divafans.test");
 await n.page.goto(`${BASE}/library`);
 check("library: memberships listed", (await n.page.locator("section").filter({ has: n.page.getByRole("heading", { name: "Memberships" }) }).getByRole("listitem").count()) >= 3);
 check("library: following listed", (await n.page.locator("section").filter({ has: n.page.getByRole("heading", { name: "Following" }) }).getByRole("listitem").count()) === 2);
@@ -66,7 +66,7 @@ const src0 = await tiles.first().locator("img").getAttribute("src");
 const own = await n.ctx.request.get(`${BASE}${src0}`);
 check("vault media loads for its owner", own.status() === 200 && /image\/svg/.test(own.headers()["content-type"] ?? ""));
 check("vault media is not cacheable", /no-store/.test(own.headers()["cache-control"] ?? ""));
-const v = await signIn("velvet@moonuke.test");
+const v = await signIn("velvet@divafans.test");
 const stolen = await v.ctx.request.get(`${BASE}${src0}`);
 check("signed URL is useless to another member", stolen.status() === 404);
 const anon = await browser.newContext(desktop);
@@ -106,7 +106,7 @@ await n.page.getByText("will continue").waitFor();
 check("resume: membership continues", true);
 
 // ================================================================ notifications from a new post
-const c = await signIn("isadora@moonuke.test");
+const c = await signIn("isadora@divafans.test");
 await c.page.goto(`${BASE}/studio/posts/new`);
 await c.page.getByLabel("Teaser").fill("E2E fan notice");
 await c.page.getByLabel("Post", { exact: true }).fill("Body only members see.");
@@ -134,14 +134,14 @@ const velvetNotes = await v.page.goto(`${BASE}/notifications`);
 check("non-follower got nothing", velvetNotes.ok() && (await v.page.getByText("Nothing yet.").isVisible()));
 
 // ================================================================ access
-const o = await signIn("owner@moonuke.test");
+const o = await signIn("owner@divafans.test");
 check("owner /library → 404 (admin only)", (await o.page.goto(`${BASE}/library`)).status() === 404);
 const anonPage = await anon.newPage();
 await anonPage.goto(`${BASE}/library/vault`);
 check("signed out → sign in", /\/signin/.test(anonPage.url()));
 
 // ================================================================ mobile
-const nm = await signIn("nocturne@moonuke.test", mobile);
+const nm = await signIn("nocturne@divafans.test", mobile);
 for (const p of ["/library", "/library/vault", "/library/memberships", "/library/purchases", "/notifications"]) {
   await nm.page.goto(`${BASE}${p}`);
   await axe(nm.page, `${p} @390`);

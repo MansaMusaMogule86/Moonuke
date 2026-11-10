@@ -1,6 +1,6 @@
 # Phase 2: Invitation-only access, discovery and creator profiles
 
-Status: implemented on `claude/cool-noether-uvf5h7`. No MOONUKE PRD was in the repository, so this spec is built only from the Phase 1 and Phase 2 briefs. Anything those briefs do not settle is listed under **Decisions requiring approval**. Each one has a default that is easy to reverse.
+Status: implemented on `claude/cool-noether-uvf5h7`. No product PRD was in the repository, so this spec is built only from the Phase 1 and Phase 2 briefs. Anything those briefs do not settle is listed under **Decisions requiring approval**. Each one has a default that is easy to reverse.
 
 ## 1. Principles
 

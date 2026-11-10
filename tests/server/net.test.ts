@@ -65,14 +65,14 @@ describe("production env validation", () => {
     try {
       vi.stubEnv("NODE_ENV", "production");
       vi.stubEnv("VERCEL", "1");
-      vi.stubEnv("VERCEL_PROJECT_PRODUCTION_URL", "moonuke.vercel.app");
+      vi.stubEnv("VERCEL_PROJECT_PRODUCTION_URL", "divafans.vercel.app");
       vi.stubEnv("DATABASE_URL", "postgres://x");
-      for (const k of ["TRUSTED_PROXY", "APP_URL", "EMAIL_TRANSPORT", "APP_SECRET", "MOONUKE_SECRET", "ALLOW_LOCAL_PRODUCTION"]) vi.stubEnv(k, undefined);
+      for (const k of ["TRUSTED_PROXY", "APP_URL", "EMAIL_TRANSPORT", "APP_SECRET", "ALLOW_LOCAL_PRODUCTION"]) vi.stubEnv(k, undefined);
       const msg = load();
       expect(msg).toContain("APP_SECRET");
       expect(msg).not.toMatch(/TRUSTED_PROXY|APP_URL|EMAIL_TRANSPORT/);
       vi.stubEnv("APP_SECRET", "x".repeat(40));
-      expect(load()).toMatchObject({ TRUSTED_PROXY: "vercel", APP_URL: "https://moonuke.vercel.app", EMAIL_TRANSPORT: "disabled" });
+      expect(load()).toMatchObject({ TRUSTED_PROXY: "vercel", APP_URL: "https://divafans.vercel.app", EMAIL_TRANSPORT: "disabled" });
     } finally {
       vi.unstubAllEnvs();
       _resetEnvCache();

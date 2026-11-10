@@ -34,7 +34,7 @@ export default defineConfig({
           hookTimeout: 60_000,
           env: {
             NODE_ENV: "test",
-            DATABASE_URL: process.env.TEST_DATABASE_URL ?? "postgresql://postgres@localhost:54329/moonuke_test",
+            DATABASE_URL: process.env.TEST_DATABASE_URL ?? "postgresql://postgres@localhost:54329/divafans_test",
             APP_SECRET: "test-secret-test-secret-test-secret-0000",
           },
         },

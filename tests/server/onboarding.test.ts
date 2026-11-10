@@ -50,7 +50,7 @@ describe("white-glove cases", () => {
     const rows = await pipeline(await viewer(s.ownerId));
     const lio = rows.find((r) => r.name === "Lio Marchand")!;
     expect(lio).toMatchObject({ white_glove: true, user_id: null, stage: "applied" });
-    const rhea = rows.find((r) => r.email === "rhea@moonuke.test")!;
+    const rhea = rows.find((r) => r.email === "rhea@divafans.test")!;
     // Verification is submitted, so the next pending step is the owner's "Verified & live".
     expect(rhea).toMatchObject({ white_glove: true, stage: "live", pending_socials: 1 });
     expect(rhea.done).toMatchObject({ verification: true, live: false });

@@ -86,7 +86,7 @@ export function env(): Env {
     ...vercel,
     ...process.env,
     // Back-compat with the Phase 2 variable name.
-    APP_SECRET: process.env.APP_SECRET ?? process.env.MOONUKE_SECRET,
+    APP_SECRET: process.env.APP_SECRET,
   };
   const parsed = schema.safeParse(raw);
   if (!parsed.success) {

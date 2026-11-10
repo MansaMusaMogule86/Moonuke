@@ -31,7 +31,7 @@ const postOf = async (handle: string, access: string) =>
 async function moderator(caps: StaffCapability[], { switchOn = true } = {}): Promise<Viewer> {
   const owner = await viewer(s.ownerId);
   await enrolMfa(s.member2Id);
-  await grantStaff(owner, "velvet@moonuke.test", caps, "Trial reviewer", T);
+  await grantStaff(owner, "velvet@divafans.test", caps, "Trial reviewer", T);
   if (switchOn) await setModeratorsEnabled(owner, true, T);
   return { ...(await viewer(s.member2Id)), aal: 2, mfa: "verified", staff: caps };
 }
@@ -41,7 +41,7 @@ describe("inactive by default", () => {
     expect(featureEnabled("moderators")).toBe(false);
     const owner = await viewer(s.ownerId);
     await enrolMfa(s.member2Id);
-    await expect(grantStaff(owner, "velvet@moonuke.test", ["reports.view"], "")).rejects.toMatchObject({ code: "forbidden" });
+    await expect(grantStaff(owner, "velvet@divafans.test", ["reports.view"], "")).rejects.toMatchObject({ code: "forbidden" });
     await expect(setModeratorsEnabled(owner, true)).rejects.toMatchObject({ code: "forbidden" });
     await setModeratorsEnabled(owner, false);
     expect((await staffOverview(owner)).enabled).toBe(false);
@@ -66,11 +66,11 @@ describe("inactive by default", () => {
 describe("who can be a moderator, and who manages them", () => {
   it("only active members with two-step sign-in; never creators; owner-only management, audited", async () => {
     const owner = await viewer(s.ownerId);
-    await expect(grantStaff(owner, "velvet@moonuke.test", ["reports.view"], "", T)).rejects.toMatchObject({ field: "email" });
+    await expect(grantStaff(owner, "velvet@divafans.test", ["reports.view"], "", T)).rejects.toMatchObject({ field: "email" });
     await enrolMfa(s.creatorIds.isadora);
-    await expect(grantStaff(owner, "isadora@moonuke.test", ["reports.view"], "", T)).rejects.toMatchObject({ field: "email" });
-    await expect(grantStaff(owner, "velvet@moonuke.test", ["accounts.suspend"], "", T)).rejects.toMatchObject({ field: "capabilities" });
-    await expect(grantStaff(await viewer(s.memberId), "velvet@moonuke.test", ["reports.view"], "", T)).rejects.toMatchObject({ code: "forbidden" });
+    await expect(grantStaff(owner, "isadora@divafans.test", ["reports.view"], "", T)).rejects.toMatchObject({ field: "email" });
+    await expect(grantStaff(owner, "velvet@divafans.test", ["accounts.suspend"], "", T)).rejects.toMatchObject({ field: "capabilities" });
+    await expect(grantStaff(await viewer(s.memberId), "velvet@divafans.test", ["reports.view"], "", T)).rejects.toMatchObject({ code: "forbidden" });
     expect(await rlsError(s.memberId, `select app.grant_staff($1, array['reports.view'], '')`, [s.member2Id])).toBe("42501");
     expect(await rlsError(s.memberId, `select app.set_moderators_enabled(true)`)).toBe("42501");
     expect(await rlsError(s.member2Id, `insert into app.staff_grants (user_id, capabilities, granted_by) values ($1, array['reports.view'], $1)`, [s.member2Id])).toBe("42501");
@@ -123,7 +123,7 @@ describe("owner-only powers stay owner-only", () => {
     await expect(revealIdentity(m, pid, "Checking this person please")).rejects.toMatchObject({ code: "forbidden" });
     await expect(reviewParticipant(m, pid, "verified")).rejects.toMatchObject({ code: "forbidden" });
     await expect(setReviewMode(m, "all")).rejects.toMatchObject({ code: "forbidden" });
-    await expect(grantStaff(m, "nocturne@moonuke.test", ["reports.view"], "", T)).rejects.toMatchObject({ code: "forbidden" });
+    await expect(grantStaff(m, "nocturne@divafans.test", ["reports.view"], "", T)).rejects.toMatchObject({ code: "forbidden" });
     await submitTakedown({ category: "impersonation", requesterRole: "depicted_person", name: "Private Person", email: "private@example.test", signature: "Private Person", location: "somewhere", goodFaith: true });
     const [n] = await takedownQueue(m);
     await expect(takedownContact(m, n.id)).rejects.toMatchObject({ code: "forbidden" });

@@ -12,7 +12,7 @@ import { totp, freshCode, DEV_OWNER_TOTP_SECRET } from "./lib/totp.mjs";
 
 const BASE = process.env.BASE ?? "http://localhost:3000";
 const SHOTS = process.env.SHOTS;
-const PW = "moonuke-dev-password";
+const PW = "divafans-dev-password";
 if (SHOTS) fs.mkdirSync(SHOTS, { recursive: true });
 const db = new Client({ connectionString: process.env.DATABASE_URL });
 await db.connect();
@@ -52,7 +52,7 @@ async function signIn(email, password = PW, opts = desktop) {
 }
 let ownerSecret = DEV_OWNER_TOTP_SECRET;
 async function ownerSignIn(opts = desktop) {
-  const o = await signIn("owner@moonuke.test", PW, opts);
+  const o = await signIn("owner@divafans.test", PW, opts);
   await o.page.getByLabel("Code").fill(await freshCode(ownerSecret));
   await o.page.getByRole("button", { name: "Verify" }).click();
   await o.page.waitForURL(/\/admin/);
@@ -67,11 +67,11 @@ async function ownerSignIn(opts = desktop) {
   await page.getByRole("link", { name: "Forgot your password?" }).click();
   await page.waitForURL(/\/forgot$/);
   await axe(page, "/forgot @1440");
-  await page.getByLabel("Email").fill("velvet@moonuke.test");
+  await page.getByLabel("Email").fill("velvet@divafans.test");
   await page.getByRole("button", { name: "Send reset link" }).click();
   await page.getByText("If an account uses that address").waitFor();
   check("forgot: generic confirmation", true);
-  const body = await lastMail("velvet@moonuke.test", "password_reset");
+  const body = await lastMail("velvet@divafans.test", "password_reset");
   const link = body?.match(/https?:\/\/\S+\/reset\/[A-Za-z0-9_-]{43}/)?.[0];
   check("reset email queued with link", !!link);
   await page.goto(link.replace(/^https?:\/\/[^/]+/, BASE));
@@ -90,7 +90,7 @@ async function ownerSignIn(opts = desktop) {
   await page.getByRole("button", { name: "Send reset link" }).click();
   await page.getByText("If an account uses that address").waitFor();
   check("forgot: unknown email gets identical response", true);
-  const v = await signIn("velvet@moonuke.test", "velvet-new-password-1");
+  const v = await signIn("velvet@divafans.test", "velvet-new-password-1");
   check("new password works", v.page.url().endsWith("/discover"));
   await v.ctx.close();
   await ctx.close();
@@ -99,7 +99,7 @@ async function ownerSignIn(opts = desktop) {
 // ---- (later sections are appended by subsequent Phase 3 commits) ----
 // ================================================================ MFA: owner challenge
 {
-  const o = await signIn("owner@moonuke.test");
+  const o = await signIn("owner@divafans.test");
   check("owner sign-in → two-step challenge", o.page.url().endsWith("/signin/verify"));
   await shot(o.page, "mfa-verify-desktop");
   await axe(o.page, "/signin/verify @1440");
@@ -121,7 +121,7 @@ async function ownerSignIn(opts = desktop) {
 // ================================================================ MFA: mandatory owner enrolment
 {
   await db.query(`delete from app.mfa_factors where user_id = (select id from app.users where role = 'owner')`);
-  const o = await signIn("owner@moonuke.test");
+  const o = await signIn("owner@divafans.test");
   check("owner without MFA → forced setup", /\/account\/security\?setup=required/.test(o.page.url()), o.page.url());
   for (const p of ["/admin", "/admin/invitations", "/discover"]) {
     await o.page.goto(`${BASE}${p}`);
@@ -147,8 +147,8 @@ async function ownerSignIn(opts = desktop) {
 
 // ================================================================ member: optional MFA, recovery code, sessions, password
 {
-  const a = await signIn("nocturne@moonuke.test");
-  const b = await signIn("nocturne@moonuke.test");
+  const a = await signIn("nocturne@divafans.test");
+  const b = await signIn("nocturne@divafans.test");
   await a.page.goto(`${BASE}/account/security`);
   await axe(a.page, "/account/security @1440");
   check("sessions list shows both sessions", (await a.page.getByText(/Signed in .* last active/).count()) === 2);
@@ -166,13 +166,13 @@ async function ownerSignIn(opts = desktop) {
   const codes = (await a.page.getByTestId("recovery-codes").textContent()).trim().split(/\s+/);
   await shot(a.page, "mfa-codes-desktop");
 
-  const c = await signIn("nocturne@moonuke.test");
+  const c = await signIn("nocturne@divafans.test");
   check("member with MFA → challenge", c.page.url().endsWith("/signin/verify"));
   await c.page.getByLabel("Code").fill(codes[0]);
   await c.page.getByRole("button", { name: "Verify" }).click();
   await c.page.waitForURL(/\/discover/);
   check("recovery code signs in", c.page.url().endsWith("/discover"));
-  const d = await signIn("nocturne@moonuke.test");
+  const d = await signIn("nocturne@divafans.test");
   await d.page.getByLabel("Code").fill(codes[0]);
   await d.page.getByRole("button", { name: "Verify" }).click();
   await formAlert(d.page).waitFor();
@@ -199,7 +199,7 @@ async function ownerSignIn(opts = desktop) {
 
 // ================================================================ safety: report, auto-hide, moderation, blocking
 {
-  const v = await signIn("velvet@moonuke.test", "velvet-new-password-1");
+  const v = await signIn("velvet@divafans.test", "velvet-new-password-1");
   await v.page.goto(`${BASE}/c/isadora`);
   await v.page.getByRole("button", { name: "Report", exact: true }).click();
   const sheet = v.page.getByRole("dialog");
@@ -281,10 +281,10 @@ async function ownerSignIn(opts = desktop) {
 
 // ================================================================ creator verification
 {
-  const m = await signIn("velvet@moonuke.test", "velvet-new-password-1");
+  const m = await signIn("velvet@divafans.test", "velvet-new-password-1");
   const hiddenRes = await m.page.goto(`${BASE}/c/rhea`);
   check("unverified creator profile 404 for members", hiddenRes.status() === 404);
-  const r = await signIn("rhea@moonuke.test");
+  const r = await signIn("rhea@divafans.test");
   check("creator nav shows Studio", await r.page.getByRole("navigation", { name: "Club" }).first().getByRole("link", { name: "Studio" }).isVisible());
   await r.page.goto(`${BASE}/studio`);
   check("studio shows submitted status", await r.page.getByText("Submitted", { exact: true }).isVisible());
@@ -318,7 +318,7 @@ async function ownerSignIn(opts = desktop) {
 {
   const o = await ownerSignIn();
   await o.page.goto(`${BASE}/admin`);
-  const row = o.page.getByRole("listitem").filter({ hasText: "satellite@moonuke.test" });
+  const row = o.page.getByRole("listitem").filter({ hasText: "satellite@divafans.test" });
   check("application row starts pending", (await row.getByTestId("row-status").textContent()).trim() === "pending");
   await row.getByRole("button", { name: "Approve" }).click();
   await row.getByText("Approved. The account is now active.").waitFor();
@@ -326,7 +326,7 @@ async function ownerSignIn(opts = desktop) {
   check("decision buttons removed after decision", (await row.getByRole("button", { name: "Approve" }).count()) === 0);
   await row.getByRole("button", { name: "Done" }).click();
   await o.page.waitForTimeout(1200);
-  check("Done refreshes: decided application leaves the queue", (await o.page.getByRole("listitem").filter({ hasText: "satellite@moonuke.test" }).count()) === 0);
+  check("Done refreshes: decided application leaves the queue", (await o.page.getByRole("listitem").filter({ hasText: "satellite@divafans.test" }).count()) === 0);
 
   await o.page.goto(`${BASE}/admin/referrals`);
   const ref = o.page.getByRole("listitem").filter({ hasText: "celeste@example.com" });

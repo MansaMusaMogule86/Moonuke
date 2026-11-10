@@ -30,7 +30,7 @@ describe("creator verification gates profile visibility", () => {
     expect(await getProfile(await viewer(s.member2Id), "rhea")).toBeNull();
     expect(await reviewVerification(owner, s.creatorIds.rhea, "verify", { checks: all })).toMatchObject({ status: "verified", published: true });
     expect(await getProfile(await viewer(s.member2Id), "rhea")).not.toBeNull();
-    const mail = await system((q) => q.one(`select 1 from app.email_outbox where template = 'creator_verified' and to_email = 'rhea@moonuke.test'`));
+    const mail = await system((q) => q.one(`select 1 from app.email_outbox where template = 'creator_verified' and to_email = 'rhea@divafans.test'`));
     expect(mail).toBeTruthy();
     await reviewVerification(owner, s.creatorIds.rhea, "unpublish");
     expect(await getProfile(await viewer(s.member2Id), "rhea")).toBeNull();

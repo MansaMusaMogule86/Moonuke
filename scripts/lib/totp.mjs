@@ -1,9 +1,21 @@
 // Independent RFC 6238 TOTP implementation for browser tests (deliberately
 // not shared with the app, so the tests check the server against the spec).
-import { createHmac } from "node:crypto";
+import { createHash, createHmac } from "node:crypto";
 
 /** Dev-seed owner authenticator secret (base32). Development data only. */
 export const DEV_OWNER_TOTP_SECRET = "JBSWY3DPEHPK3PXPDIVAFANSDEVSEED2";
+
+/** Dev-seed authenticator secret for any seeded account (mirrors devTotpSecret in src/server/seed). */
+export function devTotpSecretFor(email) {
+  if (email === "owner@divafans.test") return DEV_OWNER_TOTP_SECRET;
+  const bytes = createHash("sha256").update(`divafans-dev-totp:${email}`).digest().subarray(0, 20);
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+  let bits = "";
+  for (const b of bytes) bits += b.toString(2).padStart(8, "0");
+  let out = "";
+  for (let i = 0; i + 5 <= bits.length; i += 5) out += alphabet[parseInt(bits.slice(i, i + 5), 2)];
+  return out;
+}
 
 export function base32Decode(s) {
   const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";

@@ -5,6 +5,7 @@ import { requestMeta } from "@/server/auth/request";
 import { isAppError } from "@/server/errors";
 import { inspectInvitation } from "@/server/services/accounts";
 import { hitIp, LIMITS } from "@/server/services/rateLimit";
+import { ActivateForm } from "./ActivateForm";
 import { ApplyForm } from "./ApplyForm";
 
 // The token is a credential: never index it, never leak it in a Referer.
@@ -48,6 +49,22 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
   }
 
   const roleLabel = invitation.role === "creator" ? "creator" : "member";
+  if (invitation.activation) {
+    return (
+      <AuthShell
+        eyebrow="Invitation · creator"
+        title={<>Activate your <em className="text-metal">creator account.</em></>}
+        lede={
+          <p>
+            Creator accounts are by invitation only. Enter the temporary password you were given separately, then
+            choose your own. Next you&apos;ll sign in and set up two-step sign-in before your studio opens.
+          </p>
+        }
+      >
+        <ActivateForm token={token} />
+      </AuthShell>
+    );
+  }
   return (
     <AuthShell
       eyebrow={`Invitation · ${roleLabel}`}

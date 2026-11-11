@@ -11,11 +11,21 @@ export async function resetDb(): Promise<SeedResult> {
 
 export async function viewer(id: string): Promise<Viewer> {
   const v = await system((q) =>
-    q.one<Omit<Viewer, "aal" | "mfa">>(`select id, role, status, alias::text as alias, email::text as email from app.users where id = $1`, [id]),
+    q.one<Omit<Viewer, "aal" | "mfa">>(
+      `select id, role, status, alias::text as alias, email::text as email, email_verified_at is not null as "emailVerified" from app.users where id = $1`,
+      [id],
+    ),
   );
   if (!v) throw new Error(`no user ${id}`);
-  // Tests model an owner who has completed two-step sign-in in this session.
-  return { ...v, aal: v.role === "owner" ? 2 : 1, mfa: v.role === "owner" ? "verified" : "none" };
+  // Tests model an owner, or a creator, who has completed two-step sign-in in this session
+  // (both are required to; tests that check the gate itself build their Viewer explicitly).
+  const twoStep = v.role === "owner" || v.role === "creator";
+  return { ...v, aal: twoStep ? 2 : 1, mfa: twoStep ? "verified" : "none" };
+}
+
+/** Explicit test-only allowlist entry for a fixture creator address (live production ignores this source). */
+export async function allowCreatorFixture(email: string) {
+  await system((q) => q.query(`insert into app.creator_allowlist (email, source) values ($1, 'test_fixture') on conflict do nothing`, [email.toLowerCase()]));
 }
 
 /** Run raw SQL as a given viewer under RLS and return the Postgres error code, if any. */

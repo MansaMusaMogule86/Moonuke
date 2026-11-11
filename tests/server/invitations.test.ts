@@ -32,12 +32,12 @@ describe("invitation issuance", () => {
 
   it("returns the token once and stores only its SHA-256 hash", async () => {
     const owner = await viewer(s.ownerId);
-    const inv = await createInvitation(owner, { role: "creator", maxUses: 2, expiresInDays: 3, note: "test" });
+    const inv = await createInvitation(owner, { role: "member", maxUses: 2, expiresInDays: 3, note: "test" });
     expect(inv.token).toMatch(/^[A-Za-z0-9_-]{43}$/);
     const dump = await system((q) => q.one<{ t: string }>(`select row_to_json(i)::text as t from app.invitations i where id = $1`, [inv.id]));
     expect(dump!.t).not.toContain(inv.token);
     const list = await listInvitations(owner);
-    expect(list.find((i) => i.id === inv.id)).toMatchObject({ state: "active", max_uses: 2, intended_role: "creator" });
+    expect(list.find((i) => i.id === inv.id)).toMatchObject({ state: "active", max_uses: 2, intended_role: "member" });
   });
 
   it("cannot issue an owner invitation (DB constraint)", async () => {

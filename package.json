@@ -20,6 +20,7 @@
     "blasts:run": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/blasts-run.ts",
     "maintenance": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/maintenance.ts",
     "security:run": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/security-run.ts",
+    "creators:provision": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/provision-creators.ts",
     "verify": "node scripts/verify.mjs",
     "verify:quick": "node scripts/verify.mjs --quick"
   },

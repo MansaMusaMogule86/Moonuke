@@ -47,6 +47,8 @@ export type Viewer = {
   mfa: MfaState;
   /** Public handle of the current session (never the token or its hash). */
   sessionId?: string;
+  /** Whether the account's email address has been confirmed (required for creator permissions). */
+  emailVerified?: boolean;
   /**
    * Effective moderator capabilities (Phase 11). Empty unless the moderator
    * role is switched on, this member holds a grant, and the session is AAL2.
@@ -59,8 +61,10 @@ export type Viewer = {
  * AAL2 (a second factor verified in this session) for ANY permission —
  * mirrored in the database by app.is_owner() checking app.aal.
  */
-export function can(viewer: Pick<Viewer, "role" | "status" | "aal"> | null | undefined, permission: Permission): boolean {
+export function can(viewer: Pick<Viewer, "role" | "status" | "aal" | "emailVerified"> | null | undefined, permission: Permission): boolean {
   if (!viewer || viewer.status !== "active") return false;
   if (viewer.role === "owner" && viewer.aal !== 2) return false;
+  // Creators: a second factor verified in this session AND a confirmed email address, for every permission.
+  if (viewer.role === "creator" && (viewer.aal !== 2 || viewer.emailVerified !== true)) return false;
   return matrix[viewer.role].includes(permission);
 }

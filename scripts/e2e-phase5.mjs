@@ -4,7 +4,7 @@
 //   BASE=http://localhost:3000 SHOTS=./screenshots node scripts/e2e-phase5.mjs
 import { createRequire } from "node:module";
 import fs from "node:fs";
-import { freshCode, DEV_OWNER_TOTP_SECRET } from "./lib/totp.mjs";
+import { freshCode, DEV_OWNER_TOTP_SECRET, devTotpSecretFor } from "./lib/totp.mjs";
 const require = createRequire(import.meta.url);
 const { chromium } = require("playwright");
 const axePath = require.resolve("axe-core/axe.min.js");
@@ -41,7 +41,7 @@ async function signIn(email, opts = desktop, password = PW) {
   await page.getByRole("button", { name: "Sign in" }).click();
   await page.waitForURL(/\/(discover|pending|signin\/verify)/);
   if (page.url().endsWith("/signin/verify")) {
-    await page.getByLabel("Code").fill(await freshCode(DEV_OWNER_TOTP_SECRET));
+    await page.getByLabel("Code").fill(await freshCode(devTotpSecretFor(email)));
     await page.getByRole("button", { name: "Verify" }).click();
     await page.waitForURL(/\/(admin|discover)/);
   }

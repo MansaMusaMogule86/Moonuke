@@ -8,8 +8,8 @@ import { SignInForm } from "./SignInForm";
 
 export const metadata: Metadata = { title: "Sign in", robots: { index: false } };
 
-export default async function SignInPage({ searchParams }: { searchParams: Promise<{ reset?: string }> }) {
-  const { reset } = await searchParams;
+export default async function SignInPage({ searchParams }: { searchParams: Promise<{ reset?: string; activated?: string }> }) {
+  const { reset, activated } = await searchParams;
   const viewer = await getViewer();
   if (viewer) redirect(viewer.mfa === "pending" ? "/signin/verify" : viewer.status === "active" ? "/discover" : "/pending");
   return (
@@ -27,6 +27,11 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
         </p>
       }
     >
+      {activated === "1" && (
+        <p role="status" className="mb-8 rounded-[var(--radius-md)] border border-gold/35 bg-gold/[0.06] px-4 py-3 text-[14px] text-gold-soft">
+          Your creator account is active. Sign in with your new password; you&apos;ll set up two-step sign-in next.
+        </p>
+      )}
       {reset === "1" && (
         <p role="status" className="mb-8 rounded-[var(--radius-md)] border border-gold/35 bg-gold/[0.06] px-4 py-3 text-[14px] text-gold-soft">
           Your password was changed and every session was signed out. Sign in with the new password.

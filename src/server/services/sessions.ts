@@ -24,8 +24,9 @@ export async function createSession(userId: string, userAgent: string | null, q?
 export async function resolveSession(token: string | undefined | null): Promise<Viewer | null> {
   if (!token || token.length > 100) return null;
   return system(async (q) => {
-    const row = await q.one<Omit<Viewer, "aal" | "mfa"> & { last_seen_at: Date; has_factor: boolean; mfa_verified: boolean; public_id: string }>(
+    const row = await q.one<Omit<Viewer, "aal" | "mfa"> & { last_seen_at: Date; has_factor: boolean; mfa_verified: boolean; public_id: string; email_verified: boolean }>(
       `select u.id, u.role, u.status, u.alias::text as alias, u.email::text as email, s.last_seen_at, s.public_id,
+              u.email_verified_at is not null as email_verified,
               (f.confirmed_at is not null) as has_factor, (s.mfa_verified_at is not null) as mfa_verified
          from app.sessions s join app.users u on u.id = s.user_id
          left join app.mfa_factors f on f.user_id = u.id
@@ -57,6 +58,7 @@ export async function resolveSession(token: string | undefined | null): Promise<
       mfa,
       aal,
       sessionId: row.public_id,
+      emailVerified: row.email_verified,
       staff,
     };
   });

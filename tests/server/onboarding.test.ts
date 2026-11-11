@@ -1,5 +1,6 @@
 import { afterAll, beforeEach, describe, expect, it } from "vitest";
 import { redeemInvitation } from "@/server/services/accounts";
+import { confirmEmail, emailVerificationToken } from "@/server/services/emailVerification";
 import { getProfile } from "@/server/services/club";
 import { getOnboarding, reviewVerification, submitVerification } from "@/server/services/creatorOnboarding";
 import {
@@ -21,7 +22,7 @@ import {
 import { checkText, sanitizeCopy } from "@/server/ai/safety";
 import { draftFromTemplate } from "@/server/ai/template";
 import type { SeedResult } from "@/server/seed";
-import { asViewer, closePool, meta, resetDb, rlsError, system, viewer } from "./helpers";
+import { asViewer, closePool, meta, resetDb, rlsError, system, viewer, allowCreatorFixture } from "./helpers";
 
 let s: SeedResult;
 beforeEach(async () => {
@@ -34,6 +35,7 @@ const activate = (id: string) => system((q) => q.query(`update app.users set sta
 describe("white-glove cases", () => {
   it("issues a single-use, email-locked creator invite and links the case on redemption", async () => {
     const owner = await viewer(s.ownerId);
+    await allowCreatorFixture("ines@example.com"); // creator invitations need an allowlisted address
     const c = await openWhiteGloveCase(owner, { name: "Ines Moreau", email: "ines@example.com", note: "Referred by Isadora" });
     const inv = await system((q) => q.one<{ max_uses: number; email: string; intended_role: string }>(
       `select i.max_uses, i.email::text as email, i.intended_role from app.invitations i join app.onboarding_cases c on c.invitation_id = i.id where c.id = $1`, [c.caseId]));
@@ -193,8 +195,10 @@ describe("AI-assisted profile preparation", () => {
 describe("end-to-end approval workflow", () => {
   it("invite → apply → approve → house proposal → accept → social verified → submit → verify → live", async () => {
     const owner = await viewer(s.ownerId);
+    await allowCreatorFixture("ines@example.com");
     const c = await openWhiteGloveCase(owner, { name: "Ines Moreau", email: "ines@example.com" });
     const { userId } = await redeemInvitation(c.token, { alias: "Ines M", email: "ines@example.com", password: "a-long-enough-password" }, meta);
+    expect(await confirmEmail(emailVerificationToken(userId), meta)).toBe(true); // creators must confirm their address
     await activate(userId);
     const ines = await viewer(userId);
     await proposeProfile(owner, userId, { handle: "ines_m", displayName: "Ines Moreau", discipline: "Dancer", category: "movement", tagline: "Contemporary, close up." }, { aiAssisted: true });

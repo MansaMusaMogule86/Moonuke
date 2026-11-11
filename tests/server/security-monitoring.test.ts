@@ -10,7 +10,7 @@ import { redeemInvitation, signIn } from "@/server/services/accounts";
 import { verifyChallenge } from "@/server/services/mfa";
 import { getEvent, listEvents, securityOverview, updateAlert } from "@/server/services/securityMonitor";
 import { resolveSession } from "@/server/services/sessions";
-import { DEV_OWNER_TOTP_SECRET, DEV_PASSWORD, type SeedResult } from "@/server/seed";
+import { CREATOR_INVITE_EMAIL, DEV_OWNER_TOTP_SECRET, DEV_PASSWORD, type SeedResult } from "@/server/seed";
 import { asViewer, closePool, resetDb, rlsError, system, viewer } from "./helpers";
 
 let s: SeedResult;
@@ -168,7 +168,7 @@ describe("registration and creator applications", () => {
   });
 
   it("a creator invitation is also a creator application, referencing the real application row", async () => {
-    const { userId } = await redeemInvitation(s.creatorInviteToken, applicant(2), req());
+    const { userId } = await redeemInvitation(s.creatorInviteToken, { ...applicant(2), email: CREATOR_INVITE_EMAIL }, req());
     const [c] = await events("creator.application.submitted");
     const app = await system((q) => q.one<{ id: string; status: string }>(`select id, status from app.applications where user_id = $1`, [userId]));
     expect(c.metadata).toEqual({ application_id: app!.id, review_status: "pending" });
@@ -178,7 +178,7 @@ describe("registration and creator applications", () => {
   it("an invalid invitation records nothing; repeated callbacks don't duplicate", async () => {
     await expect(redeemInvitation("x".repeat(43), applicant(3), req())).rejects.toMatchObject({ code: "invalid_invitation" });
     expect(await events()).toHaveLength(0);
-    const { userId } = await redeemInvitation(s.creatorInviteToken, applicant(4), req());
+    const { userId } = await redeemInvitation(s.creatorInviteToken, { ...applicant(4), email: CREATOR_INVITE_EMAIL }, req());
     const app = await system((q) => q.one<{ id: string; invitation_id: string }>(`select id, invitation_id from app.applications where user_id = $1`, [userId]));
     await recordRegistration({ userId, role: "creator", invitationId: app!.invitation_id, applicationId: app!.id }, req().security);
     expect(await events("auth.registration.completed")).toHaveLength(1);
@@ -187,7 +187,7 @@ describe("registration and creator applications", () => {
 
   it("optional immediate email for creator applications links to the protected console only", async () => {
     await system((q) => q.query(`update app.monitoring_settings set immediate_creator_application = true`));
-    await redeemInvitation(s.creatorInviteToken, applicant(5), req());
+    await redeemInvitation(s.creatorInviteToken, { ...applicant(5), email: CREATOR_INVITE_EMAIL }, req());
     const mail = await system((q) => q.one<{ body_text: string; to_email: string }>(`select body_text, to_email::text from app.email_outbox where template = 'security_alert'`));
     expect(mail!.to_email).toBe("owner@divafans.test");
     expect(mail!.body_text).toMatch(/\/admin\/security/);

@@ -9,12 +9,13 @@ import { enqueue } from "@/server/email/outbox";
 import { emails } from "@/server/email/templates";
 import { appUrl } from "@/server/env";
 import { emailVerificationToken } from "./emailVerification";
-import { createSession } from "./sessions";
+import { creatorEmailAllowed } from "@/server/auth/creatorAllowlist";
+import { createSession, revokeAllSessions } from "./sessions";
 
 const INVALID = "This invitation is no longer valid.";
 const TOKEN_RE = /^[A-Za-z0-9_-]{43}$/;
 
-export type InvitationPreview = { role: Exclude<Role, "owner">; emailLocked: boolean; expiresAt: Date };
+export type InvitationPreview = { role: Exclude<Role, "owner">; emailLocked: boolean; expiresAt: Date; activation: boolean };
 
 /**
  * Checks an invitation token without consuming it. Every failure mode
@@ -24,12 +25,12 @@ export type InvitationPreview = { role: Exclude<Role, "owner">; emailLocked: boo
 export async function inspectInvitation(token: string): Promise<InvitationPreview | null> {
   if (!TOKEN_RE.test(token)) return null;
   return system(async (q) => {
-    const row = await q.one<{ intended_role: "member" | "creator"; email: string | null; expires_at: Date }>(
-      `select intended_role, email, expires_at from app.invitations
+    const row = await q.one<{ intended_role: "member" | "creator"; email: string | null; expires_at: Date; activation: boolean }>(
+      `select intended_role, email, expires_at, activates_user_id is not null as activation from app.invitations
         where token_hash = $1 and revoked_at is null and expires_at > now() and use_count < max_uses`,
       [sha256(token)],
     );
-    return row ? { role: row.intended_role, emailLocked: !!row.email, expiresAt: row.expires_at } : null;
+    return row ? { role: row.intended_role, emailLocked: !!row.email, expiresAt: row.expires_at, activation: row.activation } : null;
   });
 }
 
@@ -50,15 +51,20 @@ export async function redeemInvitation(
   const passwordHash = await hashPassword(input.password);
 
   const done = await system(async (q) => {
+    // Activation links complete a provisioned account (activateProvisionedAccount), never create one.
     const inv = await q.one<{ id: string; intended_role: Role; email: string | null }>(
       `update app.invitations set use_count = use_count + 1
-        where token_hash = $1 and revoked_at is null and expires_at > now() and use_count < max_uses
+        where token_hash = $1 and revoked_at is null and expires_at > now() and use_count < max_uses and activates_user_id is null
         returning id, intended_role, email::text as email`,
       [sha256(token)],
     );
     if (!inv) throw new AppError("invalid_invitation", INVALID);
     if (inv.email && inv.email.toLowerCase() !== input.email.toLowerCase()) {
       throw new AppError("validation", "This invitation was issued for a different email address.", "email");
+    }
+    // Creator invitations are bound to an allowlisted address (the database guard enforces the same).
+    if (inv.intended_role === "creator" && (!inv.email || !(await creatorEmailAllowed(q, inv.email)))) {
+      throw new AppError("invalid_invitation", INVALID);
     }
 
     const clash = await q.one<{ email_taken: boolean; alias_taken: boolean }>(
@@ -110,14 +116,19 @@ export async function signIn(
   const fail = new AppError("invalid_credentials", "That email and password don't match an account.");
   const ctx = contextFromMeta(meta);
   const row = await system((q) =>
-    q.one<Omit<Viewer, "aal" | "mfa"> & { password_hash: string; has_factor: boolean }>(
-      `select u.id, u.role, u.status, u.alias::text as alias, u.email::text as email, u.password_hash,
+    q.one<Omit<Viewer, "aal" | "mfa"> & { password_hash: string; has_factor: boolean; must_change_password: boolean }>(
+      `select u.id, u.role, u.status, u.alias::text as alias, u.email::text as email, u.password_hash, u.must_change_password,
               exists (select 1 from app.mfa_factors f where f.user_id = u.id and f.confirmed_at is not null) as has_factor
          from app.users u where u.email = $1`,
       [email],
     ),
   );
   const ok = await verifyPassword(password, row?.password_hash ?? (await dummyHash()));
+  // A provisioned account must be activated (temporary password replaced) before any session exists.
+  if (row && ok && row.must_change_password) {
+    await system((q) => audit(q, { actorId: row.id, action: "auth.signin_activation_required", ipHash: meta.ipHash }));
+    throw new AppError("forbidden", "Finish activating your account with the link in your invitation email first.");
+  }
   if (!row || !ok) {
     await system((q) => audit(q, { actorId: row?.id ?? null, action: "auth.signin_failed", ipHash: meta.ipHash }));
     await recordLoginFailure(email, row?.id ?? null, ctx, "bad_credentials");
@@ -132,7 +143,7 @@ export async function signIn(
     const sessionToken = await createSession(row.id, meta.userAgent, q);
     await audit(q, { actorId: row.id, action: "auth.signin", ipHash: meta.ipHash });
     const session = await q.one<{ public_id: string }>(`select public_id from app.sessions where id_hash = $1`, [sha256(sessionToken)]);
-    const { password_hash: _ph, has_factor, ...rest } = row;
+    const { password_hash: _ph, has_factor, must_change_password: _mc, ...rest } = row;
     const viewer: Viewer = { ...rest, mfa: has_factor ? "pending" : "none", aal: 1, sessionId: session!.public_id };
     return { sessionToken, viewer };
   });
@@ -142,6 +153,45 @@ export async function signIn(
     await recordLoginSuccess({ userId: out.viewer.id, role: out.viewer.role, sessionRef: out.viewer.sessionId!, method: "password" }, ctx);
   }
   return out;
+}
+
+export type Activation = { temporaryPassword: string; password: string };
+
+/**
+ * Activate a provisioned creator from their single-use, email-bound link:
+ * the link proves the address, the temporary password proves the bootstrap
+ * secret, and the new password replaces it. A wrong temporary password
+ * doesn't consume the link (the transaction rolls back); attempts are rate
+ * limited by the caller. Same message for every failure.
+ */
+export async function activateProvisionedAccount(token: string, input: Activation, meta: { ipHash: string | null }): Promise<void> {
+  if (!TOKEN_RE.test(token)) throw new AppError("invalid_invitation", INVALID);
+  if (input.temporaryPassword === input.password) throw new AppError("validation", "Choose a new password, different from the temporary one.", "password");
+  const passwordHash = await hashPassword(input.password);
+  await system(async (q) => {
+    const inv = await q.one<{ id: string; user_id: string; email: string }>(
+      `update app.invitations set use_count = use_count + 1
+        where token_hash = $1 and revoked_at is null and expires_at > now() and use_count < max_uses and activates_user_id is not null
+        returning id, activates_user_id as user_id, email::text as email`,
+      [sha256(token)],
+    );
+    // Bound to its address: the account must still have exactly that email and be awaiting activation.
+    const u = inv && (await q.one<{ id: string; password_hash: string; created_by: string | null }>(
+      `select u.id, u.password_hash, i.created_by from app.users u join app.invitations i on i.id = $3
+        where u.id = $1 and u.email = $2 and u.must_change_password and u.status = 'pending'`,
+      [inv.user_id, inv.email, inv.id],
+    ));
+    if (!inv || !u || !(await verifyPassword(input.temporaryPassword, u.password_hash))) throw new AppError("invalid_invitation", INVALID);
+    if (!(await creatorEmailAllowed(q, inv.email))) throw new AppError("invalid_invitation", INVALID);
+    await q.query(
+      `update app.users set password_hash = $2, must_change_password = false, email_verified_at = coalesce(email_verified_at, now()),
+              adult_attested_at = now(), status = 'active', approved_at = coalesce(approved_at, now()), approved_by = coalesce(approved_by, $3), updated_at = now()
+        where id = $1`,
+      [u.id, passwordHash, u.created_by],
+    );
+    await revokeAllSessions(u.id, q);
+    await audit(q, { actorId: u.id, action: "account.activate", targetType: "invitation", targetId: inv.id, ipHash: meta.ipHash });
+  });
 }
 
 /** Bootstrap the single platform owner (CLI / seed only). */

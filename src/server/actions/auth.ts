@@ -8,11 +8,11 @@ import type { FormState } from "@/lib/forms";
 import { clearSession, requestMeta, setSessionCookie } from "@/server/auth/request";
 import { bucketKey } from "@/server/auth/crypto";
 import { isAppError } from "@/server/errors";
-import { redeemInvitation, signIn } from "@/server/services/accounts";
+import { activateProvisionedAccount, redeemInvitation, signIn } from "@/server/services/accounts";
 import { confirmEmail } from "@/server/services/emailVerification";
 import { recordLoginFailure } from "@/server/security/monitor";
 import { hit, hitIp, LIMITS } from "@/server/services/rateLimit";
-import { applySchema, fieldErrors, forgotSchema, resetSchema, signinSchema } from "@/server/validation";
+import { activateSchema, applySchema, fieldErrors, forgotSchema, resetSchema, signinSchema } from "@/server/validation";
 
 const str = (fd: FormData, k: string) => (typeof fd.get(k) === "string" ? (fd.get(k) as string) : "");
 
@@ -39,7 +39,7 @@ export async function signInAction(_prev: FormState, fd: FormData): Promise<Form
     throw e;
   }
   if (mfa === "pending") redirect("/signin/verify");
-  if (role === "owner" && mfa === "none") redirect("/account/security?setup=required");
+  if ((role === "owner" || role === "creator") && mfa === "none") redirect("/account/security?setup=required");
   redirect(status === "active" ? "/discover" : "/pending");
 }
 
@@ -83,6 +83,29 @@ export async function confirmEmailAction(token: string, _prev: FormState): Promi
     if (isAppError(e)) return { status: "error", message: e.message };
     throw e;
   }
+}
+
+/** Activate a provisioned creator account. Never echoes passwords; same limits as applications. */
+export async function activateAction(token: string, _prev: FormState, fd: FormData): Promise<FormState> {
+  const values = { adult: str(fd, "adult"), terms: str(fd, "terms") };
+  const parsed = activateSchema.safeParse({
+    temporaryPassword: str(fd, "temporaryPassword"),
+    password: str(fd, "password"),
+    confirm: str(fd, "confirm"),
+    adult: fd.get("adult"),
+    terms: fd.get("terms"),
+  });
+  if (!parsed.success) return { status: "error", message: "Please check the highlighted fields.", fields: fieldErrors(parsed.error), values };
+  const meta = await requestMeta();
+  try {
+    await hitIp("activate", meta.ipHash, LIMITS.applySubmit);
+    await hit(`activate:token:${bucketKey("invite", token)}`, LIMITS.applySubmit);
+    await activateProvisionedAccount(token, { temporaryPassword: parsed.data.temporaryPassword, password: parsed.data.password }, meta);
+  } catch (e) {
+    if (isAppError(e)) return { status: "error", message: e.code === "invalid_invitation" ? "That didn't work. Check the temporary password, or ask for a new link." : e.message, fields: e.field ? { [e.field]: e.message } : undefined, values };
+    throw e;
+  }
+  redirect("/signin?activated=1");
 }
 
 export async function signOutAction() {

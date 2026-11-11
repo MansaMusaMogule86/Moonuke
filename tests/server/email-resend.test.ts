@@ -6,7 +6,7 @@ import { recordAdminAction } from "@/server/security/monitor";
 import { redeemInvitation, signIn } from "@/server/services/accounts";
 import { decideApplication } from "@/server/services/admin";
 import { confirmEmail, emailVerificationToken, readEmailVerificationToken } from "@/server/services/emailVerification";
-import { DEV_PASSWORD, type SeedResult } from "@/server/seed";
+import { CREATOR_INVITE_EMAIL, DEV_PASSWORD, type SeedResult } from "@/server/seed";
 import { closePool, meta, resetDb, system, viewer } from "./helpers";
 
 const FAKE_KEY = "re_TestOnlyKey_0123456789abcdef";
@@ -164,8 +164,10 @@ describe("welcome workflow", () => {
   });
 
   it("approval of a creator sends the welcome with the studio onboarding step", async () => {
-    const { userId } = await redeemInvitation(s.creatorInviteToken, applicant(4), meta);
+    const { userId } = await redeemInvitation(s.creatorInviteToken, { ...applicant(4), email: CREATOR_INVITE_EMAIL }, meta);
     const app = await system((q) => q.one<{ id: string }>(`select id from app.applications where user_id = $1`, [userId]));
+    await expect(decideApplication(await viewer(s.ownerId), app!.id, "approve", undefined)).rejects.toMatchObject({ code: "conflict" }); // email not confirmed yet
+    expect(await confirmEmail(emailVerificationToken(userId), meta)).toBe(true);
     await decideApplication(await viewer(s.ownerId), app!.id, "approve", undefined);
     const [m] = await outbox("account_approved");
     expect(m.body_text).toMatch(/Set up your studio/);

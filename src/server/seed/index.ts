@@ -1,5 +1,6 @@
 import "server-only";
 import { system } from "@/server/db";
+import { createHash } from "node:crypto";
 import { hashPassword, randomToken, sha256 } from "@/server/auth/crypto";
 import { encryptSecret } from "@/server/auth/totp";
 import { categories, creators, memberPerks, postsFor, vipPerks } from "./data";
@@ -8,6 +9,25 @@ export const DEV_PASSWORD = "divafans-dev-password";
 /** Dev-only owner authenticator (base32). Mirrors scripts/lib/totp.mjs. */
 export const DEV_OWNER_TOTP_SECRET = "JBSWY3DPEHPK3PXPDIVAFANSDEVSEED2";
 
+/**
+ * Dev-only authenticator secret for a seeded account (base32, 32 chars).
+ * Owner: DEV_OWNER_TOTP_SECRET. Everyone else: derived from the email so each
+ * fixture creator has its own factor. Mirrors devTotpSecretFor in scripts/lib/totp.mjs.
+ */
+export function devTotpSecret(email: string): string {
+  if (email === "owner@divafans.test") return DEV_OWNER_TOTP_SECRET;
+  const bytes = createHash("sha256").update(`divafans-dev-totp:${email}`).digest().subarray(0, 20);
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+  let bits = "";
+  for (const b of bytes) bits += b.toString(2).padStart(8, "0");
+  let out = "";
+  for (let i = 0; i + 5 <= bits.length; i += 5) out += alphabet[parseInt(bits.slice(i, i + 5), 2)];
+  return out;
+}
+
+/** The seed's creator invitation is bound to this fixture address (creator invitations must be). */
+export const CREATOR_INVITE_EMAIL = "newcreator@divafans.test";
+
 export type SeedResult = {
   ownerId: string;
   memberId: string; // Nocturne: VIP of isadora, member of zara, bought mireille PPV, member of orsolya (private)
@@ -15,7 +35,7 @@ export type SeedResult = {
   pendingId: string; // Satellite: awaiting approval
   creatorIds: Record<string, string>;
   inviteToken: string; // active, 3 uses, member
-  creatorInviteToken: string; // active, 1 use, creator
+  creatorInviteToken: string; // active, 1 use, creator, bound to CREATOR_INVITE_EMAIL
   lioInviteToken: string; // white-glove creator invitation (case not yet applied)
 };
 
@@ -28,12 +48,25 @@ export async function seed(): Promise<SeedResult> {
   const pw = await hashPassword(DEV_PASSWORD);
 
   return system(async (q) => {
-    const user = async (email: string, alias: string, role: string, status: string) =>
-      (await q.one<{ id: string }>(
-        `insert into app.users (email, password_hash, role, status, alias, adult_attested_at, approved_at)
-         values ($1, $2, $3::app.user_role, $4::text::app.user_status, $5, now(), case when $4::text = 'active' then now() end) returning id`,
+    // Test-fixture allowlist rows (dev and test databases only; live production ignores this source).
+    const fixtureCreators = [...creators.map((c) => `${c.handle}@divafans.test`), "rhea@divafans.test", "lio@example.com", CREATOR_INVITE_EMAIL];
+    for (const email of fixtureCreators) {
+      await q.query(`insert into app.creator_allowlist (email, source) values ($1, 'test_fixture') on conflict do nothing`, [email]);
+    }
+
+    const user = async (email: string, alias: string, role: string, status: string) => {
+      const id = (await q.one<{ id: string }>(
+        `insert into app.users (email, password_hash, role, status, alias, adult_attested_at, approved_at, email_verified_at)
+         values ($1, $2, $3::app.user_role, $4::text::app.user_status, $5, now(), case when $4::text = 'active' then now() end,
+                 case when $4::text = 'active' then now() end) returning id`,
         [email, pw, role, status, alias],
       ))!.id;
+      // Creators need two-step sign-in before their tools open: each fixture creator gets its own dev factor.
+      if (role === "creator") {
+        await q.query(`insert into app.mfa_factors (user_id, secret_enc, confirmed_at) values ($1, $2, now())`, [id, encryptSecret(devTotpSecret(email))]);
+      }
+      return id;
+    };
 
     const ownerId = await user("owner@divafans.test", "The House", "owner", "active");
     await q.query(`insert into app.mfa_factors (user_id, secret_enc, confirmed_at) values ($1, $2, now())`, [ownerId, encryptSecret(DEV_OWNER_TOTP_SECRET)]);
@@ -142,9 +175,9 @@ export async function seed(): Promise<SeedResult> {
     );
     const creatorInviteToken = randomToken();
     await q.query(
-      `insert into app.invitations (token_hash, intended_role, max_uses, expires_at, note, created_by)
-       values ($1, 'creator', 1, now() + interval '7 days', 'Dev seed — creator', $2)`,
-      [sha256(creatorInviteToken), ownerId],
+      `insert into app.invitations (token_hash, intended_role, email, max_uses, expires_at, note, created_by)
+       values ($1, 'creator', $3, 1, now() + interval '7 days', 'Dev seed — creator', $2)`,
+      [sha256(creatorInviteToken), ownerId, CREATOR_INVITE_EMAIL],
     );
 
     // A pending applicant who came through the member invitation

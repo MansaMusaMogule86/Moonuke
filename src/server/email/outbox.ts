@@ -33,7 +33,7 @@ const SECURITY_TEMPLATES = new Set([
   ...PLATFORM_ALERT_TEMPLATES, ...ACCOUNT_ALERT_TEMPLATES,
   "security", "password_reset", "critical_report", "takedown_alert", "safeguarding_alert",
 ]);
-const WELCOME_TEMPLATES = new Set(["invitation", "account_created", "account_approved", "creator_verified"]);
+const WELCOME_TEMPLATES = new Set(["invitation", "creator_activation", "account_created", "account_approved", "creator_verified"]);
 
 /** Sender for a template, with a display name. Bare addresses only come from validated env. */
 export const isSecurityTemplate = (template: string) => SECURITY_TEMPLATES.has(template) || template.startsWith("security_");

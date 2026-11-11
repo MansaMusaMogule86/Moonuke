@@ -80,6 +80,20 @@ export const emails = {
         )
       : make("account_approved", `Welcome to ${brand.name}`, `Welcome, ${p.alias}.`, ["Your account has been approved. Sign in to start following creators."], { label: "Sign in", url: p.url }),
 
+  /** Provisioned creator: activation link only. The temporary password is shared separately, never by email. */
+  creatorActivation: (p: { url: string; expiresAt: Date }) =>
+    make(
+      "creator_activation",
+      `Your ${brand.name} creator invitation`,
+      `You're invited to create on ${brand.name}.`,
+      [
+        `Your creator account on ${brand.name} is ready to activate.`,
+        "Open your personal link, enter the temporary password you were given separately, and choose your own password. You'll then set up two-step sign-in before your studio opens.",
+      ],
+      { label: "Activate your creator account", url: p.url },
+      `This link is personal, works once and expires ${when(p.expiresAt)}. We never send passwords by email. If you weren't expecting this, you can ignore it.`,
+    ),
+
   /** After an invitation is redeemed: the account exists and waits for approval; confirm the address. */
   accountCreated: (p: { alias: string; verifyUrl: string }) =>
     make(

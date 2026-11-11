@@ -8,7 +8,7 @@ const require = createRequire(import.meta.url);
 const { chromium } = require("playwright");
 const { Client } = require("pg");
 const axePath = require.resolve("axe-core/axe.min.js");
-import { totp, freshCode, DEV_OWNER_TOTP_SECRET } from "./lib/totp.mjs";
+import { totp, freshCode, DEV_OWNER_TOTP_SECRET, devTotpSecretFor } from "./lib/totp.mjs";
 
 const BASE = process.env.BASE ?? "http://localhost:3000";
 const SHOTS = process.env.SHOTS;
@@ -48,6 +48,13 @@ async function signIn(email, password = PW, opts = desktop) {
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Sign in" }).click();
   await page.waitForURL(/\/(discover|pending|signin\/verify|account\/security)/);
+  // Creators complete two-step sign-in with their own dev factor; the owner's flow is tested explicitly below.
+  const isCreator = (await db.query(`select 1 from app.users where email = $1 and role = 'creator'`, [email])).rowCount === 1;
+  if (page.url().endsWith("/signin/verify") && isCreator) {
+    await page.getByLabel("Code").fill(await freshCode(devTotpSecretFor(email)));
+    await page.getByRole("button", { name: "Verify" }).click();
+    await page.waitForURL(/\/(discover|studio|pending)/);
+  }
   return { ctx, page };
 }
 let ownerSecret = DEV_OWNER_TOTP_SECRET;

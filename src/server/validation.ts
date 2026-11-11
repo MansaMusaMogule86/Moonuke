@@ -23,6 +23,17 @@ export const applySchema = z.object({
 
 export const signinSchema = z.object({ email, password: z.string().min(1).max(200) });
 
+/** Provisioned-creator activation: the temporary password, a new one (confirmed), and the same attestations as an application. */
+export const activateSchema = z
+  .object({
+    temporaryPassword: z.string().min(1, "Enter the temporary password you were given.").max(200),
+    password,
+    confirm: z.string(),
+    adult: z.literal("on", { message: "You must confirm you are 18 or older." }),
+    terms: z.literal("on", { message: "Please accept the community rules." }),
+  })
+  .refine((v) => v.password === v.confirm, { message: "The passwords don't match.", path: ["confirm"] });
+
 export const forgotSchema = z.object({ email });
 export const resetSchema = z
   .object({ password, confirm: z.string() })

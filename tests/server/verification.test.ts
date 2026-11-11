@@ -3,8 +3,9 @@ import { discover, getProfile } from "@/server/services/club";
 import { getOnboarding, reviewVerification, saveProfile, submitVerification, verificationQueue } from "@/server/services/creatorOnboarding";
 import { createInvitation } from "@/server/services/admin";
 import { redeemInvitation } from "@/server/services/accounts";
+import { confirmEmail, emailVerificationToken } from "@/server/services/emailVerification";
 import type { SeedResult } from "@/server/seed";
-import { asViewer, closePool, meta, resetDb, rlsError, system, viewer } from "./helpers";
+import { allowCreatorFixture, asViewer, closePool, meta, resetDb, rlsError, system, viewer } from "./helpers";
 
 let s: SeedResult;
 beforeEach(async () => {
@@ -56,8 +57,10 @@ describe("creator verification gates profile visibility", () => {
 describe("full onboarding: invitation → approval → profile → verification", () => {
   it("a newly invited creator builds a draft, submits, and is verified by the owner", async () => {
     const owner = await viewer(s.ownerId);
-    const inv = await createInvitation(owner, { role: "creator", maxUses: 1, expiresInDays: 3 });
+    await allowCreatorFixture("nova@example.com");
+    const inv = await createInvitation(owner, { role: "creator", email: "nova@example.com", maxUses: 1, expiresInDays: 3 });
     const { userId } = await redeemInvitation(inv.token, { alias: "Nova Reyes", email: "nova@example.com", password: "a-long-enough-password" }, meta);
+    expect(await confirmEmail(emailVerificationToken(userId), meta)).toBe(true);
     await system((q) => q.query(`update app.users set status = 'active' where id = $1`, [userId]));
     const creator = await viewer(userId);
 

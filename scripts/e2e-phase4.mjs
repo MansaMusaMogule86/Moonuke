@@ -5,10 +5,13 @@
 //   BASE=http://localhost:3000 SHOTS=./screenshots node scripts/e2e-phase4.mjs
 import { createRequire } from "node:module";
 import fs from "node:fs";
-import { freshCode, DEV_OWNER_TOTP_SECRET } from "./lib/totp.mjs";
+import { freshCode, DEV_OWNER_TOTP_SECRET, devTotpSecretFor } from "./lib/totp.mjs";
 const require = createRequire(import.meta.url);
 const { chromium } = require("playwright");
 const axePath = require.resolve("axe-core/axe.min.js");
+const { Client } = require("pg");
+const db = new Client({ connectionString: process.env.DATABASE_URL });
+await db.connect();
 
 const BASE = process.env.BASE ?? "http://localhost:3000";
 const SHOTS = process.env.SHOTS;
@@ -40,9 +43,9 @@ async function signIn(email, opts = desktop, password = PW) {
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Sign in" }).click();
-  await page.waitForURL(/\/(discover|pending|signin\/verify)/);
+  await page.waitForURL(/\/(discover|pending|signin\/verify|account\/security)/);
   if (page.url().endsWith("/signin/verify")) {
-    await page.getByLabel("Code").fill(await freshCode(DEV_OWNER_TOTP_SECRET));
+    await page.getByLabel("Code").fill(await freshCode(devTotpSecretFor(email)));
     await page.getByRole("button", { name: "Verify" }).click();
     await page.waitForURL(/\/(admin|discover)/);
   }
@@ -59,6 +62,8 @@ check("board: curated creators are Live", (await col("Live").getByText("Isadora 
 await shot(o.page, "onboarding-board-desktop");
 await axe(o.page, "/admin/onboarding @1440");
 
+// Creator invitations need an allowlisted address: explicit test-only fixture row (ignored in live production).
+await db.query(`insert into app.creator_allowlist (email, source) values ('nova@example.com', 'test_fixture') on conflict do nothing`);
 await o.page.getByLabel("Creator's name").fill("Nova Reyes");
 await o.page.getByLabel("Their email").fill("nova@example.com");
 await o.page.getByLabel("Concierge note (private)").fill("Met at Lisbon week. Prefers evenings.");
@@ -93,7 +98,23 @@ await v.close();
 await o.page.goto(`${BASE}/admin`);
 const app = o.page.getByRole("listitem").filter({ hasText: "nova@example.com" });
 await app.getByRole("button", { name: "Approve" }).click();
-await app.getByText("Approved. The account is now active.").waitFor();
+await app.getByText(/hasn't confirmed their email address/).waitFor();
+check("a creator can't be approved before confirming their email", true);
+// The creator confirms through the real account-created email (the dev transport keeps the body).
+{
+  const mail = (await db.query(`select body_text from app.email_outbox where to_email = 'nova@example.com' and template = 'account_created' order by created_at desc limit 1`)).rows[0];
+  const confirm = mail?.body_text.match(/https?:\/\/\S+\/verify-email\/\S+/)?.[0].replace(/^https?:\/\/[^/]+/, BASE);
+  check("account-created email carries a confirmation link", !!confirm);
+  const c = await browser.newContext(desktop);
+  const cp = await c.newPage();
+  await cp.goto(confirm);
+  await cp.getByRole("button", { name: "Confirm my email" }).click();
+  await cp.getByText("Thanks, your email address is confirmed.").waitFor();
+  await c.close();
+}
+await o.page.goto(`${BASE}/admin`);
+await o.page.getByRole("listitem").filter({ hasText: "nova@example.com" }).getByRole("button", { name: "Approve" }).click();
+await o.page.getByRole("listitem").filter({ hasText: "nova@example.com" }).getByText("Approved. The account is now active.").waitFor();
 await o.page.goto(`${BASE}/admin/onboarding`);
 await col("Preparing profile").getByText("Nova Reyes").click();
 await o.page.waitForURL(/\/admin\/onboarding\/case\//);
@@ -125,6 +146,17 @@ check("draft sent for creator approval", true);
 
 // ================================================================ creator consents, adds a social
 const n = await signIn("nova@example.com", desktop, "nova-very-long-pass-1");
+// Creators must set up two-step sign-in before any creator tool opens.
+check("new creator without MFA → forced setup", /\/account\/security\?setup=required/.test(n.page.url()), n.page.url());
+await n.page.goto(`${BASE}/studio`);
+check("studio stays closed until two-step sign-in is on", /\/account\/security/.test(n.page.url()), n.page.url());
+check("setup banner explains the creator requirement", await n.page.getByRole("alert").filter({ hasText: "required for creator accounts" }).isVisible());
+await n.page.getByRole("button", { name: "Set up two-step sign-in" }).click();
+await n.page.getByTestId("mfa-secret").waitFor();
+const novaSecret = (await n.page.getByTestId("mfa-secret").textContent()).trim();
+await n.page.getByLabel("Code from your app").fill(await freshCode(novaSecret));
+await n.page.getByRole("button", { name: "Turn on two-step sign-in" }).click();
+await n.page.getByTestId("recovery-codes").waitFor();
 await n.page.goto(`${BASE}/studio`);
 check("white-glove studio", await n.page.getByText(/White-glove/).first().isVisible());
 const card = n.page.getByRole("article", { name: "Profile proposal from the house" });
@@ -236,6 +268,7 @@ await axe(rm.page, "/studio @390");
 check("Rhea's studio never shows concierge notes", !(await rm.page.content()).includes("Kiln schedule"));
 
 await browser.close();
+await db.end();
 let failed = 0;
 for (const r of results) {
   if (!r.ok) failed++;

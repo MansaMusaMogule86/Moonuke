@@ -1,4 +1,5 @@
 import "server-only";
+import { creatorEmailAllowed, normalizeEmail } from "@/server/auth/creatorAllowlist";
 import { recordAdminAction } from "@/server/security/monitor";
 import { asViewer, type Q } from "@/server/db";
 import { randomToken, sha256 } from "@/server/auth/crypto";
@@ -35,6 +36,13 @@ export type NewInvitation = {
 };
 
 async function insertInvitation(q: Q, viewer: Viewer, input: NewInvitation, meta: Meta) {
+  if (input.role === "creator") {
+    // Creator invitations: single-use and bound to an allowlisted address (the database enforces the same).
+    const refused = "Creator invitations can only be issued to an approved creator address.";
+    if (!input.email || !(await creatorEmailAllowed(q, input.email))) throw new AppError("validation", refused, "email");
+    if (input.maxUses !== 1) throw new AppError("validation", "Creator invitations are single-use.", "maxUses");
+    input = { ...input, email: normalizeEmail(input.email) };
+  }
   const token = randomToken();
   const row = await q.one<{ id: string; expires_at: Date }>(
     `insert into app.invitations (token_hash, intended_role, email, max_uses, expires_at, note, created_by, referral_request_id)
@@ -150,6 +158,12 @@ export async function decideApplication(
       [applicationId, decision === "approve" ? "approved" : "rejected", viewer.id, note ?? null],
     );
     if (!app) throw new AppError("not_found", "Application not found or already decided.");
+    if (decision === "approve") {
+      const u = await q.one<{ role: string; verified: boolean }>(`select role, email_verified_at is not null as verified from app.users where id = $1`, [app.user_id]);
+      if (u?.role === "creator" && !u.verified) {
+        throw new AppError("conflict", "This creator hasn't confirmed their email address yet. Approve once they have.");
+      }
+    }
     await q.query(
       decision === "approve"
         ? `update app.users set status = 'active', approved_at = now(), approved_by = $2, updated_at = now()

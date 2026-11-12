@@ -134,7 +134,7 @@ export function InteractiveSpecimens() {
         </Sheet>
       </Panel>
 
-      <Panel title="Loading" note="Champagne shimmer at 7s — calm, never a grey flash. Static under reduced motion.">
+      <Panel title="Loading & Luxury Surfaces" note="Champagne shimmer at 7s — calm, never a grey flash. Static under reduced motion.">
         <div className="flex gap-4">
           <Skeleton className="arch h-36 w-28" />
           <div className="flex-1 space-y-3 pt-2">
@@ -142,6 +142,41 @@ export function InteractiveSpecimens() {
             <Skeleton className="h-3 w-1/2" />
             <Skeleton className="h-3 w-5/6" />
           </div>
+        </div>
+      </Panel>
+
+      <Panel title="Luxury Component Library" note="Centralized accessible primitives exported from src/components/ui/luxury.tsx.">
+        <div className="flex flex-wrap gap-2 text-[12px] font-mono text-gold-soft">
+          {[
+            "LuxuryButton",
+            "LuxuryInput",
+            "LuxuryTextarea",
+            "LuxurySelect",
+            "LuxuryCard",
+            "LuxuryModal",
+            "LuxuryDialog",
+            "LuxuryTabs",
+            "LuxuryBadge",
+            "LuxuryTooltip",
+            "LuxuryToast",
+            "LuxurySkeleton",
+            "LuxuryEmptyState",
+            "LuxuryAvatar",
+            "LuxuryDropdown",
+            "LuxurySidebar",
+            "LuxuryNavbar",
+            "LuxuryFooter",
+            "LuxuryPageHeader",
+            "LuxurySectionHeader",
+            "LuxuryStatCard",
+            "LuxuryMediaCard",
+            "LuxuryCreatorCard",
+            "LuxuryTierCard",
+          ].map((name) => (
+            <span key={name} className="rounded-full border border-line bg-ink px-3 py-1">
+              {name}
+            </span>
+          ))}
         </div>
       </Panel>
     </div>

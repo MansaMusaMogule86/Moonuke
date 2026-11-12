@@ -17,6 +17,7 @@ type Section = { href: string; label: string; exact?: boolean };
 export const STUDIO_SECTIONS: Section[] = [
   { href: "/studio", label: "Overview", exact: true },
   { href: "/studio/posts", label: "Content" },
+  { href: "/studio/vault", label: "Vault" },
   { href: "/studio/tiers", label: "Memberships" },
   { href: "/studio/messaging", label: "Messages" },
   { href: "/studio/blasts", label: "Blasts" },
@@ -63,16 +64,19 @@ export function StudioShell({ alias, children }: { alias: string; children: Reac
         </ul>
       </nav>
 
-      <div className="mx-auto flex w-full max-w-[1520px]">
+      <div className="smoke-minimal mx-auto flex w-full max-w-[1520px]">
         {/* Desktop: persistent sidebar */}
-        <aside className="hidden w-[228px] shrink-0 lg:block">
-          <div className="sticky top-[92px] px-6 pt-10">
-            <p className="eyebrow text-gold">Studio</p>
-            <p className="mt-1 truncate text-[15px] text-ivory" title={alias}>
+        <aside className="hidden w-[236px] shrink-0 border-r border-line bg-ink-2/35 lg:block">
+          <div className="sticky top-[84px] px-6 py-8">
+            <div className="flex items-center justify-between gap-2">
+              <p className="eyebrow text-gold">Creator Studio</p>
+              <span className="h-2 w-2 rounded-full bg-pink shadow-[0_0_8px_var(--mk-pink)]" aria-hidden="true" />
+            </div>
+            <p className="mt-1.5 truncate font-display text-[20px] text-ivory" title={alias}>
               {alias}
             </p>
             <nav aria-label="Studio sections" className="mt-7">
-              <ul className="space-y-0.5">
+              <ul className="space-y-1">
                 {STUDIO_SECTIONS.map((s) => {
                   const active = isActive(path, s);
                   return (
@@ -81,11 +85,14 @@ export function StudioShell({ alias, children }: { alias: string; children: Reac
                         href={s.href}
                         aria-current={active ? "page" : undefined}
                         className={cn(
-                          "flex items-center rounded-[var(--radius-sm)] px-3 py-2 text-[14px] transition-colors",
-                          active ? "bg-gold/[0.10] text-gold-soft" : "text-stone hover:bg-ivory/[0.04] hover:text-ivory",
+                          "flex items-center justify-between rounded-[var(--radius-sm)] px-3.5 py-2 text-[14px] transition-colors",
+                          active
+                            ? "border border-gold/30 bg-gold/[0.12] font-medium text-gold-soft shadow-[0_0_20px_-8px_rgba(216,173,82,0.4)]"
+                            : "border border-transparent text-stone hover:bg-ivory/[0.04] hover:text-ivory",
                         )}
                       >
-                        {s.label}
+                        <span>{s.label}</span>
+                        {active && <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-gold" />}
                       </Link>
                     </li>
                   );
@@ -95,7 +102,7 @@ export function StudioShell({ alias, children }: { alias: string; children: Reac
             <div className="mt-8 border-t border-line pt-5">
               <Link
                 href="/discover"
-                className="text-[13px] text-stone underline decoration-line-strong underline-offset-4 transition-colors hover:text-ivory"
+                className="text-[13px] text-stone underline decoration-line-strong underline-offset-4 transition-colors hover:text-gold-soft"
               >
                 View the fan side
               </Link>

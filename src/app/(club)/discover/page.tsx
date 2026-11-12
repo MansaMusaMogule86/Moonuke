@@ -43,7 +43,7 @@ export default async function DiscoverPage({ searchParams }: { searchParams: SP 
   const activeCategory = categories.find((c) => c.slug === category);
 
   return (
-    <div className="mx-auto max-w-[1600px] px-5 pb-28 pt-14 md:px-10 md:pt-20">
+    <div className="smoke-ambient mx-auto max-w-[1600px] px-5 pb-28 pt-14 md:px-10 md:pt-20">
       {justBlocked && (
         <p role="status" className="mb-10 rounded-[var(--radius-md)] border border-gold/35 bg-gold/[0.06] px-4 py-3 text-[14px] text-gold-soft">
           Blocked. You won&apos;t see each other anymore. Manage blocks in{" "}

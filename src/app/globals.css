@@ -9,12 +9,14 @@
   --color-ink-2: var(--mk-ink-2);
   --color-ink-3: var(--mk-ink-3);
   --color-ink-4: var(--mk-ink-4);
+  --color-burgundy: var(--mk-burgundy);
   --color-gold: var(--mk-gold);
   --color-gold-soft: var(--mk-gold-soft);
   --color-gold-muted: var(--mk-gold-muted);
   --color-pink: var(--mk-pink);
   --color-pink-soft: var(--mk-pink-soft);
   --color-line-gold: var(--mk-line-gold);
+  --color-line-pink: var(--mk-line-pink);
   --color-ivory: var(--mk-ivory);
   --color-stone: var(--mk-stone);
   --color-ash: var(--mk-ash);
@@ -72,7 +74,7 @@
 }
 
 /* ------------------------------------------------------------------
-   Signature utilities
+   Signature utilities & Smoky Effect System
    ------------------------------------------------------------------ */
 @utility text-metal {
   background-image: var(--mk-metal);
@@ -83,9 +85,34 @@
   color: transparent;
 }
 
+@utility text-neon {
+  background-image: var(--mk-neon-lux);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
 @utility hairline {
   height: 1px;
   background: linear-gradient(90deg, transparent, var(--mk-line-gold) 20%, var(--mk-line-gold) 80%, transparent);
+}
+
+@utility hairline-pink {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--mk-line-pink) 25%, var(--mk-line-gold) 75%, transparent);
+}
+
+/* Smoky Effect System — 3 Controlled Levels */
+@utility smoke-cinematic {
+  background-image: var(--mk-smoke-cinematic);
+}
+
+@utility smoke-ambient {
+  background-image: var(--mk-smoke-ambient);
+}
+
+@utility smoke-minimal {
+  background-image: var(--mk-smoke-minimal);
 }
 
 @utility eyebrow {
@@ -166,7 +193,7 @@
 }
 /* Desktop portrait parallax, driven by scroll position without JavaScript. */
 @keyframes mk-parallax {
-  to { transform: translate3d(0, 9%, 0) scale(1.04); }
+  to { transform: translate3d(0, 7%, 0) scale(1.02); }
 }
 @media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
   @supports (animation-timeline: scroll()) {

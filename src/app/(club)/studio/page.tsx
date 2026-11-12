@@ -17,17 +17,20 @@ export const metadata: Metadata = { title: "Overview · Studio" };
 const STATE_TONE = { draft: "neutral", scheduled: "member", published: "vip" } as const;
 const when = (iso: string) => new Date(iso).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" });
 
-function Stat({ label, value, sub, href }: { label: string; value: string | number; sub?: string; href?: string }) {
+function Stat({ label, value, sub, href, accent = "gold" }: { label: string; value: string | number; sub?: string; href?: string; accent?: "gold" | "pink" }) {
   const inner = (
     <>
-      <p className="eyebrow text-stone">{label}</p>
-      <p className="mt-2 text-[30px] font-medium leading-none text-ivory tabular-nums">{value}</p>
+      <div className="flex items-center justify-between gap-2">
+        <p className="eyebrow text-stone">{label}</p>
+        <span aria-hidden="true" className={`h-1.5 w-1.5 rounded-full ${accent === "pink" ? "bg-pink" : "bg-gold"}`} />
+      </div>
+      <p className="mt-2.5 font-display text-[34px] leading-none text-ivory tabular-nums">{value}</p>
       {sub && <p className="mt-2 text-[12px] text-ash">{sub}</p>}
     </>
   );
-  const cls = "block rounded-[var(--radius-lg)] border border-line bg-ink-2 p-5 transition-colors";
+  const cls = "block rounded-[var(--radius-lg)] border border-line bg-ink-2/90 p-5 shadow-[0_14px_36px_-20px_rgba(0,0,0,0.85)] transition-colors";
   return href ? (
-    <Link href={href} className={`${cls} hover:border-gold/40`}>{inner}</Link>
+    <Link href={href} className={`${cls} hover:border-gold/45`}>{inner}</Link>
   ) : (
     <div className={cls}>{inner}</div>
   );
@@ -81,10 +84,10 @@ export default async function StudioOverviewPage() {
       />
 
       <section aria-label="Key numbers" className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Stat label="Active members" value={a.members.active} sub={`${a.members.vip} VIP`} href="/studio/analytics" />
-        <Stat label="New members" value={a.members.new30} sub="Last 30 days" href="/studio/analytics" />
-        <Stat label="Followers" value={a.followers.total} sub={`${a.followers.new30} new in 30 days`} href="/studio/analytics" />
-        <Stat label="Published posts" value={a.posts.published} sub={`${a.posts.draft} draft · ${a.posts.scheduled} scheduled`} href="/studio/posts" />
+        <Stat label="Active members" value={a.members.active} sub={`${a.members.vip} VIP`} href="/studio/analytics" accent="gold" />
+        <Stat label="New members" value={a.members.new30} sub="Last 30 days" href="/studio/analytics" accent="pink" />
+        <Stat label="Followers" value={a.followers.total} sub={`${a.followers.new30} new in 30 days`} href="/studio/analytics" accent="gold" />
+        <Stat label="Published posts" value={a.posts.published} sub={`${a.posts.draft} draft · ${a.posts.scheduled} scheduled`} href="/studio/posts" accent="pink" />
       </section>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-12">

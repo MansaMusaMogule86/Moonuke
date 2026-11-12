@@ -43,12 +43,12 @@ export function Portrait({ src, alt, study, className, priority, sizes = "(max-w
   );
 }
 
-// Accent families: gold, pink, rose-gold and a cool plum, all from the palette.
+// Accent families: champagne gold, neon pink, warm gold-rose and deep burgundy/pink, all from the smoky luxury palette.
 const ACCENTS = {
-  hoops: ["212 175 55", "245 213 138"],
-  crown: ["255 45 150", "255 139 200"],
-  collar: ["232 160 127", "212 175 55"],
-  none: ["150 120 200", "255 139 200"],
+  hoops: ["216 173 82", "243 213 138"],
+  crown: ["245 42 139", "255 139 200"],
+  collar: ["216 173 82", "245 42 139"],
+  none: ["52 16 31", "245 42 139"],
 } as const;
 const SHAPES = { long: "38% 62%", bun: "50% 30%", crop: "62% 40%", wrap: "30% 45%" } as const;
 
@@ -61,12 +61,12 @@ export function Study({ alt, hair, light, tilt = 0, adorn = "none", glow = 0.6 }
       {...(alt ? { role: "img", "aria-label": alt } : { "aria-hidden": true })}
       className="absolute inset-0"
       style={{
-        backgroundColor: "#121217",
+        backgroundColor: "#151116",
         backgroundImage: [
-          `radial-gradient(70% 55% at ${x} 18%, rgb(${a} / ${0.3 * strength}), transparent 70%)`,
-          `radial-gradient(60% 50% at ${SHAPES[hair] ?? SHAPES.long}, rgb(${b} / ${0.2 * strength}), transparent 72%)`,
-          `linear-gradient(${150 + tilt * 4}deg, transparent 40%, rgb(${a} / 0.08) 52%, transparent 64%)`,
-          "linear-gradient(180deg, transparent 55%, rgb(5 5 5 / 0.7))",
+          `radial-gradient(70% 55% at ${x} 18%, rgb(${a} / ${0.32 * strength}), transparent 70%)`,
+          `radial-gradient(60% 50% at ${SHAPES[hair] ?? SHAPES.long}, rgb(${b} / ${0.22 * strength}), transparent 72%)`,
+          `linear-gradient(${150 + tilt * 4}deg, transparent 40%, rgb(${a} / 0.09) 52%, transparent 64%)`,
+          "linear-gradient(180deg, transparent 55%, rgb(8 7 9 / 0.78))",
         ].join(","),
       }}
     />

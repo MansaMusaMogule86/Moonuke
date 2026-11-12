@@ -1,52 +1,75 @@
 /* ==================================================================
    DivaFans — Design tokens (source of truth)
-   Charcoal carries the page, warm white carries the words, champagne
-   gold carries the brand, and electric pink adds personality in small doses.
+   Approved direction: SMOKY OBSIDIAN × CHAMPAGNE GOLD × NEON PINK × DEEP BURGUNDY.
+   Obsidian and charcoal carry the page, warm ivory carries the words, champagne
+   gold carries the brand, and neon pink adds luminous personality in selective doses.
    Mirrored in src/lib/tokens.ts for JS consumers. Keep both in sync.
-   Contrast ratios below are against --mk-ink unless noted.
+   Contrast ratios below are against --mk-ink (#080709) unless noted.
    ================================================================== */
 :root {
   /* — Surfaces ------------------------------------------------------ */
-  --mk-ink: #050505;        /* Page background (obsidian; matches the logo's black) */
-  --mk-ink-2: #121217;      /* Raised surface: sections, cards */
-  --mk-ink-3: #1a1921;      /* Elevated surface: inputs, menus, dialogs */
-  --mk-ink-4: #24232c;      /* Hover / pressed on elevated */
+  --mk-ink: #080709;        /* Obsidian Black: primary page background */
+  --mk-ink-2: #151116;      /* Charcoal Black: raised surface (sections, cards) */
+  --mk-ink-3: #1d1720;      /* Elevated surface: inputs, menus, dialogs */
+  --mk-ink-4: #261f2a;      /* Hover / pressed on elevated surfaces */
+  --mk-burgundy: #34101f;   /* Deep Burgundy: atmospheric undertones & luxury accents */
 
   /* — Gold (brand) -------------------------------------------------- */
-  --mk-gold: #d4af37;       /* Metallic gold: primary actions, active nav — 9.7:1; ink text on gold 9.7:1 */
-  --mk-gold-soft: #f5d58a;  /* Champagne: highlights, hover, button sheen — 14.3:1 */
-  --mk-gold-muted: #a88b45; /* Quiet ornament, hairlines — 6.1:1 */
+  --mk-gold: #d8ad52;       /* Champagne Gold: primary actions, active nav — 9.6:1; ink on gold 9.6:1 */
+  --mk-gold-soft: #f3d58a;  /* Light Gold: highlights, hover, button sheen — 14.1:1 */
+  --mk-gold-muted: #a88b45; /* Quiet ornament, hairlines — 5.9:1 */
 
   /* — Pink (personality) -------------------------------------------- */
-  --mk-pink: #ff2d96;       /* Hot pink: 5–10% of accents only — 5.9:1; ink text on pink 5.9:1 */
-  --mk-pink-soft: #ff8bc8;  /* Soft pink: small pink text, glows — 8.1:1 on ink-3 */
+  --mk-pink: #f52a8b;       /* Neon Pink: selective interactive highlights — 5.35:1; ink on pink 5.35:1 */
+  --mk-pink-soft: #ff8bc8;  /* Soft Pink: small pink text, glows — 8.2:1 on ink-3 */
 
   /* — Text ---------------------------------------------------------- */
-  --mk-ivory: #f8f5f0;      /* Warm white: primary text — 18.7:1 */
-  --mk-stone: #b9b4c0;      /* Secondary text — 9.9:1 (8.6:1 on ink-3) */
-  --mk-ash: #948f9c;        /* Tertiary / meta — 6.4:1 (4.9:1 on ink-4) */
+  --mk-ivory: #f7f0e8;      /* Ivory White: primary text — 17.8:1 */
+  --mk-stone: #bfb5bc;      /* Muted Text: secondary text — 10.1:1 (8.8:1 on ink-3) */
+  --mk-ash: #988e96;        /* Tertiary / meta — 6.4:1 (5.1:1 on ink-4) */
 
   /* — Lines --------------------------------------------------------- */
-  --mk-line: rgb(248 245 240 / 0.08);
-  --mk-line-strong: rgb(248 245 240 / 0.16);
-  --mk-line-gold: rgb(212 175 55 / 0.45);
+  --mk-line: rgb(247 240 232 / 0.08);
+  --mk-line-strong: rgb(247 240 232 / 0.16);
+  --mk-line-gold: rgb(216 173 82 / 0.45);
+  --mk-line-pink: rgb(245 42 139 / 0.38);
 
   /* — Semantic ------------------------------------------------------ */
-  --mk-success: #9ccba2;    /* 10.9:1 */
-  --mk-danger: #e8a07f;     /* 9.3:1 */
+  --mk-success: #9ccba2;    /* 10.5:1 */
+  --mk-danger: #e8a07f;     /* 9.0:1 */
 
-  /* — Metal: the text wordmark only ---------------------------------- */
-  --mk-metal: linear-gradient(105deg, #a8862a 0%, #e3c062 30%, #f5d58a 48%, #d4af37 66%, #a8862a 100%);
+  /* — Metal: champagne gold metallic gradient ----------------------- */
+  --mk-metal: linear-gradient(105deg, #a8862a 0%, #e3c062 28%, #f3d58a 48%, #d8ad52 68%, #a8862a 100%);
+  --mk-neon-lux: linear-gradient(100deg, #f52a8b 0%, #ff8bc8 45%, #f3d58a 100%);
+
+  /* — Smoky Atmosphere Levels --------------------------------------- */
+  /* Level 1: Cinematic — Hero and major landing sections */
+  --mk-smoke-cinematic:
+    radial-gradient(80% 60% at 74% 36%, rgb(216 173 82 / 0.14), transparent 68%),
+    radial-gradient(65% 55% at 78% 72%, rgb(245 42 139 / 0.15), transparent 65%),
+    radial-gradient(90% 80% at 22% 85%, rgb(52 16 31 / 0.48), transparent 70%),
+    linear-gradient(180deg, #080709 0%, #151116 52%, #080709 100%);
+
+  /* Level 2: Ambient — Creator profiles, fan discovery, feature headers */
+  --mk-smoke-ambient:
+    radial-gradient(70% 50% at 18% 12%, rgb(216 173 82 / 0.09), transparent 65%),
+    radial-gradient(60% 50% at 84% 20%, rgb(245 42 139 / 0.08), transparent 65%),
+    radial-gradient(80% 65% at 50% 0%, rgb(52 16 31 / 0.34), transparent 72%);
+
+  /* Level 3: Minimal — Creator Studio, Vault, forms, settings, checkout, admin */
+  --mk-smoke-minimal:
+    linear-gradient(180deg, rgb(247 240 232 / 0.025) 0%, transparent 120px),
+    linear-gradient(180deg, #151116 0%, #110e13 100%);
 
   /* — Type ---------------------------------------------------------- */
-  --mk-font-display: var(--font-bodoni), "Bodoni 72", "Didot", serif;  /* Selected display moments */
-  --mk-font-sans: var(--font-jost), "Futura", "Avenir Next", system-ui, sans-serif; /* Interface and body */
+  --mk-font-display: var(--font-bodoni), "Bodoni 72", "Didot", serif;
+  --mk-font-sans: var(--font-jost), "Futura", "Avenir Next", system-ui, sans-serif;
 
   /* — Layout -------------------------------------------------------- */
-  --mk-container: 1200px;       /* Content and marketing sections */
-  --mk-container-wide: 1440px;  /* Chrome: headers, footers */
+  --mk-container: 1200px;
+  --mk-container-wide: 1440px;
   --mk-gutter: clamp(20px, 4vw, 40px);
-  --mk-section: clamp(72px, 10vw, 128px); /* Vertical rhythm between marketing sections */
+  --mk-section: clamp(72px, 10vw, 128px);
 
   /* — Radius -------------------------------------------------------- */
   --mk-radius-sm: 8px;
@@ -55,18 +78,20 @@
   --mk-radius-xl: 28px;
 
   /* — Elevation ----------------------------------------------------- */
-  --mk-shadow-1: 0 1px 0 rgb(255 255 255 / 0.04) inset, 0 8px 24px -12px rgb(0 0 0 / 0.6);
-  --mk-shadow-2: 0 1px 0 rgb(255 255 255 / 0.05) inset, 0 24px 60px -24px rgb(0 0 0 / 0.75);
+  --mk-shadow-1: 0 1px 0 rgb(255 255 255 / 0.04) inset, 0 10px 28px -12px rgb(0 0 0 / 0.65);
+  --mk-shadow-2: 0 1px 0 rgb(255 255 255 / 0.06) inset, 0 24px 60px -24px rgb(0 0 0 / 0.8);
+  --mk-shadow-gold: 0 1px 0 rgb(255 255 255 / 0.45) inset, 0 12px 32px -10px rgb(216 173 82 / 0.45);
+  --mk-shadow-pink: 0 1px 0 rgb(255 255 255 / 0.35) inset, 0 12px 34px -10px rgb(245 42 139 / 0.45);
 
   /* — Focus --------------------------------------------------------- */
   --mk-focus: 2px solid var(--mk-gold-soft);
   --mk-focus-offset: 3px;
 
   /* — Motion -------------------------------------------------------- */
-  --mk-ease-out: cubic-bezier(0.16, 1, 0.3, 1);     /* arrivals */
-  --mk-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);  /* state changes */
-  --mk-dur-1: 140ms;   /* press, toggle */
-  --mk-dur-2: 260ms;   /* hover, small reveals */
-  --mk-dur-3: 520ms;   /* sheets, cards */
-  --mk-dur-4: 800ms;   /* section entrances */
+  --mk-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --mk-ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --mk-dur-1: 140ms;
+  --mk-dur-2: 260ms;
+  --mk-dur-3: 520ms;
+  --mk-dur-4: 800ms;
 }

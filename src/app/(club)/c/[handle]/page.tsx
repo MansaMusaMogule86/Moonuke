@@ -31,8 +31,9 @@ export default async function CreatorPage({ params }: { params: Promise<{ handle
   return (
     <div className="pb-28">
       {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div aria-hidden className="pointer-events-none absolute -left-[10vw] top-0 h-[70vw] w-[70vw] rounded-full bg-[radial-gradient(closest-side,rgb(214_181_109/0.09),transparent)] md:h-[50vw] md:w-[50vw]" />
+      <section className="smoke-ambient relative overflow-hidden">
+        <div aria-hidden className="pointer-events-none absolute -left-[10vw] top-0 h-[70vw] w-[70vw] rounded-full bg-[radial-gradient(closest-side,rgb(216_173_82/0.11),transparent)] md:h-[50vw] md:w-[50vw]" />
+        <div aria-hidden className="pointer-events-none absolute -right-[10vw] top-[15%] h-[55vw] w-[55vw] rounded-full bg-[radial-gradient(closest-side,rgb(245_42_139/0.08),transparent)] md:h-[40vw] md:w-[40vw]" />
         <div className="relative mx-auto grid max-w-[1600px] gap-10 px-5 pt-10 md:grid-cols-12 md:gap-6 md:px-10 md:pt-16">
           <ImageReveal className="arch relative aspect-[3/4] overflow-hidden border border-line-strong p-[6px] md:col-span-5 lg:col-span-4">
             <Portrait alt={`Cover for ${p.displayName}`} study={p.cover} className="arch h-full w-full" priority />
@@ -115,9 +116,12 @@ export default async function CreatorPage({ params }: { params: Promise<{ handle
             const current = p.viewer.tier === t.kind;
             const seatsLeft = t.seatLimit != null ? Math.max(0, t.seatLimit - (t.seatsTaken ?? 0)) : null;
             return (
-              <li key={t.id} className={cn("flex flex-col rounded-[var(--radius-xl)] border p-7 md:p-10", isVip ? "border-gold/40 bg-ink-3" : "border-line bg-ink-2")}>
+              <li key={t.id} className={cn("flex flex-col rounded-[var(--radius-xl)] border p-7 shadow-[0_24px_64px_-24px_rgba(0,0,0,0.85)] md:p-10", isVip ? "border-gold/45 bg-ink-3 shadow-[0_0_48px_-20px_rgba(216,173,82,0.3)]" : "border-line bg-ink-2")}>
                 <div className="flex items-start justify-between gap-4">
-                  <h3 className={cn("font-display text-[40px] leading-none", isVip ? "text-metal" : "text-ivory")}>{t.name}</h3>
+                  <div>
+                    <p className="eyebrow text-gold">{isVip ? "VIP Tier" : "Member Tier"}</p>
+                    <h3 className={cn("mt-2 font-display text-[40px] leading-none", isVip ? "text-metal" : "text-ivory")}>{t.name}</h3>
+                  </div>
                   {seatsLeft != null && (
                     <p className="text-right text-[12px] text-stone">
                       <span className="block font-display text-[22px] tabular-nums text-gold-soft">{seatsLeft}</span>

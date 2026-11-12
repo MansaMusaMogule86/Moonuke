@@ -13,18 +13,19 @@ import { InteractiveSpecimens, MotionSpecimens } from "./specimens";
 export const metadata: Metadata = { title: "Design system", robots: { index: false } };
 
 const swatches: { name: string; token: string; hex: string; role: string }[] = [
-  { name: "Ink", token: "--mk-ink", hex: color.ink, role: "Page background. Most of every screen." },
-  { name: "Ink 2", token: "--mk-ink-2", hex: color.ink2, role: "Raised surface: alternating sections, cards." },
+  { name: "Obsidian Black", token: "--mk-ink", hex: color.ink, role: "Primary canvas background (#080709)." },
+  { name: "Charcoal Black", token: "--mk-ink-2", hex: color.ink2, role: "Raised surface: cards, drawers, alternating sections (#151116)." },
   { name: "Ink 3", token: "--mk-ink-3", hex: color.ink3, role: "Elevated surface: inputs, menus, sheets." },
   { name: "Ink 4", token: "--mk-ink-4", hex: color.ink4, role: "Hover and pressed states on elevated surfaces." },
-  { name: "Gold", token: "--mk-gold", hex: color.gold, role: "The brand: primary action, active place, VIP." },
-  { name: "Soft gold", token: "--mk-gold-soft", hex: color.goldSoft, role: "Hover, focus rings, highlighted words." },
-  { name: "Muted gold", token: "--mk-gold-muted", hex: color.goldMuted, role: "Quiet ornament only." },
-  { name: "Pink", token: "--mk-pink", hex: color.pink, role: "Personality: a highlighted word, a sent message, a small accent." },
-  { name: "Soft pink", token: "--mk-pink-soft", hex: color.pinkSoft, role: "Small pink text and hover on pink." },
-  { name: "Ivory", token: "--mk-ivory", hex: color.ivory, role: "Primary text." },
-  { name: "Stone", token: "--mk-stone", hex: color.stone, role: "Secondary text." },
-  { name: "Ash", token: "--mk-ash", hex: color.ash, role: "Meta text, captions (AA minimum)." },
+  { name: "Champagne Gold", token: "--mk-gold", hex: color.gold, role: "Primary brand emphasis, CTAs, VIP indicators (#D8AD52)." },
+  { name: "Light Gold", token: "--mk-gold-soft", hex: color.goldSoft, role: "Hover highlights, focus rings, editorial accents (#F3D58A)." },
+  { name: "Muted Gold", token: "--mk-gold-muted", hex: color.goldMuted, role: "Quiet hairline and ornament accents." },
+  { name: "Neon Pink", token: "--mk-pink", hex: color.pink, role: "Selective interactive highlights, active indicators (#F52A8B)." },
+  { name: "Soft Pink", token: "--mk-pink-soft", hex: color.pinkSoft, role: "Small pink text and accessible pink accents." },
+  { name: "Deep Burgundy", token: "--mk-burgundy", hex: color.burgundy, role: "Atmospheric depth, wine shadows, luxury surface tint (#34101F)." },
+  { name: "Ivory White", token: "--mk-ivory", hex: color.ivory, role: "Primary editorial and UI text (#F7F0E8)." },
+  { name: "Muted Text", token: "--mk-stone", hex: color.stone, role: "Secondary copy and descriptions (#BFB5BC)." },
+  { name: "Ash", token: "--mk-ash", hex: color.ash, role: "Meta text, captions (AA minimum on Obsidian)." },
 ];
 
 const typeScale = [
@@ -128,6 +129,31 @@ export default function DesignSystemPage() {
             <p className="eyebrow mb-4 text-stone">Metal — text wordmark only</p>
             <div className="h-16 rounded-md" style={{ background: "var(--mk-metal)" }} />
             <div className="hairline mt-6" />
+          </div>
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
+            {[
+              {
+                level: "Level 1 · Cinematic",
+                cls: "smoke-cinematic",
+                desc: "Homepage hero and flagship landing moments. Rich atmospheric smoke, gold and neon-pink radial illumination.",
+              },
+              {
+                level: "Level 2 · Ambient",
+                cls: "smoke-ambient",
+                desc: "Creator profiles, fan discovery headers, and featured cards. Soft charcoal haze with restrained illumination.",
+              },
+              {
+                level: "Level 3 · Minimal",
+                cls: "smoke-minimal",
+                desc: "Creator Studio, Vault, forms, settings, and checkout. Predominantly clean dark surfaces for high-density legibility.",
+              },
+            ].map((s) => (
+              <div key={s.level} className={`${s.cls} rounded-[var(--radius-lg)] border border-line p-6`}>
+                <p className="eyebrow text-gold">{s.level}</p>
+                <p className="mt-2 font-mono text-[12px] text-ivory">.{s.cls}</p>
+                <p className="mt-3 text-[13px] leading-relaxed text-stone">{s.desc}</p>
+              </div>
+            ))}
           </div>
         </Section>
 

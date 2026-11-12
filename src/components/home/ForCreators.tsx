@@ -11,7 +11,7 @@ const TOOLS = [
 
 export function ForCreators() {
   return (
-    <section id="creators" aria-labelledby="creators-title" className="section-y border-t border-line bg-ink-2">
+    <section id="creators" aria-labelledby="creators-title" className="smoke-minimal section-y border-t border-line bg-ink-2">
       <div className="container-page">
         <SectionHeading
           id="creators-title"
@@ -19,11 +19,14 @@ export function ForCreators() {
           title={<>Your work, your audience, <em className="text-gold-soft">your terms.</em></>}
           lede="Creators join by invitation and are verified before their profile goes live. Earnings and payouts start when payments open."
         />
-        <ul className="mt-12 grid gap-px overflow-hidden rounded-[var(--radius-xl)] border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
-          {TOOLS.map(([title, body]) => (
-            <li key={title} className="mk-reveal bg-ink-2 p-6 md:p-7">
-              <h3 className="text-[18px] font-medium text-ivory">{title}</h3>
-              <p className="mt-2.5 text-[15px] leading-relaxed text-stone">{body}</p>
+        <ul className="mt-12 grid gap-px overflow-hidden rounded-[var(--radius-xl)] border border-line-gold/35 bg-line sm:grid-cols-2 lg:grid-cols-3">
+          {TOOLS.map(([title, body], i) => (
+            <li key={title} className="mk-reveal bg-ink-2 p-6 md:p-8">
+              <div className="flex items-center justify-between gap-3">
+                <h3 className="text-[18px] font-medium text-ivory">{title}</h3>
+                <span aria-hidden className={i % 2 === 1 ? "h-1.5 w-1.5 rounded-full bg-pink" : "h-1.5 w-1.5 rounded-full bg-gold"} />
+              </div>
+              <p className="mt-3 text-[15px] leading-relaxed text-stone">{body}</p>
             </li>
           ))}
         </ul>

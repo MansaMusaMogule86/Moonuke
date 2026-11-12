@@ -8,8 +8,9 @@ describe("design tokens", () => {
   it("CSS and JS token sources agree", () => {
     const pairs: [string, string][] = [
       ["--mk-ink", color.ink], ["--mk-ink-2", color.ink2], ["--mk-ink-3", color.ink3],
+      ["--mk-ink-4", color.ink4], ["--mk-burgundy", color.burgundy],
       ["--mk-gold", color.gold], ["--mk-gold-soft", color.goldSoft], ["--mk-gold-muted", color.goldMuted],
-      ["--mk-pink", color.pink], ["--mk-pink-soft", color.pinkSoft], ["--mk-ink-4", color.ink4],
+      ["--mk-pink", color.pink], ["--mk-pink-soft", color.pinkSoft],
       ["--mk-ivory", color.ivory], ["--mk-stone", color.stone], ["--mk-ash", color.ash],
     ];
     for (const [token, hex] of pairs) {
@@ -17,16 +18,17 @@ describe("design tokens", () => {
     }
   });
 
-  it("matches the DivaFans palette", () => {
-    expect(color.ink).toBe("#050505");
-    expect(color.ink2).toBe("#121217");
-    expect(color.ink3).toBe("#1a1921");
-    expect(color.gold).toBe("#d4af37");
-    expect(color.goldSoft).toBe("#f5d58a");
+  it("matches the DivaFans smoky luxury palette", () => {
+    expect(color.ink).toBe("#080709");
+    expect(color.ink2).toBe("#151116");
+    expect(color.ink3).toBe("#1d1720");
+    expect(color.burgundy).toBe("#34101f");
+    expect(color.gold).toBe("#d8ad52");
+    expect(color.goldSoft).toBe("#f3d58a");
     expect(color.goldMuted).toBe("#a88b45");
-    expect(color.pink).toBe("#ff2d96");
-    expect(color.ivory).toBe("#f8f5f0");
-    expect(color.stone).toBe("#b9b4c0");
+    expect(color.pink).toBe("#f52a8b");
+    expect(color.ivory).toBe("#f7f0e8");
+    expect(color.stone).toBe("#bfb5bc");
   });
 
   it.each([

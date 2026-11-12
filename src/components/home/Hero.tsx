@@ -1,82 +1,138 @@
-import { Symbol } from "@/components/brand/Symbol";
+import Image from "next/image";
 import { Button } from "@/components/ui/Button";
 
 const TRUST = [
-  { label: "By invitation", icon: <path d="M10 3.5a3 3 0 0 0-3 3V9H5.5v7.5h9V9H13V6.5a3 3 0 0 0-3-3Zm-1.5 3a1.5 1.5 0 0 1 3 0V9h-3V6.5Z" /> },
-  { label: "Private by design", icon: <path d="M10 2.5 4 5v4.6c0 3.7 2.6 6.7 6 7.9 3.4-1.2 6-4.2 6-7.9V5l-6-2.5Zm0 1.6 4.5 1.9v3.6c0 2.9-1.9 5.3-4.5 6.4-2.6-1.1-4.5-3.5-4.5-6.4V6l4.5-1.9Z" /> },
-  { label: "Creator first", icon: <path d="m10 3 1.9 4.6L17 8l-3.6 3.4 1 5L10 14l-4.4 2.4 1-5L3 8l5.1-.4L10 3Z" /> },
+  {
+    label: "By invitation",
+    icon: (
+      <path d="M10 2.75a3.25 3.25 0 0 0-3.25 3.25V8.5H5.5A1.25 1.25 0 0 0 4.25 9.75v6A1.25 1.25 0 0 0 5.5 17h9a1.25 1.25 0 0 0 1.25-1.25v-6A1.25 1.25 0 0 0 14.5 8.5h-1.25V6A3.25 3.25 0 0 0 10 2.75Zm-1.75 3.25a1.75 1.75 0 1 1 3.5 0V8.5h-3.5V6Z" />
+    ),
+  },
+  {
+    label: "Private by design",
+    icon: (
+      <path d="M10 2.25 4 4.75v4.6c0 3.85 2.55 7.05 6 8.4 3.45-1.35 6-4.55 6-8.4v-4.6l-6-2.5Zm-.75 10.06-2.28-2.28 1.06-1.06 1.22 1.22 3.22-3.22 1.06 1.06-4.28 4.28Z" />
+    ),
+  },
+  {
+    label: "Creator first",
+    icon: (
+      <path d="M2.75 6.5 6.5 10l3.5-5.25L13.5 10l3.75-3.5-1.5 8.25H4.25L2.75 6.5Zm1.75 9.75h11v1.5h-11v-1.5Z" />
+    ),
+  },
 ];
 
 /**
- * Cinematic hero. There is NO photography: the right-hand plate is a branded
- * composition — a gold-and-pink gradient field, an arch hairline and the DF
- * monogram watermark — so the page never shows a stock or model image. Motion
- * is CSS: staggered entrances, slow light drift and a desktop-only parallax,
- * all off under prefers-reduced-motion.
+ * Approved DivaFans Smoky Luxury Hero.
+ * Reconstructed as live, responsive, accessible HTML and CSS over the clean,
+ * text-free extracted hero artwork (/assets/brand/divafans-hero-smoky.webp).
+ * Preserves the obsidian/charcoal smoky atmosphere, champagne gold highlights,
+ * neon pink lighting, diva line-art illustration, circular glow and pink waves.
  */
 export function Hero() {
   return (
-    <section aria-labelledby="hero-title" className="relative isolate overflow-hidden bg-ink lg:min-h-[min(100svh,920px)]">
-      {/* Ambient light + a fine gold grid */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-        <div className="mk-drift absolute -left-[10%] top-[10%] h-[60vw] max-h-[720px] w-[60vw] max-w-[720px] rounded-full bg-[radial-gradient(closest-side,rgb(212_175_55/0.14),transparent)]" />
-        <div className="mk-glow absolute right-[8%] top-[30%] h-[40vw] max-h-[520px] w-[40vw] max-w-[520px] rounded-full bg-[radial-gradient(closest-side,rgb(255_45_150/0.12),transparent)]" />
-        <div className="absolute inset-0 opacity-[0.05] [background-image:linear-gradient(to_right,rgb(212_175_55/0.6)_1px,transparent_1px),linear-gradient(to_bottom,rgb(212_175_55/0.6)_1px,transparent_1px)] [background-size:72px_72px] [mask-image:radial-gradient(120%_90%_at_72%_28%,black,transparent_72%)]" />
-      </div>
+    <section
+      aria-labelledby="hero-title"
+      className="relative isolate overflow-hidden bg-ink lg:min-h-[min(100svh,937px)]"
+    >
+      {/* Level 1 Cinematic atmospheric underglow */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 -z-20 smoke-cinematic" />
 
-      {/* Brand plate: on top below lg, right-hand side from lg. Abstract — never a person. */}
-      <div className="relative mt-[72px] h-[42svh] min-h-[280px] max-h-[480px] md:h-[52svh] md:max-h-[580px] lg:absolute lg:inset-y-0 lg:right-0 lg:mt-0 lg:h-auto lg:max-h-none lg:w-[50%] xl:w-[min(58%,1000px)]">
-        <div className="mk-parallax absolute inset-0">
-          <div className="relative h-full w-full overflow-hidden [mask-image:linear-gradient(to_bottom,transparent_0,black_28px,black_62%,transparent)] lg:[mask-image:linear-gradient(to_right,transparent_0%,black_34%),linear-gradient(to_bottom,black_78%,transparent)] lg:[mask-composite:intersect]">
-            <div className="absolute inset-0 bg-[radial-gradient(120%_90%_at_78%_20%,rgb(212_175_55/0.20),transparent_58%),radial-gradient(90%_80%_at_28%_92%,rgb(255_45_150/0.16),transparent_62%),linear-gradient(158deg,#16151c_0%,#050505_68%)]" />
-            <div aria-hidden className="arch absolute inset-x-[11%] inset-y-[8%] border border-gold/25 bg-[linear-gradient(180deg,rgb(212_175_55/0.07),transparent_58%)]" />
-            <div aria-hidden className="absolute left-1/2 top-1/2 h-[60%] w-[60%] -translate-x-1/2 -translate-y-1/2">
-              <Symbol size={560} className="h-full w-full opacity-95" />
-            </div>
-            <div aria-hidden className="mk-drift absolute -inset-y-1/4 left-[8%] w-[64%] rotate-[16deg] bg-[linear-gradient(90deg,transparent,rgb(245_213_138/0.12),transparent)] blur-2xl" />
-          </div>
+      {/* Approved smoky diva artwork: framed above copy on mobile, full-bleed stage on desktop */}
+      <div className="relative mt-[68px] h-[34svh] min-h-[236px] max-h-[330px] w-full sm:h-[40svh] sm:max-h-[400px] md:h-[46svh] md:max-h-[480px] lg:absolute lg:inset-0 lg: -z-10 lg:mt-0 lg:h-full lg:max-h-none">
+        <div className="mk-parallax relative h-full w-full">
+          <Image
+            src="/assets/brand/divafans-hero-smoky.webp"
+            alt=""
+            fill
+            preload
+            fetchPriority="high"
+            sizes="100vw"
+            className="object-cover object-[78%_20%] [mask-image:linear-gradient(to_bottom,transparent_0,black_20px,black_78%,transparent_100%)] lg:object-[66%_center] lg:[mask-image:linear-gradient(to_bottom,black_88%,transparent_100%)] xl:object-center"
+          />
+          {/* Subtle readability veil on the left for desktop and bottom edge on mobile */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,transparent_55%,#080709_100%)] lg:bg-[linear-gradient(90deg,#080709_0%,rgb(8_7_9/0.86)_34%,rgb(8_7_9/0.25)_54%,transparent_72%)]"
+          />
         </div>
       </div>
 
-      <div className="container-wide relative lg:flex lg:min-h-[min(100svh,920px)] lg:items-center lg:pt-[84px]">
-        <div className="-mt-10 pb-16 md:-mt-16 lg:mt-0 lg:max-w-[470px] lg:pb-0 xl:max-w-[620px]">
-          <p className="mk-rise flex items-center gap-3 text-[12px] font-medium uppercase tracking-[0.32em] text-gold md:text-[13px]">
-            Create <span aria-hidden className="h-1 w-1 rounded-full bg-pink" /> Share <span aria-hidden className="h-1 w-1 rounded-full bg-pink" /> Earn
+      {/* Live editorial content column */}
+      <div className="container-wide relative z-10 lg:flex lg:min-h-[min(100svh,937px)] lg:items-center lg:pt-[84px]">
+        <div className="-mt-6 pb-12 sm:-mt-8 md:pb-16 lg:mt-0 lg:max-w-[540px] lg:py-16 xl:max-w-[640px]">
+          <p className="mk-rise flex items-center gap-3.5 text-[11.5px] font-medium uppercase tracking-[0.34em] text-gold md:text-[13px]">
+            <span>Create</span>
+            <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-pink shadow-[0_0_8px_var(--mk-pink)]" />
+            <span>Share</span>
+            <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-pink shadow-[0_0_8px_var(--mk-pink)]" />
+            <span>Earn</span>
           </p>
+
           <h1
             id="hero-title"
-            className="mk-rise-2 mt-5 font-display text-[clamp(2.6rem,5.6vw,4.6rem)] leading-[1.02] tracking-[-0.02em] text-ivory"
+            className="mk-rise-2 mt-4 font-display text-[clamp(2.35rem,5.5vw,4.65rem)] leading-[1.03] tracking-[-0.02em] text-ivory md:mt-5"
           >
-            A Premium Space for{" "}
-            <em className="bg-[linear-gradient(100deg,var(--mk-pink)_0%,var(--mk-pink-soft)_45%,var(--mk-gold-soft)_100%)] bg-clip-text pr-[0.06em] text-transparent">
-              Exclusive
-            </em>{" "}
-            Creators
+            <span className="block">A Premium</span>
+            <span className="block">Space for</span>
+            <span className="relative inline-block">
+              <em className="bg-[linear-gradient(95deg,#f52a8b_0%,#ff4da2_55%,#ff8bc8_100%)] bg-clip-text pr-[0.08em] font-normal italic text-transparent drop-shadow-[0_0_24px_rgb(245_42_139/0.28)]">
+                Exclusive
+              </em>
+              {/* Champagne gold brush swoosh underline from the approved reference */}
+              <svg
+                aria-hidden
+                viewBox="0 0 260 22"
+                fill="none"
+                className="pointer-events-none mt-1 h-[10px] w-[88%] md:h-[14px]"
+              >
+                <path
+                  d="M4 17.5C62 5.5 154 3.5 256 14.5C184 9.5 88 11.5 18 19.5C10 20.3 4 19 4 17.5Z"
+                  fill="url(#hero-gold-swoosh)"
+                />
+                <defs>
+                  <linearGradient id="hero-gold-swoosh" x1="4" y1="12" x2="256" y2="12" gradientUnits="userSpaceOnUse">
+                    <stop offset="0%" stopColor="#D8AD52" />
+                    <stop offset="50%" stopColor="#F3D58A" />
+                    <stop offset="100%" stopColor="#D8AD52" stopOpacity="0.25" />
+                  </linearGradient>
+                </defs>
+              </svg>
+            </span>{" "}
+            <span>Creators</span>
           </h1>
-          <p className="mk-rise-3 mt-6 max-w-[34rem] text-[17px] leading-relaxed text-stone md:text-[18px]">
+
+          <p className="mk-rise-3 mt-4 max-w-[35rem] text-[15.5px] leading-[1.62] text-stone sm:text-[16.5px] md:mt-6 md:text-[18px]">
             Share exclusive content, grow your fanbase, and build a closer connection with your community on a platform designed for creators.
           </p>
-          <div className="mk-rise-4 mt-9 flex flex-col gap-3 sm:flex-row">
+
+          <div className="mk-rise-4 mt-6 flex flex-col gap-3 sm:flex-row sm:items-center md:mt-8">
             <Button
               href="/#creators"
               size="lg"
               arrow
-              className="shadow-[inset_0_1px_0_rgb(255_255_255/0.5),0_10px_34px_-10px_rgb(255_45_150/0.45)] hover:shadow-[inset_0_1px_0_rgb(255_255_255/0.6),0_14px_40px_-10px_rgb(255_45_150/0.6)]"
+              className="h-12 px-7 text-[15px] font-medium shadow-[inset_0_1px_0_rgb(255_255_255/0.55),0_10px_32px_-8px_rgb(216_173_82/0.55)] hover:shadow-[inset_0_1px_0_rgb(255_255_255/0.7),0_14px_40px_-8px_rgb(216_173_82/0.72)] md:h-14 md:px-8"
             >
               Join as a Creator
             </Button>
-            <Button href="/discover" size="lg" variant="outline" className="border-gold/50 bg-ink/40 backdrop-blur-sm">
+            <Button
+              href="/discover"
+              size="lg"
+              variant="outline"
+              className="h-12 border-gold/55 bg-ink/60 px-7 text-[15px] text-ivory backdrop-blur-sm hover:border-gold hover:bg-gold/[0.08] md:h-14 md:px-8"
+            >
               Discover Creators
             </Button>
           </div>
-          <ul className="mk-rise-4 mt-9 flex flex-wrap items-center gap-x-6 gap-y-3 text-[14px] text-ivory/85">
+
+          <ul className="mk-rise-4 mt-6 flex flex-wrap items-center gap-x-5 gap-y-2.5 text-[13.5px] text-ivory/90 md:mt-8 md:text-[14px]">
             {TRUST.map((t, i) => (
               <li key={t.label} className="flex items-center gap-2.5">
-                {i > 0 && <span aria-hidden className="-ml-3 mr-3 hidden h-4 w-px bg-pink/50 sm:block" />}
-                <svg aria-hidden viewBox="0 0 20 20" className="h-[18px] w-[18px] text-gold" fill="currentColor">
+                {i > 0 && <span aria-hidden className="-ml-2 mr-2 hidden h-4 w-px bg-pink/65 sm:block" />}
+                <svg aria-hidden viewBox="0 0 20 20" className="h-[17px] w-[17px] shrink-0 text-gold" fill="currentColor">
                   {t.icon}
                 </svg>
-                {t.label}
+                <span>{t.label}</span>
               </li>
             ))}
           </ul>

@@ -1,23 +1,31 @@
 /**
  * DivaFans design tokens for JS consumers (Motion, canvas, charts).
+ * Approved direction: SMOKY OBSIDIAN × CHAMPAGNE GOLD × NEON PINK × DEEP BURGUNDY.
  * The CSS source of truth lives in src/styles/tokens.css — keep in sync.
  * tests/tokens.test.ts verifies parity and contrast budgets.
  */
 export const color = {
-  ink: "#050505",
-  ink2: "#121217",
-  ink3: "#1a1921",
-  ink4: "#24232c",
-  gold: "#d4af37",
-  goldSoft: "#f5d58a",
+  ink: "#080709",
+  ink2: "#151116",
+  ink3: "#1d1720",
+  ink4: "#261f2a",
+  burgundy: "#34101f",
+  gold: "#d8ad52",
+  goldSoft: "#f3d58a",
   goldMuted: "#a88b45",
-  pink: "#ff2d96",
+  pink: "#f52a8b",
   pinkSoft: "#ff8bc8",
-  ivory: "#f8f5f0",
-  stone: "#b9b4c0",
-  ash: "#948f9c",
+  ivory: "#f7f0e8",
+  stone: "#bfb5bc",
+  ash: "#988e96",
   success: "#9ccba2",
   danger: "#e8a07f",
+} as const;
+
+export const smokeLevel = {
+  cinematic: "smoke-cinematic",
+  ambient: "smoke-ambient",
+  minimal: "smoke-minimal",
 } as const;
 
 export const ease = {

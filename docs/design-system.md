@@ -13,18 +13,19 @@ The live, interactive reference is at **`/design-system`**. This file covers the
 ## Tokens (`src/styles/tokens.css`, mirrored in `src/lib/tokens.ts`)
 | Token | Value | Use |
 |---|---|---|
-| `--mk-ink` | #050505 | Page background (obsidian; matches the logo's black) |
-| `--mk-ink-2` | #121217 | Raised surface: alternating sections, cards |
-| `--mk-ink-3` | #1A1921 | Elevated surface: inputs, menus, sheets |
-| `--mk-ink-4` | #24232C | Hover and pressed on elevated surfaces |
-| `--mk-gold` | #D4AF37 | Metallic gold: primary action, active nav, VIP (9.7:1; ink label on gold 9.7:1) |
-| `--mk-gold-soft` | #F5D58A | Champagne: hover, focus ring, button sheen |
-| `--mk-gold-muted` | #A88B45 | Quiet ornament |
-| `--mk-pink` | #FF2D96 | Hot pink, about 5–10% of accents (5.9:1; ink label on pink 5.9:1) |
+| `--mk-ink` | #080709 | Obsidian Black: page background |
+| `--mk-ink-2` | #151116 | Charcoal Black: raised surface, alternating sections, cards |
+| `--mk-ink-3` | #1E1820 | Elevated surface: inputs, menus, sheets |
+| `--mk-ink-4` | #28202B | Hover and pressed on elevated surfaces |
+| `--mk-gold` | #D8AD52 | Champagne Gold: primary action, active nav, VIP |
+| `--mk-gold-soft` | #F3D58A | Light Gold: hover, focus ring, button sheen |
+| `--mk-gold-muted` | #A88743 | Quiet ornament |
+| `--mk-pink` | #F52A8B | Neon Pink: selective interactive highlights and accents |
 | `--mk-pink-soft` | #FF8BC8 | Soft pink: small pink text, glows |
-| `--mk-ivory` | #F8F5F0 | Warm white: primary text (18.7:1) |
-| `--mk-stone` | #B9B4C0 | Secondary text (9.9:1) |
-| `--mk-ash` | #948F9C | Meta text; AA on every surface up to ink-4 (enforced by `tests/tokens.test.ts`) |
+| `--mk-burgundy` | #34101F | Deep Burgundy: atmospheric shadows and wine surface tints |
+| `--mk-ivory` | #F7F0E8 | Ivory White: primary text |
+| `--mk-stone` | #BFB5BC | Muted Text: secondary text |
+| `--mk-ash` | #9A9098 | Meta text; AA on every surface up to ink-4 (enforced by `tests/tokens.test.ts`) |
 | `--mk-container` / `--mk-container-wide` | 1200 / 1440px | Content width / chrome width (`container-page`, `container-wide` utilities) |
 | `--mk-gutter`, `--mk-section` | fluid | Side padding and marketing section rhythm (`section-y`) |
 | `--mk-shadow-1`, `--mk-shadow-2` | — | Card and raised-panel elevation |

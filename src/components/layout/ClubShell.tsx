@@ -30,7 +30,7 @@ export function ClubShell({ viewer, children, unread = 0 }: { viewer: Viewer; ch
           <Link href="/discover" className="flex items-center gap-3 rounded-md">
             <span className="sr-only">{`${brand.name} — Discover`}</span>
             <Symbol size={36} />
-            <Wordmark decorative className="hidden text-[14px] sm:inline-flex" />
+            <Wordmark decorative tone="duotone" className="hidden text-[15px] sm:inline-flex" />
           </Link>
           <ClubNav items={items} variant="top" />
           <div className="flex items-center gap-3">

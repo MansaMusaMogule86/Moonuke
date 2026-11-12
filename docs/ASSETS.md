@@ -43,9 +43,12 @@ Never write `/public/...` in a URL or `src` attribute. In components, use `next/
 
 Both derived files were produced by cropping and padding only (sharp, bundled with Next.js), with no recolouring. Every use applies the `logo-art` utility (`mix-blend-mode: lighten`) so the black disappears into the dark page surface. Don't place them on light backgrounds; a transparent master would remove that limit.
 
-**Hero** (`public/images/hero/`):
+**Hero** (`public/assets/brand/`):
 
-The homepage hero is **photography-free**. `src/components/home/Hero.tsx` renders a branded composition — a gold-and-pink gradient field, an arch hairline and the DF monogram watermark — so no stock or model image is ever shown. The folder holds only its `.gitkeep`; the previously shipped hero portrait and its reference mock-up were removed (never replace them with another stock or AI-generated person).
+The homepage hero uses the approved smoky DivaFans artwork:
+- `public/assets/brand/divafans-hero-smoky.webp` (1679×937 WebP, 87 KB): clean, text-free extraction of the approved gold-and-pink diva line-art illustration with crown, circular neon-pink/champagne-gold glow, luminous pink waves, and smoky obsidian-charcoal atmosphere.
+- `public/assets/brand/divafans-hero-smoky-mobile.webp` (939×902 WebP, 70 KB): mobile-focused crop for viewports under 1024px.
+Navigation, headline, and CTA buttons are rendered as accessible live HTML/CSS on top of the smoky composition.
 
 Every other folder holds only its `.gitkeep`.
 

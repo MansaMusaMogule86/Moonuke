@@ -40,25 +40,27 @@ export function SiteHeader({ overlay = false }: { overlay?: boolean }) {
     <>
       <header
         className={cn(
-          "inset-x-0 top-0 z-50 transition-[background-color] duration-[520ms]",
+          "inset-x-0 top-0 z-50 transition-[background-color,border-color,backdrop-filter] duration-[520ms]",
           overlay ? "fixed" : "sticky",
-          solid ? "border-b border-line bg-ink/85 backdrop-blur-md" : "bg-gradient-to-b from-ink/70 to-transparent",
+          solid
+            ? "border-b border-line bg-ink/88 backdrop-blur-md"
+            : "bg-gradient-to-b from-ink/80 via-ink/35 to-transparent",
         )}
       >
-        <div className="container-wide flex h-[72px] items-center justify-between gap-4 lg:h-[84px]">
+        <div className="container-wide flex h-[68px] items-center justify-between gap-4 lg:h-[84px]">
           <Link href="/" className="flex items-center gap-3 rounded-md">
             <span className="sr-only">{`${brand.name} home`}</span>
-            <Symbol size={44} className="h-10 w-10 lg:h-11 lg:w-11" />
-            <Wordmark decorative className="text-[14px] sm:text-[16px]" />
+            <Symbol size={44} className="h-10 w-10 lg:h-12 lg:w-12" />
+            <Wordmark decorative tone="duotone" className="text-[16px] sm:text-[18px] lg:text-[20px]" />
           </Link>
 
           <nav aria-label="Primary" className="hidden lg:block">
-            <ul className="flex items-center gap-1">
+            <ul className="flex items-center gap-2 xl:gap-4">
               {NAV.map((item) => (
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className="relative block rounded-full px-4 py-2.5 text-[14px] text-ivory/80 transition-colors duration-[260ms] after:absolute after:inset-x-4 after:bottom-1.5 after:h-px after:origin-left after:scale-x-0 after:bg-gold after:transition-transform after:duration-[260ms] hover:text-ivory hover:after:scale-x-100"
+                    className="relative block rounded-full px-4 py-2.5 text-[14px] text-ivory/90 transition-colors duration-[260ms] after:absolute after:inset-x-4 after:bottom-1.5 after:h-px after:origin-left after:scale-x-0 after:bg-gold after:transition-transform after:duration-[260ms] hover:text-gold-soft hover:after:scale-x-100"
                   >
                     {item.label}
                   </Link>
@@ -67,11 +69,20 @@ export function SiteHeader({ overlay = false }: { overlay?: boolean }) {
             </ul>
           </nav>
 
-          <div className="flex items-center gap-2">
-            <Button href="/signin" size="sm" variant="outline" className="hidden h-11 px-5 sm:inline-flex">
+          <div className="flex items-center gap-2.5">
+            <Button
+              href="/signin"
+              size="sm"
+              variant="outline"
+              className="hidden h-11 border-line-strong bg-ink/50 px-5 text-[13.5px] backdrop-blur-sm hover:border-gold/60 sm:inline-flex"
+            >
               Log in
             </Button>
-            <Button href={JOIN_HREF} size="sm" className="hidden h-11 px-5 md:inline-flex">
+            <Button
+              href={JOIN_HREF}
+              size="sm"
+              className="hidden h-11 px-5 text-[13.5px] shadow-[inset_0_1px_0_rgb(255_255_255/0.5),0_8px_24px_-8px_rgb(216_173_82/0.55)] md:inline-flex"
+            >
               {`Join ${brand.name}`}
             </Button>
             <button
@@ -80,7 +91,7 @@ export function SiteHeader({ overlay = false }: { overlay?: boolean }) {
               aria-label="Open menu"
               aria-haspopup="dialog"
               aria-expanded={open}
-              className="grid h-11 w-11 place-items-center rounded-full border border-line-strong text-ivory transition-colors hover:border-gold/60 lg:hidden"
+              className="grid h-11 w-11 place-items-center rounded-full border border-line-strong bg-ink-2/80 text-ivory transition-colors hover:border-gold/60 lg:hidden"
             >
               <svg aria-hidden viewBox="0 0 20 20" className="h-4 w-4">
                 <path d="M3 6.5h14M3 13.5h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
@@ -101,7 +112,7 @@ export function SiteHeader({ overlay = false }: { overlay?: boolean }) {
                   className="flex min-h-14 items-center justify-between text-[18px] text-ivory transition-colors active:text-gold"
                 >
                   {item.label}
-                  <svg aria-hidden viewBox="0 0 20 20" className="h-4 w-4 text-ash">
+                  <svg aria-hidden viewBox="0 0 20 20" className="h-4 w-4 text-gold">
                     <path d="M7 4l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="1.5" />
                   </svg>
                 </Link>

@@ -9,14 +9,24 @@ const STEPS = [
 
 export function HowItWorks() {
   return (
-    <section id="how-it-works" aria-labelledby="how-title" className="section-y border-t border-line bg-ink-2">
+    <section id="how-it-works" aria-labelledby="how-title" className="smoke-minimal section-y border-t border-line bg-ink-2">
       <div className="container-page">
-        <SectionHeading id="how-title" eyebrow="How it works" title="Three steps to a closer connection." />
-        <ol className="mt-12 grid gap-4 md:grid-cols-3">
+        <SectionHeading
+          id="how-title"
+          eyebrow="How it works"
+          title={<>Three steps to a <em className="text-metal">closer connection.</em></>}
+        />
+        <ol className="mt-12 grid gap-5 md:grid-cols-3">
           {STEPS.map(([title, body], i) => (
-            <li key={title} className="mk-reveal rounded-[var(--radius-lg)] border border-line bg-ink p-6 md:p-7">
-              <span className="font-display text-[34px] leading-none text-gold">{i + 1}</span>
-              <h3 className="mt-5 text-[19px] font-medium text-ivory">{title}</h3>
+            <li
+              key={title}
+              className="mk-reveal relative overflow-hidden rounded-[var(--radius-xl)] border border-line bg-ink p-6 transition-colors hover:border-gold/35 md:p-8"
+            >
+              <div className="flex items-center justify-between">
+                <span className="font-display text-[38px] leading-none text-gold">{`0${i + 1}`}</span>
+                <span aria-hidden className={i === 1 ? "h-1.5 w-1.5 rounded-full bg-pink" : "h-1.5 w-1.5 rounded-full bg-gold/60"} />
+              </div>
+              <h3 className="mt-6 text-[19px] font-medium text-ivory">{title}</h3>
               <p className="mt-2.5 text-[15px] leading-relaxed text-stone">{body}</p>
             </li>
           ))}

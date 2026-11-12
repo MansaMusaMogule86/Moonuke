@@ -1,0 +1,3 @@
+# Hero artwork lives here. The homepage hero is photography-free by design
+# (see src/components/home/Hero.tsx and docs/ASSETS.md); do not add stock or
+# AI-generated portraits. This file only keeps the folder in git.

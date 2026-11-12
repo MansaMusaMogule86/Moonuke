@@ -52,10 +52,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   await headers();
   return (
     // suppressHydrationWarning: browser extensions and inline pre-hydration scripts
-    // add attributes to <html> (e.g. data-* flags) that React would otherwise flag as
-    // a hydration mismatch. React keeps the DOM value instead of re-rendering <html>.
+    // add attributes to <html> and <body> (e.g. Grammarly's data-gr-* flags,
+    // data-trendtrack-*) that React would otherwise flag as a hydration mismatch.
+    // It applies one level deep, so it is needed on both elements; React keeps the
+    // DOM value instead of re-rendering them.
     <html lang="en" className={`${bodoni.variable} ${jost.variable}`} suppressHydrationWarning>
-      <body>
+      <body suppressHydrationWarning>
         <a
           href="#main"
           className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-full focus:bg-gold focus:px-5 focus:py-3 focus:text-ink"

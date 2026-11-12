@@ -14,6 +14,7 @@
     "db:migrate": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/migrate.ts",
     "db:seed": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/seed.ts",
     "owner:create": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/create-owner.ts",
+    "member:create": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/create-member.ts",
     "test:server": "vitest run --project server",
     "env:check": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/env-check.ts",
     "email:drain": "tsx --conditions=react-server --env-file-if-exists=.env.local scripts/email-drain.ts",

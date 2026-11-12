@@ -51,7 +51,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // nonces require. Next.js applies the nonce from the CSP header to its scripts.
   await headers();
   return (
-    <html lang="en" className={`${bodoni.variable} ${jost.variable}`}>
+    // suppressHydrationWarning: browser extensions and inline pre-hydration scripts
+    // add attributes to <html> (e.g. data-* flags) that React would otherwise flag as
+    // a hydration mismatch. React keeps the DOM value instead of re-rendering <html>.
+    <html lang="en" className={`${bodoni.variable} ${jost.variable}`} suppressHydrationWarning>
       <body>
         <a
           href="#main"

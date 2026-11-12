@@ -139,7 +139,7 @@ This was a **local** run. GitHub Actions did not run.
 
 ## Known issues and limitations
 - **Auth:** our own implementation; the Supabase switch is planned, not done. There's no ID-verification vendor; checks are manual.
-- **Studio:** no uploads, Blasts or earnings yet; analytics are counts only.
+- **Studio:** a cohesive workspace (persistent sidebar + Overview dashboard + Earnings). Blasts are implemented (composer, custom lists, templates, worker, history). Uploads remain inert (no approved storage or scan provider). Earnings is a read-only interface over the payment ledger — payments are off, so it shows availability, not income. Analytics are counts only. See `docs/CREATOR_STUDIO_IMPLEMENTATION.md`.
 - **Messaging:** text only, no attachments (storage not approved) and no paid messages or tips (payments). Updates arrive by polling, not websockets. Not end-to-end encrypted. No separate moderator role. Appeals cover messaging pauses only.
 - **Fan app:** no tips, notification preferences or email or push notifications. The unread badge updates on navigation, not live. Memberships never renew, because there's no billing. Scheduled posts go live silently, with no notification.
 - **Media:** placeholder SVGs only. No uploads, no object storage, no CSAM/NCII hash-matching (required before real uploads).

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { StudioHeader } from "@/components/studio/StudioHeader";
 import { Badge } from "@/components/ui/Badge";
 import { requireViewer } from "@/server/auth/request";
 import { markNoticesRead, myNotices } from "@/server/services/notices";
@@ -17,14 +18,14 @@ export default async function NoticesPage() {
   const notices = await myNotices(viewer);
   await markNoticesRead(viewer);
   return (
-    <div className="mx-auto max-w-[800px] px-5 pb-28 pt-14 md:px-10 md:pt-20">
-      <Link href="/studio" className="text-[13px] text-stone underline decoration-line-strong underline-offset-4 hover:text-ivory">← Studio</Link>
-      <h1 className="mt-6 font-display text-[44px] leading-none tracking-[-0.03em] text-ivory md:text-[64px]">Notices</h1>
-      <p className="mt-4 text-[14px] leading-relaxed text-stone">
-        When the house restricts your content, it tells you what was decided, why, and how to appeal. People who report content are never identified.
-      </p>
-      {notices.length === 0 ? <p className="mt-10 text-[14px] text-ash">No decisions about your content.</p> : (
-        <ul className="mt-10 space-y-4">
+    <div className="mx-auto max-w-[800px] px-5 pb-28 pt-6 md:px-10 md:pt-8">
+      <StudioHeader
+        eyebrow="Studio"
+        title="Notices"
+        lede="When the house restricts your content, it tells you what was decided, why, and how to appeal. People who report content are never identified."
+      />
+      {notices.length === 0 ? <p className="mt-8 text-[14px] text-ash">No decisions about your content.</p> : (
+        <ul className="mt-8 space-y-4">
           {notices.map((n) => (
             <li key={n.id} className="rounded-[var(--radius-xl)] border border-line bg-ink-2 p-6">
               <div className="flex flex-wrap items-center gap-2 text-[13px] text-stone">

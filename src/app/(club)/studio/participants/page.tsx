@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { notFound } from "next/navigation";
+import { StudioHeader } from "@/components/studio/StudioHeader";
 import { Badge } from "@/components/ui/Badge";
 import { requireViewer } from "@/server/auth/request";
 import { myConsents, myParticipants } from "@/server/services/participants";
@@ -16,16 +16,15 @@ export default async function StudioParticipantsPage() {
   const people = await myParticipants(viewer);
   const consents = new Map(await Promise.all(people.map(async (p) => [p.id, await myConsents(viewer, p.id)] as const)));
   return (
-    <div className="mx-auto max-w-[800px] px-5 pb-28 pt-14 md:px-10 md:pt-20">
-      <Link href="/studio" className="text-[13px] text-stone underline decoration-line-strong underline-offset-4 hover:text-ivory">← Studio</Link>
-      <h1 className="mt-6 font-display text-[44px] leading-none tracking-[-0.03em] text-ivory md:text-[64px]">Participants</h1>
-      <p className="mt-4 text-[14px] leading-relaxed text-stone">
-        Record everyone other than you who appears in your content. Each person must be 18 or older, verified by the house, and have given
-        consent for the content they appear in. If someone withdraws consent, every post that relies on it is hidden at once.
-      </p>
+    <div className="mx-auto max-w-[800px] px-5 pb-28 pt-6 md:px-10 md:pt-8">
+      <StudioHeader
+        eyebrow="Studio"
+        title="Participants"
+        lede="Record everyone other than you who appears in your content. Each person must be 18 or older, verified by the house, and have given consent for the content they appear in. If someone withdraws consent, every post that relies on it is hidden at once."
+      />
 
       {people.length > 0 && (
-        <ul className="mt-10 space-y-4">
+        <ul className="mt-8 space-y-4">
           {people.map((p) => (
             <li key={p.id} className="rounded-[var(--radius-xl)] border border-line bg-ink-2 p-6">
               <div className="flex flex-wrap items-center gap-2">

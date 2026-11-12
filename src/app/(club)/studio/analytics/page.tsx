@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { StudioHeader } from "@/components/studio/StudioHeader";
 import { requireViewer } from "@/server/auth/request";
 import { myAnalytics } from "@/server/services/studio";
 
@@ -25,14 +26,14 @@ export default async function AnalyticsPage() {
   const peak = Math.max(1, ...a.weeks.flatMap((w) => [w.members, w.followers]));
 
   return (
-    <div className="mx-auto max-w-[1100px] px-5 pb-28 pt-14 md:px-10 md:pt-20">
-      <Link href="/studio" className="text-[13px] text-stone underline decoration-line-strong underline-offset-4 hover:text-ivory">← Studio</Link>
-      <h1 className="mt-6 font-display text-[48px] leading-none tracking-[-0.03em] text-ivory md:text-[72px]">Analytics</h1>
-      <p className="mt-4 max-w-2xl text-[14px] leading-relaxed text-stone">
-        Counts only — the house never shows you who your members are here, and no viewing activity is tracked. Earnings appear once payments are active.
-      </p>
+    <div className="mx-auto max-w-[1100px] px-5 pb-28 pt-6 md:px-10 md:pt-8">
+      <StudioHeader
+        eyebrow="Studio"
+        title="Analytics"
+        lede="Counts only — the house never shows you who your members are here, and no viewing activity is tracked. Earnings appear once payments are active."
+      />
 
-      <section aria-labelledby="audience-h" className="mt-10">
+      <section aria-labelledby="audience-h" className="mt-8">
         <h2 id="audience-h" className="sr-only">Audience</h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Stat label="Active members" value={a.members.active} sub={`${a.members.vip} VIP`} />

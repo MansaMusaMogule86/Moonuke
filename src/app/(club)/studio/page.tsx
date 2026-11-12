@@ -1,126 +1,197 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ImportPanel } from "@/components/onboarding/ImportPanel";
-import { Stepper } from "@/components/onboarding/Stepper";
+import { CopyLink } from "@/components/studio/CopyLink";
+import { StudioHeader } from "@/components/studio/StudioHeader";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { requireViewer } from "@/server/auth/request";
-import { unreadNotices } from "@/server/services/notices";
-import { listCategories } from "@/server/services/club";
+import { myBlasts } from "@/server/services/blasts";
 import { getOnboarding } from "@/server/services/creatorOnboarding";
-import { assistantInfo, myOnboarding, myProposals, mySocials, STAGES } from "@/server/services/onboarding";
-import { ProfileEditor, ProposalCard, SocialsManager, VerificationForm } from "./StudioForms";
+import { myEarnings } from "@/server/services/earnings";
+import { myConversations } from "@/server/services/messaging";
+import { myAnalytics, myPosts } from "@/server/services/studio";
 
-export const metadata: Metadata = { title: "Studio" };
+export const metadata: Metadata = { title: "Overview · Studio" };
 
-const statusCopy = {
-  not_started: ["Not started", "Save your profile, then confirm the statements below to request verification."],
-  submitted: ["Submitted", "The house has your request. You may be contacted to complete identity checks."],
-  in_review: ["In review", "The house is reviewing your verification."],
-  needs_more_info: ["More information needed", "The house needs more from you — see the note below, then resubmit."],
-  verified: ["Verified", "Your profile is live for members."],
-  rejected: ["Not approved", "Verification wasn't approved. You can update your details and resubmit."],
-} as const;
+const STATE_TONE = { draft: "neutral", scheduled: "member", published: "vip" } as const;
+const when = (iso: string) => new Date(iso).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" });
 
-export default async function StudioPage() {
+function Stat({ label, value, sub, href }: { label: string; value: string | number; sub?: string; href?: string }) {
+  const inner = (
+    <>
+      <p className="eyebrow text-stone">{label}</p>
+      <p className="mt-2 text-[30px] font-medium leading-none text-ivory tabular-nums">{value}</p>
+      {sub && <p className="mt-2 text-[12px] text-ash">{sub}</p>}
+    </>
+  );
+  const cls = "block rounded-[var(--radius-lg)] border border-line bg-ink-2 p-5 transition-colors";
+  return href ? (
+    <Link href={href} className={`${cls} hover:border-gold/40`}>{inner}</Link>
+  ) : (
+    <div className={cls}>{inner}</div>
+  );
+}
+
+export default async function StudioOverviewPage() {
   const viewer = await requireViewer("club.discover");
   if (viewer.role !== "creator") notFound();
-  const unread = await unreadNotices(viewer);
-  const [ob, categories, onboarding, proposals, socials] = await Promise.all([
+
+  const [a, posts, blasts, earnings, onboarding, conversations] = await Promise.all([
+    myAnalytics(viewer),
+    myPosts(viewer),
+    myBlasts(viewer),
+    myEarnings(viewer),
     getOnboarding(viewer),
-    listCategories(viewer),
-    myOnboarding(viewer),
-    myProposals(viewer),
-    mySocials(viewer),
+    myConversations(viewer),
   ]);
-  const [label, help] = statusCopy[ob.verification.status];
-  const canSubmit = !!ob.profile && ["not_started", "needs_more_info", "rejected"].includes(ob.verification.status);
-  const open = proposals.find((p) => p.status === "proposed");
+  const unread = conversations.filter((c) => c.unread).length;
+  const verified = onboarding.verification.status === "verified";
+  const scheduled = a.posts.scheduled + blasts.filter((b) => b.status === "scheduled").length;
+
+  const checks = [
+    { label: "Email confirmed", done: viewer.emailVerified === true, href: "/account/security" },
+    { label: "Two-step sign-in", done: viewer.mfa === "verified" || viewer.aal === 2, href: "/account/security" },
+    { label: "Profile saved", done: !!onboarding.profile, href: "/studio/settings" },
+    { label: "Membership tier added", done: a.tiers.length > 0, href: "/studio/tiers" },
+    { label: "First post published", done: a.posts.published > 0, href: "/studio/posts/new" },
+    { label: "Verified by the house", done: verified, href: "/studio/settings" },
+  ];
+  const doneCount = checks.filter((c) => c.done).length;
+  const handle = onboarding.profile?.handle;
+  const profileUrl = handle ? `https://www.divafans.io/c/${handle}` : null;
 
   return (
-    <div className="mx-auto max-w-[1200px] px-5 pb-28 pt-14 md:px-10 md:pt-20">
-      <p className="eyebrow mb-5">Studio · {viewer.alias}{onboarding.whiteGlove ? " · White-glove" : ""}</p>
-      <h1 className="font-display text-[52px] leading-[0.98] tracking-[-0.03em] text-ivory md:text-[84px]">
-        Your <em className="text-metal">studio.</em>
-      </h1>
-      <p className="mt-5 max-w-2xl text-[16px] leading-relaxed text-stone">
-        {onboarding.whiteGlove
-          ? "The house is preparing your room with you. Review anything we draft, connect your socials, then request verification."
-          : "Set up your profile and request verification. Members can't see your profile until the house verifies you and publishes it."}
-      </p>
-      <div className="mt-6 flex flex-wrap gap-3">
-        <Button href="/studio/posts" variant="outline">Posts</Button>
-        <Button href="/studio/tiers" variant="outline">Tiers</Button>
-        <Button href="/studio/analytics" variant="outline">Analytics</Button>
-        <Button href="/studio/messaging" variant="outline">Messaging</Button>
-        <Button href="/studio/blasts" variant="outline">Blasts</Button>
-        <Button href="/studio/participants" variant="outline">Participants</Button>
-        <Button href="/studio/notices" variant="outline">{unread ? `Notices (${unread} new)` : "Notices"}</Button>
-      </div>
+    <div className="mx-auto max-w-[1100px] px-5 pb-28 pt-6 md:px-10 md:pt-8">
+      <StudioHeader
+        eyebrow="Studio"
+        title="Overview"
+        lede={
+          <>
+            Signed in as <span className="text-ivory">{viewer.alias}</span>
+            {verified ? " · verified" : " · verification in progress"}. Numbers below come from your own data — never fan identities.
+          </>
+        }
+        actions={
+          <>
+            <Button href="/studio/blasts" variant="outline">Send a Blast</Button>
+            <Button href="/studio/posts/new">New post</Button>
+          </>
+        }
+      />
 
-      <section aria-labelledby="progress-h" className="mt-10 rounded-[var(--radius-xl)] border border-line bg-ink-2 p-6 md:p-8">
-        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-          <h2 id="progress-h" className="font-display text-[24px] text-ivory">Your progress</h2>
-          {onboarding.welcomeCallAt && !onboarding.stages.done.welcome && (
-            <p className="text-[13px] text-gold-soft">Welcome call: {new Date(onboarding.welcomeCallAt).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}</p>
-          )}
-        </div>
-        <Stepper stages={STAGES} done={onboarding.stages.done} current={onboarding.stages.current} />
+      <section aria-label="Key numbers" className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Stat label="Active members" value={a.members.active} sub={`${a.members.vip} VIP`} href="/studio/analytics" />
+        <Stat label="New members" value={a.members.new30} sub="Last 30 days" href="/studio/analytics" />
+        <Stat label="Followers" value={a.followers.total} sub={`${a.followers.new30} new in 30 days`} href="/studio/analytics" />
+        <Stat label="Published posts" value={a.posts.published} sub={`${a.posts.draft} draft · ${a.posts.scheduled} scheduled`} href="/studio/posts" />
       </section>
 
-      {open && (
-        <section aria-label="Proposal from the house" className="mt-6">
-          <ProposalCard p={open} current={ob.profile} />
-        </section>
-      )}
-
-      <div className="mt-6 grid gap-6 lg:grid-cols-12">
-        <section aria-labelledby="profile-h" className="rounded-[var(--radius-xl)] border border-line bg-ink-2 p-6 md:p-9 lg:col-span-7">
-          <div className="flex flex-wrap items-center gap-3">
-            <h2 id="profile-h" className="font-display text-[30px] text-ivory">Profile</h2>
-            <Badge tone={ob.profile?.published ? "vip" : "neutral"}>{ob.profile?.published ? "Published" : "Private draft"}</Badge>
-          </div>
-          <div className="mt-8">
-            {/* Remount only when a house proposal was accepted (to load its values) — never on an ordinary save, which would drop the confirmation. */}
-            <ProfileEditor key={proposals.find((p) => p.status === "accepted")?.id ?? "draft"} initial={ob.profile} categories={categories} assist={assistantInfo()} userId={viewer.id} />
-          </div>
-        </section>
-
-        <div className="space-y-6 lg:col-span-5">
-          <section aria-labelledby="import-h" className="rounded-[var(--radius-xl)] border border-line bg-ink-2 p-6 md:p-9">
-            <h2 id="import-h" className="font-display text-[30px] text-ivory">Import a profile</h2>
-            <p className="mt-3 text-[14px] leading-relaxed text-stone">
-              Bring your name, bio and links from another platform by pasting them or choosing an export file. You&apos;ll review everything before it&apos;s used.
-            </p>
-            <div className="mt-6">
-              {open ? <p className="text-[14px] text-ash">Answer the proposal above first, then you can import.</p> : <ImportPanel targetUserId={viewer.id} audience="creator" />}
+      <div className="mt-8 grid gap-6 lg:grid-cols-12">
+        <div className="space-y-6 lg:col-span-8">
+          <section aria-labelledby="content-h" className="rounded-[var(--radius-xl)] border border-line bg-ink-2 p-6 md:p-8">
+            <div className="flex items-center justify-between gap-3">
+              <h2 id="content-h" className="text-[18px] font-medium text-ivory">Recent content</h2>
+              <Link href="/studio/posts" className="text-[13px] text-gold underline decoration-gold/40 underline-offset-4">All posts</Link>
             </div>
-          </section>
-
-          <section aria-labelledby="socials-h" className="rounded-[var(--radius-xl)] border border-line bg-ink-2 p-6 md:p-9">
-            <h2 id="socials-h" className="font-display text-[30px] text-ivory">Social profiles</h2>
-            <p className="mt-3 text-[14px] leading-relaxed text-stone">
-              Optional, but it helps the house confirm who you are. Verified profiles can be shown on your page — your choice.
-            </p>
-            <div className="mt-6"><SocialsManager socials={socials} /></div>
-          </section>
-
-          <section aria-labelledby="verify-h" className="rounded-[var(--radius-xl)] border border-line bg-ink-2 p-6 md:p-9">
-            <div className="flex flex-wrap items-center gap-3">
-              <h2 id="verify-h" className="font-display text-[30px] text-ivory">Verification</h2>
-              <Badge tone={ob.verification.status === "verified" ? "vip" : ob.verification.status === "rejected" ? "live" : "neutral"}>{label}</Badge>
-            </div>
-            <p className="mt-3 text-[14px] leading-relaxed text-stone">{help}</p>
-            {ob.verification.reviewNote && ob.verification.status !== "verified" && (
-              <p className="mt-4 rounded-[var(--radius-md)] border border-gold/35 bg-gold/[0.06] px-4 py-3 text-[14px] text-gold-soft">Note from the house: {ob.verification.reviewNote}</p>
+            {posts.length === 0 ? (
+              <p className="mt-4 text-[14px] text-ash">No posts yet. <Link href="/studio/posts/new" className="text-gold underline decoration-gold/40 underline-offset-4">Write your first post</Link>.</p>
+            ) : (
+              <ul className="mt-4 divide-y divide-line">
+                {posts.slice(0, 5).map((p) => (
+                  <li key={p.id} className="flex items-center justify-between gap-3 py-3">
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-2">
+                        <Badge tone={STATE_TONE[p.state]}>{p.state}</Badge>
+                        {p.hidden && <Badge tone="live">Hidden</Badge>}
+                      </div>
+                      <p className="mt-1.5 truncate text-[14px] text-ivory">{p.teaser}</p>
+                    </div>
+                    <Link href={`/studio/posts/${p.id}`} className="shrink-0 text-[13px] text-gold underline decoration-gold/40 underline-offset-4">Edit</Link>
+                  </li>
+                ))}
+              </ul>
             )}
-            <p className="mt-4 text-[12px] leading-relaxed text-ash">
-              No identity-verification provider is connected yet. The house completes identity and age checks directly. We don&apos;t store ID documents, your legal name or date of birth in your profile.
+          </section>
+
+          <section aria-labelledby="blasts-h" className="rounded-[var(--radius-xl)] border border-line bg-ink-2 p-6 md:p-8">
+            <div className="flex items-center justify-between gap-3">
+              <h2 id="blasts-h" className="text-[18px] font-medium text-ivory">Recent Blasts</h2>
+              <Link href="/studio/blasts" className="text-[13px] text-gold underline decoration-gold/40 underline-offset-4">All Blasts</Link>
+            </div>
+            {blasts.length === 0 ? (
+              <p className="mt-4 text-[14px] text-ash">No Blasts yet. <Link href="/studio/blasts" className="text-gold underline decoration-gold/40 underline-offset-4">Write one</Link>.</p>
+            ) : (
+              <ul className="mt-4 divide-y divide-line">
+                {blasts.slice(0, 4).map((b) => (
+                  <li key={b.id} className="py-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge tone={b.status === "sent" ? "vip" : b.status === "canceled" ? "locked" : "member"}>{b.status}</Badge>
+                      <span className="text-[12px] text-ash">{b.status === "scheduled" ? `Sends ${when(b.scheduledAt)}` : when(b.scheduledAt)}</span>
+                    </div>
+                    <p className="mt-1.5 line-clamp-1 text-[14px] text-ivory">{b.body}</p>
+                    {(b.status === "sent" || b.status === "sending") && (
+                      <p className="mt-1 text-[12px] text-stone">{b.delivered} delivered · {b.read} read · {b.replies} replied</p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </div>
+
+        <div className="space-y-6 lg:col-span-4">
+          <section aria-labelledby="setup-h" className="rounded-[var(--radius-xl)] border border-line bg-ink-2 p-6">
+            <div className="flex items-center justify-between gap-3">
+              <h2 id="setup-h" className="text-[18px] font-medium text-ivory">Get set up</h2>
+              <span className="text-[13px] tabular-nums text-stone">{doneCount}/{checks.length}</span>
+            </div>
+            <ul className="mt-4 space-y-2">
+              {checks.map((c) => (
+                <li key={c.label}>
+                  <Link href={c.href} className="flex items-center gap-2.5 text-[14px]">
+                    <span aria-hidden className={c.done ? "text-gold" : "text-ash"}>{c.done ? "●" : "○"}</span>
+                    <span className={c.done ? "text-stone line-through decoration-line-strong" : "text-ivory"}>{c.label}</span>
+                    <span className="sr-only">{c.done ? "done" : "not done"}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            {profileUrl && (
+              <div className="mt-5 border-t border-line pt-4">
+                <p className="eyebrow text-stone">Your profile link</p>
+                <div className="mt-2 flex items-center gap-2">
+                  <code className="min-w-0 flex-1 truncate rounded-[var(--radius-sm)] bg-ink px-2.5 py-1.5 text-[12px] text-stone">{profileUrl}</code>
+                  <CopyLink url={profileUrl} label="Copy" />
+                </div>
+              </div>
+            )}
+          </section>
+
+          <section aria-labelledby="earn-h" className="rounded-[var(--radius-xl)] border border-line bg-ink-2 p-6">
+            <h2 id="earn-h" className="text-[18px] font-medium text-ivory">Earnings</h2>
+            {!earnings.paymentsEnabled ? (
+              <p className="mt-3 text-[14px] leading-relaxed text-stone">
+                Payments aren&apos;t active yet, so nobody is charged and there is no income to show. When they open, your balances, transactions and payouts appear in <Link href="/studio/earnings" className="text-gold underline decoration-gold/40 underline-offset-4">Earnings</Link>.
+              </p>
+            ) : (
+              <p className="mt-3 text-[14px] text-stone">See balances and history in <Link href="/studio/earnings" className="text-gold underline decoration-gold/40 underline-offset-4">Earnings</Link>.</p>
+            )}
+          </section>
+
+          <section aria-labelledby="msg-h" className="rounded-[var(--radius-xl)] border border-line bg-ink-2 p-6">
+            <h2 id="msg-h" className="text-[18px] font-medium text-ivory">Messages</h2>
+            <p className="mt-3 text-[14px] text-stone">
+              {unread > 0 ? <><span className="text-ivory">{unread}</span> unread conversation{unread === 1 ? "" : "s"}.</> : "You're all caught up."}
             </p>
-            {canSubmit ? <div className="mt-8"><VerificationForm /></div> : !ob.profile ? <p className="mt-8 text-[14px] text-ash">Save your profile first.</p> : null}
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <Button href="/messages" variant="outline" size="sm">Open messages</Button>
+              {scheduled > 0 && <span className="text-[12px] text-ash">{scheduled} scheduled</span>}
+            </div>
           </section>
         </div>
       </div>
     </div>
   );
 }
+

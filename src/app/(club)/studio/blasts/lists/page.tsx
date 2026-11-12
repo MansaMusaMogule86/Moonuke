@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { StudioHeader } from "@/components/studio/StudioHeader";
 import { requireViewer } from "@/server/auth/request";
 import { memberDirectory, myLists } from "@/server/services/blasts";
 import { AddMember, DeleteList, NewList, RemoveMember } from "./ListForms";
@@ -12,10 +13,12 @@ export default async function ListsPage() {
   if (viewer.role !== "creator") notFound();
   const [lists, dir] = [await myLists(viewer), await memberDirectory(viewer)];
   return (
-    <div className="mx-auto max-w-[900px] px-5 pb-28 pt-14 md:px-10 md:pt-20">
-      <Link href="/studio/blasts" className="text-[13px] text-stone underline decoration-line-strong underline-offset-4 hover:text-ivory">← Blasts</Link>
-      <h1 className="mt-6 font-display text-[44px] leading-none tracking-[-0.03em] text-ivory md:text-[64px]">Custom lists</h1>
-      <p className="mt-4 max-w-2xl text-[14px] text-stone">Group your current and past members. Followers who never joined can&apos;t be listed individually — they stay private to you.</p>
+    <div className="mx-auto max-w-[900px] px-5 pb-28 pt-6 md:px-10 md:pt-8">
+      <StudioHeader
+        eyebrow="Blasts"
+        title="Custom lists"
+        lede="Group your current and past members. Followers who never joined can't be listed individually — they stay private to you."
+      />
       <div className="mt-8 rounded-[var(--radius-xl)] border border-line bg-ink-2 p-6"><NewList /></div>
       <div className="mt-6 space-y-6">
         {lists.map((l) => (

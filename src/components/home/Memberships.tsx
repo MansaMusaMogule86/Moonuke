@@ -1,4 +1,5 @@
 import { LuxuryTierCard } from "@/components/ui/luxury";
+import { PinkAccent, SmokySection } from "./Atmosphere";
 import { SectionHeading } from "./SectionHeading";
 
 const LEVELS = [
@@ -24,18 +25,18 @@ const LEVELS = [
 
 export function Memberships() {
   return (
-    <section id="memberships" aria-labelledby="memberships-title" className="smoke-ambient section-y border-t border-line bg-ink">
+    <SmokySection id="memberships" ariaLabelledBy="memberships-title" variant="memberships" curve="arc">
       <span id="tiers" className="block -translate-y-24" aria-hidden />
       <span id="vault" className="block -translate-y-24" aria-hidden />
       <span id="features" className="block -translate-y-24" aria-hidden />
-      <div className="container-page">
+      <div className="container-page relative">
         <SectionHeading
           id="memberships-title"
-          eyebrow="Memberships"
+          eyebrow="Memberships & Features"
           title={<>Choose how <em className="text-neon">close</em> you want to be.</>}
           lede="Every creator offers the same simple levels, and each one decides their own prices. Some posts can also be unlocked one at a time."
         />
-        <ul className="mt-12 grid gap-5 md:grid-cols-3">
+        <ul className="mt-10 grid gap-5 md:mt-12 md:grid-cols-3 md:gap-6">
           {LEVELS.map((l) => (
             <li key={l.name} className="mk-reveal flex">
               <LuxuryTierCard
@@ -49,10 +50,13 @@ export function Memberships() {
             </li>
           ))}
         </ul>
-        <p className="mk-reveal mt-6 rounded-[var(--radius-md)] border border-gold/30 bg-ink-2 px-5 py-4 text-[14px] leading-relaxed text-stone">
-          <span className="font-medium text-gold-soft">Payments aren&apos;t open yet.</span> Paid memberships and single-post unlocks become available once payments are switched on. Until then nobody is charged, and following is free.
-        </p>
+        <div className="mk-reveal mt-6 flex items-start gap-3.5 rounded-[var(--radius-lg)] border border-gold/35 bg-[linear-gradient(145deg,rgb(24_18_27/0.88)_0%,rgb(12_9_14/0.94)_100%)] px-5 py-4 text-[14px] leading-relaxed text-stone shadow-[inset_0_1px_0_rgb(243_213_138/0.18)]">
+          <PinkAccent variant="diamond" tone="gold" className="mt-1.5" />
+          <p>
+            <span className="font-medium text-gold-soft">Payments aren&apos;t open yet.</span> Paid memberships and single-post unlocks become available once payments are switched on. Until then nobody is charged, and following is free.
+          </p>
+        </div>
       </div>
-    </section>
+    </SmokySection>
   );
 }

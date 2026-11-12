@@ -1,4 +1,5 @@
 import { brand } from "@/config/brand";
+import { GoldGlowCard, PinkAccent, SmokySection } from "./Atmosphere";
 import { SectionHeading } from "./SectionHeading";
 
 const POINTS = [
@@ -10,27 +11,32 @@ const POINTS = [
 
 export function Privacy() {
   return (
-    <section id="privacy" aria-labelledby="privacy-title" className="section-y border-t border-line">
-      <div className="container-page grid gap-12 lg:grid-cols-12">
+    <SmokySection id="privacy" ariaLabelledBy="privacy-title" variant="privacy" curve="right">
+      <div className="container-page grid gap-10 lg:grid-cols-12 lg:items-start">
         <SectionHeading
           id="privacy-title"
           eyebrow="Privacy and control"
-          title="Designed around your privacy."
+          title={<>Designed around <em className="text-metal">your privacy.</em></>}
           lede={`Plain-language promises about how ${brand.name} works today.`}
           className="lg:col-span-5"
         />
-        <dl className="grid gap-4 sm:grid-cols-2 lg:col-span-7">
-          {POINTS.map(([title, body]) => (
-            <div key={title} className="mk-reveal rounded-[var(--radius-lg)] border border-line bg-ink-2 p-6">
-              <dt className="flex items-center gap-3 text-[17px] text-ivory">
-                <span aria-hidden className="h-2 w-2 rotate-45 bg-pink" />
-                {title}
-              </dt>
-              <dd className="mt-2.5 text-[15px] leading-relaxed text-stone">{body}</dd>
-            </div>
+        <ul className="grid gap-4 sm:grid-cols-2 lg:col-span-7">
+          {POINTS.map(([title, body], i) => (
+            <GoldGlowCard
+              key={title}
+              as="li"
+              accent={i % 2 === 0 ? "pink" : "gold"}
+              className="mk-reveal p-6"
+            >
+              <h3 className="flex items-center gap-3 font-display text-[21px] text-ivory">
+                <PinkAccent variant="diamond" tone={i % 2 === 0 ? "pink" : "gold"} />
+                <span>{title}</span>
+              </h3>
+              <p className="mt-3 text-[14.5px] leading-relaxed text-stone">{body}</p>
+            </GoldGlowCard>
           ))}
-        </dl>
+        </ul>
       </div>
-    </section>
+    </SmokySection>
   );
 }

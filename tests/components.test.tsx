@@ -6,8 +6,11 @@ import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
 import { Segmented } from "@/components/ui/Segmented";
 import {
+  AtmosphericCTA,
+  GoldGlowCard,
   LuxuryAvatar,
   LuxuryCard,
+  LuxuryDivider,
   LuxuryDropdown,
   LuxuryEmptyState,
   LuxuryStatCard,
@@ -15,7 +18,16 @@ import {
   LuxuryTierCard,
   LuxuryToast,
   LuxuryTooltip,
+  PinkAccent,
+  SmokySection,
 } from "@/components/ui/luxury";
+import { Discover } from "@/components/home/Discover";
+import { HowItWorks } from "@/components/home/HowItWorks";
+import { Memberships } from "@/components/home/Memberships";
+import { ForCreators } from "@/components/home/ForCreators";
+import { Privacy } from "@/components/home/Privacy";
+import { Faq } from "@/components/home/Faq";
+import { Closing } from "@/components/home/Closing";
 
 describe("Button", () => {
   it("renders a button with type=button by default", () => {
@@ -137,5 +149,36 @@ describe("Luxury component library", () => {
     expect(screen.getByText("Active members")).toBeInTheDocument();
     expect(screen.getByText("Exclusive posts")).toBeInTheDocument();
     expect(screen.getByText("No items yet")).toBeInTheDocument();
+  });
+
+  it("SmokySection, GoldGlowCard, PinkAccent, LuxuryDivider, AtmosphericCTA and homepage sections render with semantic landmarks", () => {
+    render(
+      <div>
+        <SmokySection id="test-smoke" ariaLabelledBy="test-smoke-title" variant="discover" curve="arc">
+          <h2 id="test-smoke-title">Smoky Stage</h2>
+          <GoldGlowCard accent="pink">
+            <PinkAccent variant="bar" tone="pink" />
+            <span>Glass Panel</span>
+          </GoldGlowCard>
+          <LuxuryDivider />
+          <AtmosphericCTA>
+            <span>Closing Invitation</span>
+          </AtmosphericCTA>
+        </SmokySection>
+        <Discover />
+        <HowItWorks />
+        <Memberships />
+        <ForCreators />
+        <Privacy />
+        <Faq />
+        <Closing />
+      </div>,
+    );
+    expect(screen.getByRole("region", { name: "Smoky Stage" })).toBeInTheDocument();
+    expect(screen.getByText("Glass Panel")).toBeInTheDocument();
+    expect(screen.getByText("Closing Invitation")).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: /Creators across/i })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: /Three steps to a closer connection/i })).toBeInTheDocument();
+    expect(screen.getByRole("region", { name: /Your work, your audience, your terms/i })).toBeInTheDocument();
   });
 });

@@ -38,8 +38,8 @@ export function Hero() {
       {/* Level 1 Cinematic atmospheric underglow */}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-20 smoke-cinematic" />
 
-      {/* Approved smoky diva artwork: framed above copy on mobile, full-bleed stage on desktop */}
-      <div className="relative mt-[68px] h-[34svh] min-h-[236px] max-h-[330px] w-full sm:h-[40svh] sm:max-h-[400px] md:h-[46svh] md:max-h-[480px] lg:absolute lg:inset-0 lg: -z-10 lg:mt-0 lg:h-full lg:max-h-none">
+      {/* Approved smoky diva artwork: compact framed stage on mobile, unchanged full-bleed stage on desktop (1024px+) */}
+      <div className="hero-mobile-stage relative mt-[56px] h-[24svh] min-h-[172px] max-h-[210px] w-full overflow-hidden sm:mt-[64px] sm:h-[28svh] sm:max-h-[250px] md:h-[32svh] md:max-h-[300px] lg:absolute lg:inset-0 lg:-z-10 lg:mt-0 lg:h-full lg:min-h-0 lg:max-h-none lg:overflow-visible">
         <div className="mk-parallax relative h-full w-full">
           <Image
             src="/assets/brand/divafans-hero-smoky.webp"
@@ -48,20 +48,20 @@ export function Hero() {
             preload
             fetchPriority="high"
             sizes="100vw"
-            className="object-cover object-[78%_20%] [mask-image:linear-gradient(to_bottom,transparent_0,black_20px,black_78%,transparent_100%)] lg:object-[66%_center] lg:[mask-image:linear-gradient(to_bottom,black_88%,transparent_100%)] xl:object-center"
+            className="object-contain object-[74%_center] max-lg:scale-[1.24] max-lg:origin-[74%_42%] max-lg:mix-blend-lighten lg:scale-100 lg:object-cover lg:object-[66%_center] lg:[mask-image:linear-gradient(to_bottom,black_88%,transparent_100%)] xl:object-center"
           />
-          {/* Subtle readability veil on the left for desktop and bottom edge on mobile */}
+          {/* Subtle readability veil on the left for desktop */}
           <div
             aria-hidden
-            className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,transparent_55%,#080709_100%)] lg:bg-[linear-gradient(90deg,#080709_0%,rgb(8_7_9/0.86)_34%,rgb(8_7_9/0.25)_54%,transparent_72%)]"
+            className="pointer-events-none hidden lg:absolute lg:inset-0 lg:block lg:bg-[linear-gradient(90deg,#080709_0%,rgb(8_7_9/0.86)_34%,rgb(8_7_9/0.25)_54%,transparent_72%)]"
           />
         </div>
       </div>
 
       {/* Live editorial content column */}
-      <div className="container-wide relative z-10 lg:flex lg:min-h-[min(100svh,937px)] lg:items-center lg:pt-[84px]">
-        <div className="-mt-6 pb-12 sm:-mt-8 md:pb-16 lg:mt-0 lg:max-w-[540px] lg:py-16 xl:max-w-[640px]">
-          <p className="mk-rise flex items-center gap-3.5 text-[11.5px] font-medium uppercase tracking-[0.34em] text-gold md:text-[13px]">
+      <div className="container-wide relative z-10 text-left lg:flex lg:min-h-[min(100svh,937px)] lg:items-center lg:pt-[84px]">
+        <div className="-mt-3 pb-7 sm:-mt-4 sm:pb-9 md:pb-12 lg:mt-0 lg:max-w-[540px] lg:py-16 xl:max-w-[640px]">
+          <p className="mk-rise flex items-center gap-2.5 text-[10.5px] font-medium uppercase tracking-[0.28em] text-gold sm:text-[11.5px] md:text-[13px] lg:gap-3.5 lg:tracking-[0.34em]">
             <span>Create</span>
             <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-pink shadow-[0_0_8px_var(--mk-pink)]" />
             <span>Share</span>
@@ -71,47 +71,49 @@ export function Hero() {
 
           <h1
             id="hero-title"
-            className="mk-rise-2 mt-4 font-display text-[clamp(2.35rem,5.5vw,4.65rem)] leading-[1.03] tracking-[-0.02em] text-ivory md:mt-5"
+            className="mk-rise-2 mt-2 font-display text-[clamp(2.02rem,9.4vw,2.625rem)] leading-[1.08] tracking-[-0.02em] text-ivory sm:mt-2.5 sm:text-[42px] md:mt-4 md:text-[48px] lg:mt-5 lg:text-[clamp(2.35rem,5.5vw,4.65rem)] lg:leading-[1.03]"
           >
-            <span className="block">A Premium</span>
-            <span className="block">Space for</span>
-            <span className="relative inline-block">
-              <em className="bg-[linear-gradient(95deg,#f52a8b_0%,#ff4da2_55%,#ff8bc8_100%)] bg-clip-text pr-[0.08em] font-normal italic text-transparent drop-shadow-[0_0_24px_rgb(245_42_139/0.28)]">
-                Exclusive
-              </em>
-              {/* Champagne gold brush swoosh underline from the approved reference */}
-              <svg
-                aria-hidden
-                viewBox="0 0 260 22"
-                fill="none"
-                className="pointer-events-none mt-1 h-[10px] w-[88%] md:h-[14px]"
-              >
-                <path
-                  d="M4 17.5C62 5.5 154 3.5 256 14.5C184 9.5 88 11.5 18 19.5C10 20.3 4 19 4 17.5Z"
-                  fill="url(#hero-gold-swoosh)"
-                />
-                <defs>
-                  <linearGradient id="hero-gold-swoosh" x1="4" y1="12" x2="256" y2="12" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%" stopColor="#D8AD52" />
-                    <stop offset="50%" stopColor="#F3D58A" />
-                    <stop offset="100%" stopColor="#D8AD52" stopOpacity="0.25" />
-                  </linearGradient>
-                </defs>
-              </svg>
-            </span>{" "}
-            <span>Creators</span>
+            <span className="lg:block">A Premium </span>
+            <span className="lg:block">Space for </span>
+            <span className="max-lg:mt-0.5 max-lg:block max-lg:pb-1.5">
+              <span className="relative inline-block">
+                <em className="bg-[linear-gradient(95deg,#f52a8b_0%,#ff4da2_55%,#ff8bc8_100%)] bg-clip-text pr-[0.08em] font-normal italic text-transparent drop-shadow-[0_0_24px_rgb(245_42_139/0.28)]">
+                  Exclusive
+                </em>
+                {/* Champagne gold brush swoosh underline from the approved reference */}
+                <svg
+                  aria-hidden
+                  viewBox="0 0 260 22"
+                  fill="none"
+                  className="pointer-events-none max-lg:absolute max-lg:-bottom-1.5 max-lg:left-0 h-[9px] w-[90%] md:h-[12px] lg:static lg:mt-1 lg:block lg:h-[14px] lg:w-[88%]"
+                >
+                  <path
+                    d="M4 17.5C62 5.5 154 3.5 256 14.5C184 9.5 88 11.5 18 19.5C10 20.3 4 19 4 17.5Z"
+                    fill="url(#hero-gold-swoosh)"
+                  />
+                  <defs>
+                    <linearGradient id="hero-gold-swoosh" x1="4" y1="12" x2="256" y2="12" gradientUnits="userSpaceOnUse">
+                      <stop offset="0%" stopColor="#D8AD52" />
+                      <stop offset="50%" stopColor="#F3D58A" />
+                      <stop offset="100%" stopColor="#D8AD52" stopOpacity="0.25" />
+                    </linearGradient>
+                  </defs>
+                </svg>
+              </span>{" "}
+              <span>Creators</span>
+            </span>
           </h1>
 
-          <p className="mk-rise-3 mt-4 max-w-[35rem] text-[15.5px] leading-[1.62] text-stone sm:text-[16.5px] md:mt-6 md:text-[18px]">
+          <p className="mk-rise-3 mt-3 max-w-[32rem] text-[14.5px] leading-[1.55] text-stone sm:text-[15px] md:mt-4 md:text-[16px] lg:mt-6 lg:max-w-[35rem] lg:text-[18px] lg:leading-[1.62]">
             Share exclusive content, grow your fanbase, and build a closer connection with your community on a platform designed for creators.
           </p>
 
-          <div className="mk-rise-4 mt-6 flex flex-col gap-3 sm:flex-row sm:items-center md:mt-8">
+          <div className="mk-rise-4 mt-4 flex flex-col gap-2.5 sm:mt-5 sm:flex-row sm:items-center sm:gap-3 md:mt-6 lg:mt-8">
             <Button
               href="/#creators"
               size="lg"
               arrow
-              className="h-12 px-7 text-[15px] font-medium shadow-[inset_0_1px_0_rgb(255_255_255/0.55),0_10px_32px_-8px_rgb(216_173_82/0.55)] hover:shadow-[inset_0_1px_0_rgb(255_255_255/0.7),0_14px_40px_-8px_rgb(216_173_82/0.72)] md:h-14 md:px-8"
+              className="h-[46px] w-full px-6 text-[14.5px] font-medium shadow-[inset_0_1px_0_rgb(255_255_255/0.55),0_10px_32px_-8px_rgb(216_173_82/0.55)] hover:shadow-[inset_0_1px_0_rgb(255_255_255/0.7),0_14px_40px_-8px_rgb(216_173_82/0.72)] sm:w-auto lg:h-14 lg:px-8 lg:text-[15px]"
             >
               Join as a Creator
             </Button>
@@ -119,17 +121,17 @@ export function Hero() {
               href="/discover"
               size="lg"
               variant="outline"
-              className="h-12 border-gold/55 bg-ink/60 px-7 text-[15px] text-ivory backdrop-blur-sm hover:border-gold hover:bg-gold/[0.08] md:h-14 md:px-8"
+              className="h-[46px] w-full border-gold/55 bg-ink/60 px-6 text-[14.5px] text-ivory backdrop-blur-sm hover:border-gold hover:bg-gold/[0.08] sm:w-auto lg:h-14 lg:px-8 lg:text-[15px]"
             >
               Discover Creators
             </Button>
           </div>
 
-          <ul className="mk-rise-4 mt-6 flex flex-wrap items-center gap-x-5 gap-y-2.5 text-[13.5px] text-ivory/90 md:mt-8 md:text-[14px]">
+          <ul className="mk-rise-4 mt-4 flex flex-wrap items-center gap-x-3.5 gap-y-1.5 text-[12px] leading-tight text-ivory/90 sm:mt-5 sm:gap-x-4 sm:text-[13px] md:mt-6 lg:mt-8 lg:gap-x-5 lg:gap-y-2.5 lg:text-[14px]">
             {TRUST.map((t, i) => (
-              <li key={t.label} className="flex items-center gap-2.5">
-                {i > 0 && <span aria-hidden className="-ml-2 mr-2 hidden h-4 w-px bg-pink/65 sm:block" />}
-                <svg aria-hidden viewBox="0 0 20 20" className="h-[17px] w-[17px] shrink-0 text-gold" fill="currentColor">
+              <li key={t.label} className="flex items-center gap-1.5 lg:gap-2.5">
+                {i > 0 && <span aria-hidden className="-ml-1.5 mr-1.5 h-3.5 w-px bg-pink/65 sm:-ml-2 sm:mr-2 lg:h-4" />}
+                <svg aria-hidden viewBox="0 0 20 20" className="h-[14px] w-[14px] shrink-0 text-gold lg:h-[17px] lg:w-[17px]" fill="currentColor">
                   {t.icon}
                 </svg>
                 <span>{t.label}</span>

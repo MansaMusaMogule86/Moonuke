@@ -249,13 +249,24 @@ export function LuxuryTierCard({
   return (
     <div
       className={cn(
-        "flex flex-col rounded-[var(--radius-xl)] border p-7 transition-colors md:p-9",
+        "group relative flex flex-col overflow-hidden rounded-[var(--radius-xl)] border p-7 transition-all duration-[280ms] hover:-translate-y-0.5 md:p-9",
         isVip
-          ? "smoke-ambient border-gold/45 bg-ink-3 shadow-[var(--mk-shadow-1)]"
-          : "smoke-minimal border-line bg-ink-2",
+          ? "border-gold/60 bg-[linear-gradient(150deg,rgb(38_26_38/0.92)_0%,rgb(14_11_17/0.96)_55%,rgb(52_16_31/0.68)_100%)] shadow-[inset_0_1px_0_rgb(243_213_138/0.40),0_28px_68px_-22px_rgba(216,173,82,0.28),0_0_40px_-14px_rgba(245,42,139,0.22)] hover:border-gold"
+          : kind === "member"
+            ? "border-gold/38 bg-[linear-gradient(155deg,rgb(26_20_29/0.90)_0%,rgb(12_10_14/0.96)_58%,rgb(42_15_29/0.52)_100%)] shadow-[inset_0_1px_0_rgb(243_213_138/0.24),0_22px_52px_-24px_rgba(0,0,0,0.92)] hover:border-gold/65"
+            : "border-gold/28 bg-[linear-gradient(155deg,rgb(22_17_24/0.86)_0%,rgb(10_8_12/0.94)_60%,rgb(30_12_22/0.42)_100%)] shadow-[inset_0_1px_0_rgb(243_213_138/0.18),0_20px_48px_-24px_rgba(0,0,0,0.9)] hover:border-gold/55",
         className,
       )}
     >
+      <span
+        aria-hidden="true"
+        className={cn(
+          "pointer-events-none absolute inset-x-6 top-0 h-px",
+          isVip
+            ? "bg-[linear-gradient(90deg,transparent_0%,rgb(243_213_138/0.85)_35%,rgb(245_42_139/0.75)_65%,transparent_100%)]"
+            : "bg-[linear-gradient(90deg,transparent_0%,rgb(243_213_138/0.55)_50%,transparent_100%)]",
+        )}
+      />
       <div className="flex items-start justify-between gap-4">
         <div>
           <h3 className={cn("font-display text-[34px] leading-none md:text-[38px]", isVip ? "text-metal" : "text-ivory")}>
@@ -305,4 +316,13 @@ export function LuxuryTierCard({
     </div>
   );
 }
+
+export {
+  SmokySection,
+  GoldGlowCard,
+  PinkAccent,
+  LuxuryDivider,
+  AtmosphericCTA,
+} from "@/components/home/Atmosphere";
+
 

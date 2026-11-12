@@ -205,6 +205,13 @@
   }
 }
 
+@media (max-width: 1023.98px) {
+  .hero-mobile-stage {
+    -webkit-mask-image: radial-gradient(ellipse 48% 54% at 68% 44%, #000 66%, transparent 98%);
+    mask-image: radial-gradient(ellipse 48% 54% at 68% 44%, #000 66%, transparent 98%);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     transition-duration: 0.01ms !important;

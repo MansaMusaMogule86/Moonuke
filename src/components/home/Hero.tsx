@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { Symbol } from "@/components/brand/Symbol";
 import { Button } from "@/components/ui/Button";
 
 const TRUST = [
@@ -8,32 +8,33 @@ const TRUST = [
 ];
 
 /**
- * Cinematic hero. The portrait is real artwork (a text-free crop of the approved
- * reference, public/images/hero); everything else is live UI. Motion is CSS:
- * staggered entrances, slow light drift and a desktop-only scroll parallax, all
- * off under prefers-reduced-motion.
+ * Cinematic hero. There is NO photography: the right-hand plate is a branded
+ * composition — a gold-and-pink gradient field, an arch hairline and the DF
+ * monogram watermark — so the page never shows a stock or model image. Motion
+ * is CSS: staggered entrances, slow light drift and a desktop-only parallax,
+ * all off under prefers-reduced-motion.
  */
 export function Hero() {
   return (
     <section aria-labelledby="hero-title" className="relative isolate overflow-hidden bg-ink lg:min-h-[min(100svh,920px)]">
-      {/* Ambient light */}
+      {/* Ambient light + a fine gold grid */}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
         <div className="mk-drift absolute -left-[10%] top-[10%] h-[60vw] max-h-[720px] w-[60vw] max-w-[720px] rounded-full bg-[radial-gradient(closest-side,rgb(212_175_55/0.14),transparent)]" />
         <div className="mk-glow absolute right-[8%] top-[30%] h-[40vw] max-h-[520px] w-[40vw] max-w-[520px] rounded-full bg-[radial-gradient(closest-side,rgb(255_45_150/0.12),transparent)]" />
+        <div className="absolute inset-0 opacity-[0.05] [background-image:linear-gradient(to_right,rgb(212_175_55/0.6)_1px,transparent_1px),linear-gradient(to_bottom,rgb(212_175_55/0.6)_1px,transparent_1px)] [background-size:72px_72px] [mask-image:radial-gradient(120%_90%_at_72%_28%,black,transparent_72%)]" />
       </div>
 
-      {/* Portrait: on top below lg, right-hand side from lg */}
+      {/* Brand plate: on top below lg, right-hand side from lg. Abstract — never a person. */}
       <div className="relative mt-[72px] h-[42svh] min-h-[280px] max-h-[480px] md:h-[52svh] md:max-h-[580px] lg:absolute lg:inset-y-0 lg:right-0 lg:mt-0 lg:h-auto lg:max-h-none lg:w-[50%] xl:w-[min(58%,1000px)]">
         <div className="mk-parallax absolute inset-0">
-          <Image
-            src="/images/hero/divafans-hero-portrait.webp"
-            alt=""
-            fill
-            preload
-            fetchPriority="high"
-            sizes="(min-width: 1280px) min(58vw, 1000px), (min-width: 1024px) 50vw, 100vw"
-            className="object-cover object-[50%_18%] [mask-image:linear-gradient(to_bottom,transparent_0,black_28px,black_62%,transparent)] lg:[mask-image:linear-gradient(to_right,transparent_0%,black_32%),linear-gradient(to_bottom,black_75%,transparent)] lg:[mask-composite:intersect]"
-          />
+          <div className="relative h-full w-full overflow-hidden [mask-image:linear-gradient(to_bottom,transparent_0,black_28px,black_62%,transparent)] lg:[mask-image:linear-gradient(to_right,transparent_0%,black_34%),linear-gradient(to_bottom,black_78%,transparent)] lg:[mask-composite:intersect]">
+            <div className="absolute inset-0 bg-[radial-gradient(120%_90%_at_78%_20%,rgb(212_175_55/0.20),transparent_58%),radial-gradient(90%_80%_at_28%_92%,rgb(255_45_150/0.16),transparent_62%),linear-gradient(158deg,#16151c_0%,#050505_68%)]" />
+            <div aria-hidden className="arch absolute inset-x-[11%] inset-y-[8%] border border-gold/25 bg-[linear-gradient(180deg,rgb(212_175_55/0.07),transparent_58%)]" />
+            <div aria-hidden className="absolute left-1/2 top-1/2 h-[60%] w-[60%] -translate-x-1/2 -translate-y-1/2">
+              <Symbol size={560} className="h-full w-full opacity-95" />
+            </div>
+            <div aria-hidden className="mk-drift absolute -inset-y-1/4 left-[8%] w-[64%] rotate-[16deg] bg-[linear-gradient(90deg,transparent,rgb(245_213_138/0.12),transparent)] blur-2xl" />
+          </div>
         </div>
       </div>
 

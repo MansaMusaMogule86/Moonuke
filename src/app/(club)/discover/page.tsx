@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Symbol } from "@/components/brand/Symbol";
 import { CreatorPlate } from "@/components/club/CreatorPlate";
 import { Reveal } from "@/components/ui/Reveal";
 import { cn } from "@/lib/cn";
@@ -105,15 +106,34 @@ export default async function DiscoverPage({ searchParams }: { searchParams: SP 
       </nav>
 
       <p className="mt-10 text-[13px] text-ash" aria-live="polite">
-        {creators.length === 0 ? "No creators match." : `${creators.length} ${creators.length === 1 ? "creator" : "creators"}${q ? ` for “${q}”` : ""}`}
+        {creators.length === 0
+          ? filtered
+            ? "No creators match those filters."
+            : "No creators are listed yet."
+          : `${creators.length} ${creators.length === 1 ? "creator" : "creators"}${q ? ` for “${q}”` : ""}`}
       </p>
 
       {creators.length === 0 ? (
-        <div className="mt-10 rounded-[var(--radius-xl)] border border-line p-10 text-center md:p-16">
-          <p className="font-display text-[32px] italic text-ivory">Nobody by that name — yet.</p>
-          <p className="mx-auto mt-3 max-w-md text-[15px] text-stone">Try a discipline or a city, or clear the filters to see the whole Circle.</p>
-          <Link href="/discover" className="mt-6 inline-block rounded-full border border-line-strong px-5 py-2.5 text-[14px] text-ivory hover:border-gold/60">Clear filters</Link>
-        </div>
+        filtered ? (
+          <div className="mt-10 rounded-[var(--radius-xl)] border border-line p-10 text-center md:p-16">
+            <p className="text-[22px] font-medium text-ivory">No creators match those filters.</p>
+            <p className="mx-auto mt-3 max-w-md text-[15px] leading-relaxed text-stone">Try a different discipline or city, or clear the filters to see everyone in the Circle.</p>
+            <Link href="/discover" className="mt-6 inline-block rounded-full border border-line-strong px-5 py-2.5 text-[14px] text-ivory transition-colors hover:border-gold/60">Clear filters</Link>
+          </div>
+        ) : (
+          <div className="mt-10 rounded-[var(--radius-xl)] border border-line-gold/50 bg-[radial-gradient(120%_120%_at_50%_-20%,rgb(212_175_55/0.10),transparent_62%)] p-10 text-center md:p-20">
+            <div aria-hidden className="mx-auto mb-7 h-14 w-14">
+              <Symbol size={56} className="h-full w-full" />
+            </div>
+            <p className="font-display text-[30px] leading-tight tracking-[-0.02em] text-ivory md:text-[40px]">
+              Something <em className="text-metal">exclusive</em> is coming.
+            </p>
+            <p className="mx-auto mt-4 max-w-md text-[15px] leading-relaxed text-stone">
+              Discover creators, connect with their world and explore exclusive experiences.
+            </p>
+            <p className="mx-auto mt-2 max-w-md text-[14px] text-ash">Creators will appear here as they join DivaFans.</p>
+          </div>
+        )
       ) : (
         <>
           {lead.length > 0 && (

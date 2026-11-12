@@ -153,6 +153,7 @@ This was a **local** run. GitHub Actions did not run.
 - **Rate limits:** depend on a correctly set `TRUSTED_PROXY`.
 - **Ops:** no external log drain, uptime monitor or error tracker (they need accounts or money). No pentest or load test. The `APP_SECRET` rotation path for MFA hasn't been exercised.
 - **UI:** after approving an application or referral, the row keeps its state until you press "Done". This is intentional.
+- **Imagery:** there is no stock or model photography anywhere. The homepage hero is a photography-free branded composition (gold/pink gradient field, arch hairline, DF monogram watermark); creator covers are abstract unless a real, permissioned photo exists. Discovery lists only real, listed, published creators from the database, and shows a branded empty state ("Something exclusive is coming.") when there are none. Dev/test fixtures (`@divafans.test`) exist only in seeded databases and are refused in production.
 
 ## Infrastructure
 - **CI:** GitHub Actions is paused. The workflow lives at `ci/github-actions.disabled.yml`. Its earlier runs never got a runner, which looked like a repository or account Actions/billing block. **Verification is local only (`pnpm verify`).**

@@ -45,12 +45,7 @@ Both derived files were produced by cropping and padding only (sharp, bundled wi
 
 **Hero** (`public/images/hero/`):
 
-| Asset | File | Notes |
-|---|---|---|
-| Approved hero reference (design mock-up) | `divafans-hero-reference.png` | 1672×941. The supplied visual direction, kept for reference. Not used by any page, but publicly reachable like everything in `public/`. |
-| Hero portrait | `divafans-hero-portrait.webp` | 924×845, 117 KB. A text-free crop of the reference's right-hand artwork (portrait, gold DF art, pink light), cropped with sharp only. Rendered with `next/image` (`preload`, `fetchPriority="high"`) in `src/components/home/Hero.tsx`. |
-
-The portrait crop is limited by the reference's resolution: it is sharp at 1× but soft on high-density displays at full desktop width. Supply the original, text-free artwork at 2000px wide or more (for example `public/images/hero/divafans-hero-portrait.webp`, same name) to fix that.
+The homepage hero is **photography-free**. `src/components/home/Hero.tsx` renders a branded composition — a gold-and-pink gradient field, an arch hairline and the DF monogram watermark — so no stock or model image is ever shown. The folder holds only its `.gitkeep`; the previously shipped hero portrait and its reference mock-up were removed (never replace them with another stock or AI-generated person).
 
 Every other folder holds only its `.gitkeep`.
 
@@ -60,8 +55,7 @@ Every other folder holds only its `.gitkeep`.
 |---|---|---|
 | Transparent master logo (PNG with alpha, or SVG) | `public/images/brand/diva-fans-logo.png` | Would allow light backgrounds and drop the blend utility |
 | Standalone wordmark artwork | `public/images/brand/diva-fans-wordmark.png` | Optional; headers use the text wordmark today |
-| Original hero artwork, text-free, ≥2000px wide | `public/images/hero/divafans-hero-portrait.webp` | Replaces the lower-resolution crop |
-| Creator photography with public-use permission | `public/images/creators/` | For creator promotion beyond the hero |
+| Creator photography with public-use permission | `public/images/creators/` | Only genuine, permissioned creator photography — never stock or AI-generated people |
 
 ## Metadata and app icons
 

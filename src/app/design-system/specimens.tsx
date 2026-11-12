@@ -85,7 +85,7 @@ export function InteractiveSpecimens() {
 
       <Panel title="Field" note="Underline inputs. Label lights gold on focus; errors announce via role=alert.">
         <div className="space-y-8">
-          <Field label="Alias" placeholder="Nocturne" hint="Shown to creators. Change it anytime." />
+          <Field label="Alias" placeholder="Your alias" hint="Shown to creators. Change it anytime." />
           <Field
             label="Email"
             type="email"
@@ -114,7 +114,7 @@ export function InteractiveSpecimens() {
         <Button variant="outline" onClick={() => setOpen(true)}>
           Open sheet
         </Button>
-        <Sheet open={open} onOpenChange={setOpen} title="Subscribe to VIP" description="Isadora Lune · Couture & Muse">
+        <Sheet open={open} onOpenChange={setOpen} title="Subscribe to VIP" description="Creator name · Discipline">
           <div className="space-y-6 pb-4">
             <Segmented
               label="Billing period"

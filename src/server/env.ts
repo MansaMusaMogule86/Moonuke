@@ -59,6 +59,10 @@ const schema = z.object({
   FEATURE_GEO_RESTRICTIONS: z.enum(["on", "off"]).default("off"),
   // Phase 11: restricted moderator role. OFF until the owner approves staff (A1, B-6).
   FEATURE_MODERATORS: z.enum(["on", "off"]).default("off"),
+  // Creator invite links: a creator's stable /join/<handle> link can create a FAN
+  // account. OFF by default, so the invitation-only rule (owner approval for every
+  // account) stands until the owner explicitly turns it on.
+  FEATURE_CREATOR_REFERRALS: z.enum(["on", "off"]).default("off"),
   // Google Search Console HTML-tag verification token (the content="…" value only).
   GOOGLE_SITE_VERIFICATION: z.string().regex(/^[A-Za-z0-9_-]{20,100}$/, "GOOGLE_SITE_VERIFICATION must be the token from Search Console's HTML tag").optional(),
 });

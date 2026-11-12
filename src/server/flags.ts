@@ -8,7 +8,7 @@ import { AppError } from "@/server/errors";
  * and production refuses to boot with them ON until a provider is approved
  * (see productionProblems in env.ts).
  */
-export type Feature = "payments" | "uploads" | "age_assurance" | "geo_restrictions" | "moderators";
+export type Feature = "payments" | "uploads" | "age_assurance" | "geo_restrictions" | "moderators" | "creator_referrals";
 
 export function featureEnabled(f: Feature): boolean {
   const e = env();
@@ -16,12 +16,13 @@ export function featureEnabled(f: Feature): boolean {
   if (f === "age_assurance") return e.FEATURE_AGE_ASSURANCE === "on" && e.AGE_PROVIDER !== "none";
   if (f === "geo_restrictions") return e.FEATURE_GEO_RESTRICTIONS === "on";
   if (f === "moderators") return e.FEATURE_MODERATORS === "on";
+  if (f === "creator_referrals") return e.FEATURE_CREATOR_REFERRALS === "on";
   return e.FEATURE_UPLOADS === "on" && e.STORAGE_PROVIDER !== "none" && e.SCAN_PROVIDER !== "none";
 }
 
 export function requireFeature(f: Feature): void {
   if (!featureEnabled(f)) {
-    const msg = { payments: "Payments aren't active yet.", uploads: "Uploads aren't available yet.", age_assurance: "Age checks aren't active yet.", geo_restrictions: "Regional rules aren't active yet.", moderators: "Moderator access isn't approved yet." }[f];
+    const msg = { payments: "Payments aren't active yet.", uploads: "Uploads aren't available yet.", age_assurance: "Age checks aren't active yet.", geo_restrictions: "Regional rules aren't active yet.", moderators: "Moderator access isn't approved yet.", creator_referrals: "Creator invite links aren't active yet." }[f];
     throw new AppError("forbidden", msg);
   }
 }

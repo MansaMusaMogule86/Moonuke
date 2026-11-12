@@ -9,6 +9,7 @@ import { clearSession, requestMeta, setSessionCookie } from "@/server/auth/reque
 import { bucketKey } from "@/server/auth/crypto";
 import { isAppError } from "@/server/errors";
 import { activateProvisionedAccount, redeemInvitation, signIn } from "@/server/services/accounts";
+import { registerFanViaReferral } from "@/server/services/creatorReferral";
 import { confirmEmail } from "@/server/services/emailVerification";
 import { recordLoginFailure } from "@/server/security/monitor";
 import { hit, hitIp, LIMITS } from "@/server/services/rateLimit";
@@ -68,6 +69,34 @@ export async function applyAction(token: string, _prev: FormState, fd: FormData)
     throw e;
   }
   redirect("/pending");
+}
+
+/** Join as a fan through a creator's link. The handle is validated server-side. */
+export async function fanSignupAction(handle: string, _prev: FormState, fd: FormData): Promise<FormState> {
+  // Echo consent choices; never echo the password.
+  const values = { alias: str(fd, "alias"), email: str(fd, "email"), adult: str(fd, "adult"), terms: str(fd, "terms") };
+  const parsed = applySchema.safeParse({
+    alias: str(fd, "alias"),
+    email: str(fd, "email"),
+    password: str(fd, "password"),
+    adult: fd.get("adult"),
+    terms: fd.get("terms"),
+  });
+  if (!parsed.success) return { status: "error", message: "Please check the highlighted fields.", fields: fieldErrors(parsed.error), values };
+
+  const meta = await requestMeta();
+  let destination = "/discover";
+  try {
+    await hitIp("apply", meta.ipHash, LIMITS.applySubmit);
+    await hit(`signup:creator:${bucketKey("invite", handle)}`, LIMITS.applySubmit);
+    const r = await registerFanViaReferral(handle, { alias: parsed.data.alias, email: parsed.data.email, password: parsed.data.password }, meta);
+    await setSessionCookie(r.sessionToken);
+    destination = `/c/${r.handle}`;
+  } catch (e) {
+    if (isAppError(e)) return { status: "error", message: e.message, fields: e.field ? { [e.field]: e.message } : undefined, values };
+    throw e;
+  }
+  redirect(destination);
 }
 
 /** Confirm an email address from its link. A POST (the page's button), so link scanners can't confirm by prefetching. */

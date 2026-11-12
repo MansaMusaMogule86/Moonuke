@@ -2,11 +2,14 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ImportPanel } from "@/components/onboarding/ImportPanel";
 import { Stepper } from "@/components/onboarding/Stepper";
+import { CopyLink } from "@/components/studio/CopyLink";
 import { StudioHeader } from "@/components/studio/StudioHeader";
 import { Badge } from "@/components/ui/Badge";
 import { requireViewer } from "@/server/auth/request";
+import { featureEnabled } from "@/server/flags";
 import { listCategories } from "@/server/services/club";
 import { getOnboarding } from "@/server/services/creatorOnboarding";
+import { myReferralCount } from "@/server/services/creatorReferral";
 import { assistantInfo, myOnboarding, myProposals, mySocials, STAGES } from "@/server/services/onboarding";
 import { ProfileEditor, ProposalCard, SocialsManager, VerificationForm } from "../StudioForms";
 
@@ -24,13 +27,16 @@ const statusCopy = {
 export default async function StudioSettingsPage() {
   const viewer = await requireViewer("club.discover");
   if (viewer.role !== "creator") notFound();
-  const [ob, categories, onboarding, proposals, socials] = await Promise.all([
+  const [ob, categories, onboarding, proposals, socials, referrals] = await Promise.all([
     getOnboarding(viewer),
     listCategories(viewer),
     myOnboarding(viewer),
     myProposals(viewer),
     mySocials(viewer),
+    myReferralCount(viewer),
   ]);
+  const referralsOpen = featureEnabled("creator_referrals");
+  const handle = ob.profile?.handle;
   const [label, help] = statusCopy[ob.verification.status];
   const canSubmit = !!ob.profile && ["not_started", "needs_more_info", "rejected"].includes(ob.verification.status);
   const open = proposals.find((p) => p.status === "proposed");
@@ -42,6 +48,30 @@ export default async function StudioSettingsPage() {
         title="Settings"
         lede="Your profile, socials and verification. Members can't see your profile until the house verifies you and publishes it."
       />
+
+      <div className="mt-8 grid gap-6 lg:grid-cols-12">
+        <section aria-labelledby="share-h" className="rounded-[var(--radius-xl)] border border-gold/30 bg-ink-2 p-6 md:p-8 lg:col-span-12">
+          <h2 id="share-h" className="text-[18px] font-medium text-ivory">Your invite link</h2>
+          <p className="mt-3 max-w-2xl text-[14px] leading-relaxed text-stone">
+            Share this link and new fans join through you — they land on your profile. You&apos;ll see how many joined.
+            Open to fans only: it never creates a creator account.
+          </p>
+          {handle ? (
+            <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
+              <code className="min-w-0 flex-1 truncate rounded-[var(--radius-sm)] bg-ink px-3 py-2.5 text-[13px] text-stone">{`https://www.divafans.io/join/${handle}`}</code>
+              <CopyLink url={`https://www.divafans.io/join/${handle}`} label="Copy invite link" className="shrink-0" />
+              <span className="shrink-0 text-[13px] text-ash"><span className="tabular-nums text-ivory">{referrals}</span> joined</span>
+            </div>
+          ) : (
+            <p className="mt-5 text-[14px] text-ash">Save your profile (with a handle) and your invite link appears here.</p>
+          )}
+          {!referralsOpen && (
+            <p className="mt-4 text-[13px] leading-relaxed text-ash">
+              Creator invite links aren&apos;t switched on yet, so this link is not live. The house enables it.
+            </p>
+          )}
+        </section>
+      </div>
 
       <section aria-labelledby="progress-h" className="mt-8 rounded-[var(--radius-xl)] border border-line bg-ink-2 p-6 md:p-8">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">

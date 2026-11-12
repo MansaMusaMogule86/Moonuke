@@ -62,8 +62,9 @@ export async function requireViewer(permission?: Permission, opts: { allowMfaSet
   if (!v) redirect("/signin");
   if (v.mfa === "pending") redirect("/signin/verify");
   if (v.status !== "active") redirect("/pending");
-  // Two-step sign-in is mandatory for the owner and for creators before any of their tools open.
-  if ((v.role === "owner" || v.role === "creator") && v.mfa === "none" && !opts.allowMfaSetup) redirect("/account/security?setup=required");
+  // Two-step sign-in is mandatory for the owner before any owner tools open.
+  // It is optional for creators, who can enable it in Account security.
+  if (v.role === "owner" && v.mfa === "none" && !opts.allowMfaSetup) redirect("/account/security?setup=required");
   if (permission && !can(v, permission)) notFound();
   return v;
 }

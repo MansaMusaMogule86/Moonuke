@@ -39,7 +39,7 @@ export async function signInAction(_prev: FormState, fd: FormData): Promise<Form
     throw e;
   }
   if (mfa === "pending") redirect("/signin/verify");
-  if ((role === "owner" || role === "creator") && mfa === "none") redirect("/account/security?setup=required");
+  if (role === "owner" && mfa === "none") redirect("/account/security?setup=required");
   redirect(status === "active" ? "/discover" : "/pending");
 }
 

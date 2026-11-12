@@ -19,7 +19,7 @@ There is no public or self-service creator registration. Members can't upgrade t
 
 ## Requirements before any creator permission works
 
-`can()` refuses every permission to a creator unless the session has verified a second factor (AAL2) **and** the account's email is confirmed. `requireViewer` sends a creator without MFA to `/account/security?setup=required`. Creators can't turn MFA off. A provisioned account can't sign in at all until it's activated (`must_change_password`).
+`can()` refuses every permission to a creator unless the account's email is confirmed. Two-step sign-in is **optional** for creators — they can enable or disable it from Account security — and **mandatory for the owner only**. A provisioned account can't sign in at all until it's activated (`must_change_password`).
 
 ## Flow for the two creators
 
@@ -61,7 +61,7 @@ The script:
 
 ## Limits (honest)
 
-- **MFA is enforced in code, not in RLS.** The MFA-and-confirmed-email requirement for creators is enforced in `can()` and `requireViewer`, which every creator page and action passes through, not in RLS. Creator-owned rows are protected by ownership policies. Moving the MFA check into RLS would mean changing every creator policy; that's a separate decision.
+- **The confirmed-email requirement for creators is enforced in code, not in RLS.** It is checked in `can()`, which every creator page and action passes through. Creator-owned rows are additionally protected by ownership policies. Two-step sign-in is optional for creators (mandatory for the owner only).
 - **Fixture creators.** Dev and test fixture creators have deterministic dev authenticator secrets (`devTotpSecret`). These exist only in seeded development data.
 
 ## Rollback

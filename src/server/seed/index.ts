@@ -61,10 +61,8 @@ export async function seed(): Promise<SeedResult> {
                  case when $4::text = 'active' then now() end) returning id`,
         [email, pw, role, status, alias],
       ))!.id;
-      // Creators need two-step sign-in before their tools open: each fixture creator gets its own dev factor.
-      if (role === "creator") {
-        await q.query(`insert into app.mfa_factors (user_id, secret_enc, confirmed_at) values ($1, $2, now())`, [id, encryptSecret(devTotpSecret(email))]);
-      }
+      // Two-step sign-in is optional for creators, so a seeded creator gets no
+      // factor; they can enrol one from Account security if they choose.
       return id;
     };
 

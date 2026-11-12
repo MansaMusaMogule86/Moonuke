@@ -160,32 +160,33 @@ describe("activation, password rotation and MFA", () => {
     await expect(activate(tokenOf(r.activationUrl))).rejects.toMatchObject({ code: "invalid_invitation" });
   });
 
-  it("after activation, creator permissions stay closed until two-step sign-in is set up and verified", async () => {
+  it("after activation a creator can use the Studio; two-step sign-in is optional", async () => {
     const r = await provisionCreator({ email: ALLOWED, temporaryPassword: TEMP });
     await activate(tokenOf(r.activationUrl));
     const { sessionToken } = await signIn(normalizeEmail(ALLOWED), NEW, meta);
     let v = (await resolveSession(sessionToken))!;
     expect(v).toMatchObject({ role: "creator", mfa: "none", aal: 1, emailVerified: true });
-    expect(can(v, "club.discover")).toBe(false);
+    // A confirmed email is enough for creator permissions: no second factor is required.
+    expect(can(v, "club.discover")).toBe(true);
+    // Two-step sign-in is optional. A creator may still enrol it, and once enrolled a fresh sign-in requires it.
     const { secret } = await startEnrollment(v);
     await confirmEnrollment(v, codeAt(secret, currentStep()));
     v = (await resolveSession(sessionToken))!;
     expect(v.aal).toBe(2);
     expect(can(v, "club.discover")).toBe(true);
-    // A fresh sign-in needs the second factor again before anything opens.
     const again = await signIn(normalizeEmail(ALLOWED), NEW, meta);
     const v2 = (await resolveSession(again.sessionToken))!;
     expect(v2.mfa).toBe("pending");
-    expect(can(v2, "club.discover")).toBe(false);
     await verifyChallenge(v2, codeAt(secret, currentStep() + 1), meta);
-    expect(can((await resolveSession(again.sessionToken))!, "club.discover")).toBe(true);
+    expect((await resolveSession(again.sessionToken))!.aal).toBe(2);
   });
 
   it("a creator without a confirmed email has no creator permissions, even at AAL2", async () => {
     const v = await viewer(s.creatorIds.isadora);
     expect(can(v, "club.discover")).toBe(true);
     expect(can({ ...v, emailVerified: false }, "club.discover")).toBe(false);
-    expect(can({ ...v, aal: 1 }, "club.discover")).toBe(false);
+    // Two-step sign-in is optional for creators, so AAL1 still has permissions.
+    expect(can({ ...v, aal: 1 }, "club.discover")).toBe(true);
     // Members are unaffected.
     expect(can(await viewer(s.member2Id), "club.discover")).toBe(true);
     // The seeded creator still signs in normally with the dev password.

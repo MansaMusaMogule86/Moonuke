@@ -20,9 +20,12 @@ Brand: **DivaFans** (formerly MOONUKE). Interface name in the product is
 - Invitation-only onboarding: invitation → pending account → owner approval →
   profile draft → verification → publish. Evidence: `src/server/services/accounts.ts`,
   `src/server/services/creatorOnboarding.ts`, `src/app/(club)/studio/page.tsx`.
-- Guard: `requireViewer()` redirects to MFA setup for creators; creators need
-  AAL2 **and** a verified email for every permission (`permissions.ts` `can()`).
-- Required change: none to the rules. The Studio chrome is being made cohesive.
+- Guard: `requireViewer()` requires a verified email for every creator permission
+  (`permissions.ts` `can()`). Two-step sign-in is optional for creators and
+  mandatory for the owner.
+- Change (owner decision, this phase): creator two-step sign-in was made
+  optional so a creator reaches the Studio with email + password; the owner's
+  MFA stays mandatory (`docs/DECISIONS.md` A8).
 
 ### Studio routing and navigation — Incomplete
 - Routes exist: `/studio`, `/studio/posts`(+`/new`,`/[id]`), `/studio/tiers`,

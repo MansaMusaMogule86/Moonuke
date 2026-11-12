@@ -27,7 +27,7 @@ export async function mfaStatus(viewer: Viewer): Promise<MfaStatus> {
   return system(async (q) => {
     const f = await q.one<{ confirmed: boolean }>(`select confirmed_at is not null as confirmed from app.mfa_factors where user_id = $1`, [viewer.id]);
     const c = await q.one<{ n: number }>(`select count(*)::int as n from app.mfa_recovery_codes where user_id = $1 and used_at is null`, [viewer.id]);
-    return { enrolled: !!f?.confirmed, pendingSetup: !!f && !f.confirmed, recoveryCodesLeft: c?.n ?? 0, mandatory: viewer.role === "owner" || viewer.role === "creator" };
+    return { enrolled: !!f?.confirmed, pendingSetup: !!f && !f.confirmed, recoveryCodesLeft: c?.n ?? 0, mandatory: viewer.role === "owner" };
   });
 }
 
@@ -145,10 +145,9 @@ async function requireCurrentCode(q: Q, viewer: Viewer, code: string) {
   await q.query(`update app.mfa_factors set last_used_step = $2 where user_id = $1`, [viewer.id, step]);
 }
 
-/** Members may turn MFA off with a current code. The owner and creators cannot: it is mandatory for them. */
+/** Anyone but the owner may turn MFA off with a current code; the owner's is mandatory. */
 export async function disableMfa(viewer: Viewer, code: string): Promise<void> {
   if (viewer.role === "owner") throw new AppError("forbidden", "Two-step sign-in is mandatory for the owner account.");
-  if (viewer.role === "creator") throw new AppError("forbidden", "Two-step sign-in is mandatory for creator accounts.");
   if (viewer.aal !== 2) throw new AppError("forbidden", "Verify two-step sign-in first.");
   await system(async (q) => {
     await requireCurrentCode(q, viewer, code);

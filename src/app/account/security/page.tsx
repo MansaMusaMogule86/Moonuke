@@ -20,7 +20,7 @@ export default async function SecurityPage({ searchParams }: { searchParams: Pro
   const viewer = await requireViewer(undefined, { allowMfaSetup: true });
   const { setup } = await searchParams;
   const [mfa, sessions] = await Promise.all([mfaStatus(viewer), listSessions(viewer)]);
-  const mustEnrol = (viewer.role === "owner" || viewer.role === "creator") && !mfa.enrolled;
+  const mustEnrol = viewer.role === "owner" && !mfa.enrolled;
 
   return (
     <div className="mx-auto max-w-[1200px] px-5 pb-28 pt-14 md:px-10 md:pt-20">
@@ -31,14 +31,8 @@ export default async function SecurityPage({ searchParams }: { searchParams: Pro
 
       {mustEnrol && (
         <p role="alert" className="mt-8 max-w-2xl rounded-[var(--radius-md)] border border-gold/45 bg-gold/[0.07] px-5 py-4 text-[15px] leading-relaxed text-gold-soft">
-          {viewer.role === "owner" ? (
-            <>
-              Two-step sign-in is required for the owner account. Set it up below to unlock the House{setup === "required" ? "" : "."}
-              {setup === "required" ? " — every owner page stays closed until you do." : ""}
-            </>
-          ) : (
-            <>Two-step sign-in is required for creator accounts. Set it up below to open your studio and creator tools.</>
-          )}
+          Two-step sign-in is required for the owner account. Set it up below to unlock the House{setup === "required" ? "" : "."}
+          {setup === "required" ? " — every owner page stays closed until you do." : ""}
         </p>
       )}
 
@@ -47,7 +41,7 @@ export default async function SecurityPage({ searchParams }: { searchParams: Pro
           <div className="flex flex-wrap items-center gap-3">
             <h2 id="mfa-h" className="font-display text-[30px] text-ivory">Two-step sign-in</h2>
             <Badge tone={mfa.enrolled ? "vip" : "neutral"}>{mfa.enrolled ? "On" : "Off"}</Badge>
-            {mfa.mandatory && <Badge tone="member">{viewer.role === "owner" ? "Required for owner" : "Required for creators"}</Badge>}
+            {mfa.mandatory && <Badge tone="member">Required for owner</Badge>}
           </div>
           <p className="mt-3 text-[14px] leading-relaxed text-stone">
             A 6-digit code from an authenticator app (1Password, Google Authenticator, Authy…) after your password.

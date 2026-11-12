@@ -64,7 +64,9 @@ export type Viewer = {
 export function can(viewer: Pick<Viewer, "role" | "status" | "aal" | "emailVerified"> | null | undefined, permission: Permission): boolean {
   if (!viewer || viewer.status !== "active") return false;
   if (viewer.role === "owner" && viewer.aal !== 2) return false;
-  // Creators: a second factor verified in this session AND a confirmed email address, for every permission.
-  if (viewer.role === "creator" && (viewer.aal !== 2 || viewer.emailVerified !== true)) return false;
+  // Creators need a confirmed email address for every permission. Two-step
+  // sign-in is OPTIONAL for creators — they may enable it in Account security —
+  // so it is not required here. The owner above still needs AAL2.
+  if (viewer.role === "creator" && viewer.emailVerified !== true) return false;
   return matrix[viewer.role].includes(permission);
 }

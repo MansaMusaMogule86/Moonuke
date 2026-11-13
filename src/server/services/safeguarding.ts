@@ -84,7 +84,7 @@ export async function openCase(
   if (input.uploadId) await placeHold(q, row.id, "media_upload", input.uploadId);
   await q.query(`insert into app.safeguarding_events (case_id, actor_id, kind, note) values ($1, $2, 'opened', $3)`, [row.id, input.actorId ?? null, `Source: ${input.sourceType}`]);
   await audit(q, { actorId: input.actorId ?? null, action: "safeguarding.open", targetType: "safeguarding_case", targetId: row.id, metadata: { source: input.sourceType } });
-  const owner = await q.one<{ id: string; email: string }>(`select id, email::text as email from app.users where role = 'owner'`);
+  const owner = await q.one<{ id: string; email: string }>(`select id, email::text as email from app.users where role = 'owner' order by created_at asc limit 1`);
   if (owner) await enqueue(q, owner.email, emails.safeguardingAlert({ reference: ref, url: `${appUrl()}/admin/safety/safeguarding` }), owner.id);
   return { id: row.id, reference: ref, created: true };
 }

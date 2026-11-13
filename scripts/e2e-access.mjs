@@ -93,7 +93,7 @@ await o.page.getByLabel(/^Note/).fill("Fictional test rule");
 await o.page.getByRole("button", { name: "Save rule" }).click();
 check("rule saved, with a no-effect warning", await visible(o.page.getByText(/no effect until regional rules are approved/)));
 check("rule change audited", (await one(`select count(*)::int as n from app.audit_log where action = 'access.rule_set'`)).n === 1);
-await db.query(`insert into app.jurisdiction_rules (country, rule, updated_by) values ('XX', 'block', (select id from app.users where role = 'owner'))`);
+await db.query(`insert into app.jurisdiction_rules (country, rule, updated_by) values ('XX', 'block', (select id from app.users where role = 'owner' order by created_at asc limit 1))`);
 const d = await m.page.goto(`${BASE}/discover`);
 check("a block rule has no effect while regional rules are off", d.status() === 200 && m.page.url().endsWith("/discover"));
 

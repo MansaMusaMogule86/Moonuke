@@ -30,7 +30,7 @@ export async function provisionCreator(input: { email: string; temporaryPassword
   const hash = await hashPassword(input.temporaryPassword);
   return system(async (q) => {
     if (!(await creatorEmailAllowed(q, email))) throw new AppError("forbidden", "That address is not on the creator allowlist.");
-    const owner = await q.one<{ id: string }>(`select id from app.users where role = 'owner' and status = 'active'`);
+    const owner = await q.one<{ id: string }>(`select id from app.users where role = 'owner' and status = 'active' order by created_at asc limit 1`);
     if (!owner) throw new AppError("conflict", "Create the owner account first: provisioning is the owner's approval.");
 
     const existing = await q.one<{ id: string; role: string; must_change_password: boolean }>(

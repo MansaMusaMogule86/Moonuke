@@ -117,7 +117,7 @@ export async function fileReport(viewer: Viewer, input: ReportInput, meta: { ipH
           await audit(q, { actorId: null, action: "moderation.auto_hide", targetType: "post", targetId: input.targetId, metadata: { report: id } });
         }
       }
-      const owner = await q.one<{ id: string; email: string }>(`select id, email::text as email from app.users where role = 'owner'`);
+      const owner = await q.one<{ id: string; email: string }>(`select id, email::text as email from app.users where role = 'owner' order by created_at asc limit 1`);
       if (owner) await enqueue(q, owner.email, emails.criticalReport({ reason: input.reason, url: `${appUrl()}/admin/moderation` }), owner.id);
       // Child-safety concerns also go to the separate safeguarding queue, with
       // the content and the account preserved under legal hold.

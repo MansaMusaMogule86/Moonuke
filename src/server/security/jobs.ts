@@ -25,7 +25,7 @@ export async function runSecurityDigest(now = new Date()): Promise<{ sent: boole
     const timeZone = env().SECURITY_DIGEST_TIMEZONE ?? s.digest_timezone;
     const { day, hm } = localParts(now, timeZone);
     if (hm < s.digest_local_time.slice(0, 5)) return { sent: false, day };
-    const owner = await q.one<{ id: string; email: string }>(`select id, email::text as email from app.users where role = 'owner' and status = 'active'`);
+    const owner = await q.one<{ id: string; email: string }>(`select id, email::text as email from app.users where role = 'owner' and status = 'active' order by created_at asc limit 1`);
     if (!owner) return { sent: false, day };
     const t = await q.one<{
       logins: number; accounts: number; registrations: number; creator_applications: number; failed: number;

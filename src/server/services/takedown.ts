@@ -148,7 +148,7 @@ export async function submitTakedown(raw: TakedownInput, meta: { ipHash?: string
       await q.query(`update app.takedown_notices set status = 'escalated' where id = $1`, [row.id]);
       await audit(q, { actorId: null, action: "takedown.escalate", targetType: "takedown", targetId: row.id, metadata: { case: sg.id } });
     }
-    const owner = await q.one<{ id: string; email: string }>(`select id, email::text as email from app.users where role = 'owner'`);
+    const owner = await q.one<{ id: string; email: string }>(`select id, email::text as email from app.users where role = 'owner' order by created_at asc limit 1`);
     if (owner && !primary) await enqueue(q, owner.email, emails.takedownAlert({ category: i.category, reference: ref, dueAt: new Date(row.due_at), url: `${appUrl()}/admin/safety` }), owner.id);
     return { reference: ref, id: row.id, created: true, t };
   });

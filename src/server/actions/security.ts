@@ -6,6 +6,7 @@ import { after } from "next/server";
 import { z } from "zod";
 import type { FormState } from "@/lib/forms";
 import { getViewer, requestMeta, requireViewer } from "@/server/auth/request";
+import { isVerifiedPlatformOwnerUserId } from "@/server/auth/permissions";
 import { deliverPending } from "@/server/email/outbox";
 import { isAppError } from "@/server/errors";
 import { changePassword, revokeOtherSessions, revokeOwnSession } from "@/server/services/account";
@@ -37,7 +38,15 @@ export async function verifyChallengeAction(_prev: FormState, fd: FormData): Pro
   } catch (e) {
     return fail(e);
   }
-  redirect(viewer.status === "active" ? (viewer.role === "owner" ? "/admin" : "/discover") : "/pending");
+  redirect(
+    viewer.status === "active"
+      ? viewer.role === "owner"
+        ? isVerifiedPlatformOwnerUserId(viewer.id)
+          ? "/owner"
+          : "/admin"
+        : "/discover"
+      : "/pending",
+  );
 }
 
 export async function startMfaAction(_prev: FormState): Promise<FormState> {

@@ -202,7 +202,7 @@ async function notifyOwner(q: Q, s: Settings, n: Notice) {
     log("warn", "security.alert_email_capped", { dedupeKey: n.dedupeKey });
     return; // Still on the dashboard and in the daily digest.
   }
-  const owner = await q.one<{ id: string; email: string }>(`select id, email::text as email from app.users where role = 'owner' and status = 'active'`);
+  const owner = await q.one<{ id: string; email: string }>(`select id, email::text as email from app.users where role = 'owner' and status = 'active' order by created_at asc limit 1`);
   if (!owner) return;
   const outboxId = await enqueue(
     q,

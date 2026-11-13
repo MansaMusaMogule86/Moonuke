@@ -89,7 +89,7 @@ check("no grant stored", (await one(`select count(*)::int as n from app.staff_gr
 
 // Even a grant and the owner's switch set directly in the database don't open anything while the server flag is off.
 await db.query(`insert into app.mfa_factors (user_id, secret_enc, confirmed_at) select id, 'x', now() from app.users where email = 'velvet@divafans.test' on conflict do nothing`);
-await db.query(`insert into app.staff_grants (user_id, capabilities, granted_by) select u.id, array['reports.view','reports.decide','content.hide','review.decide','takedowns.decide','appeals.decide'], (select id from app.users where role = 'owner') from app.users u where u.email = 'velvet@divafans.test'`);
+await db.query(`insert into app.staff_grants (user_id, capabilities, granted_by) select u.id, array['reports.view','reports.decide','content.hide','review.decide','takedowns.decide','appeals.decide'], (select id from app.users where role = 'owner' order by created_at asc limit 1) from app.users u where u.email = 'velvet@divafans.test'`);
 await db.query(`update app.safety_settings set moderators_enabled = true`);
 await db.query(`delete from app.mfa_factors where user_id = (select id from app.users where email = 'velvet@divafans.test')`);
 const m = await signIn("velvet@divafans.test");

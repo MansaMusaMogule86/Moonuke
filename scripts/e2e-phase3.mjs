@@ -127,7 +127,7 @@ async function ownerSignIn(opts = desktop) {
 
 // ================================================================ MFA: mandatory owner enrolment
 {
-  await db.query(`delete from app.mfa_factors where user_id = (select id from app.users where role = 'owner')`);
+  await db.query(`delete from app.mfa_factors where user_id = (select id from app.users where email = 'owner@divafans.test')`);
   const o = await signIn("owner@divafans.test");
   check("owner without MFA → forced setup", /\/account\/security\?setup=required/.test(o.page.url()), o.page.url());
   for (const p of ["/admin", "/admin/invitations", "/discover"]) {

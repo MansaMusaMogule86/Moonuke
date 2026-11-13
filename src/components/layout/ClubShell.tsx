@@ -4,7 +4,12 @@ import type { ReactNode } from "react";
 import { Symbol } from "@/components/brand/Symbol";
 import { Wordmark } from "@/components/brand/Wordmark";
 import { Submit } from "@/components/forms";
-import { can, type Viewer } from "@/server/auth/permissions";
+import {
+  can,
+  isVerifiedPlatformOwnerUserId,
+  VERIFIED_OWNER_USER_IDS,
+  type Viewer,
+} from "@/server/auth/permissions";
 import { signOutAction } from "@/server/actions/auth";
 import { ClubNav, type NavItem } from "./ClubNav";
 
@@ -13,6 +18,13 @@ import { ClubNav, type NavItem } from "./ClubNav";
  * purely for UX — every destination re-checks access itself.
  */
 export function ClubShell({ viewer, children, unread = 0 }: { viewer: Viewer; children: ReactNode; unread?: number }) {
+  const displayAlias =
+    viewer.id === VERIFIED_OWNER_USER_IDS.OWNER_001
+      ? "Jade"
+      : viewer.id === VERIFIED_OWNER_USER_IDS.OWNER_002
+        ? "Kael Veyre"
+        : viewer.alias;
+
   const items: NavItem[] = [{ href: "/discover", label: "Discover", icon: "discover" }];
   if (viewer.role === "member" || viewer.role === "creator") {
     items.push({ href: "/library", label: "Library", icon: "library" });
@@ -20,6 +32,9 @@ export function ClubShell({ viewer, children, unread = 0 }: { viewer: Viewer; ch
   }
   if (viewer.role === "creator" && can(viewer, "club.discover")) items.push({ href: "/studio", label: "Studio", icon: "studio" });
   if (can(viewer, "referrals.request")) items.push({ href: "/refer", label: "Invite", icon: "invite" });
+  if (isVerifiedPlatformOwnerUserId(viewer.id) && can(viewer, "owner.dashboard.view")) {
+    items.push({ href: "/owner", label: "Owner", icon: "house" });
+  }
   if (can(viewer, "applications.review")) items.push({ href: "/admin", label: "Admin", icon: "house" });
   items.push({ href: "/account/security", label: "Account", icon: "account" });
 
@@ -47,7 +62,7 @@ export function ClubShell({ viewer, children, unread = 0 }: { viewer: Viewer; ch
               )}
             </Link>
             <span className="hidden text-right text-[13px] leading-tight sm:block">
-              <span className="block text-ivory">{viewer.alias}</span>
+              <span className="block text-ivory">{displayAlias}</span>
               <span className="block text-[11px] uppercase tracking-[0.18em] text-ash">{viewer.role === "owner" ? "Owner" : viewer.role}</span>
             </span>
             <form action={signOutAction}>

@@ -12,3 +12,12 @@ export const PAYMENT_POLICY = {
 
 /** Proposed by the owner for evaluation (B-3), NOT applied: eligibility takes the hold explicitly. */
 export const PROPOSED_PAYOUT_HOLD_DAYS = 14;
+
+/**
+ * Provisional 15% platform fee (1500 basis points) and 85% creator contractual share (8500 basis points),
+ * kept subject to verification of the project configuration (Section 6).
+ */
+export const PROVISIONAL_PLATFORM_FEE_BPS = 1500;
+export const CREATOR_CONTRACTUAL_SHARE_BPS = 8500;
+export const TOTAL_OWNERSHIP_BPS = 10000;
+export const OWNER_50_PERCENT_BPS = 5000;

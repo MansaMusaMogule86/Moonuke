@@ -3,11 +3,14 @@ import { system } from "@/server/db";
 import { createHash } from "node:crypto";
 import { hashPassword, randomToken, sha256 } from "@/server/auth/crypto";
 import { encryptSecret } from "@/server/auth/totp";
+import { VERIFIED_OWNER_USER_IDS } from "@/server/auth/permissions";
 import { categories, creators, memberPerks, postsFor, vipPerks } from "./data";
 
 export const DEV_PASSWORD = "divafans-dev-password";
 /** Dev-only owner authenticator (base32). Mirrors scripts/lib/totp.mjs. */
 export const DEV_OWNER_TOTP_SECRET = "JBSWY3DPEHPK3PXPDIVAFANSDEVSEED2";
+export const JADE_OWNER_TEST_EMAIL = "jade.owner@divafans.test";
+export const KAEL_OWNER_TEST_EMAIL = "kael.owner@divafans.test";
 
 /**
  * Dev-only authenticator secret for a seeded account (base32, 32 chars).
@@ -30,6 +33,8 @@ export const CREATOR_INVITE_EMAIL = "newcreator@divafans.test";
 
 export type SeedResult = {
   ownerId: string;
+  jadeUserId: string; // OWNER_001: Jade (50%, Account A)
+  kaelUserId: string; // OWNER_002: Kael Veyre (50%, Account B)
   memberId: string; // Nocturne: VIP of isadora, member of zara, bought mireille PPV, member of orsolya (private)
   member2Id: string; // Velvet Hour: active, no subscriptions
   pendingId: string; // Satellite: awaiting approval
@@ -193,6 +198,28 @@ export async function seed(): Promise<SeedResult> {
 
     await q.query(`insert into app.audit_log (actor_id, action, metadata) values ($1, 'seed.run', '{"env":"dev"}')`, [ownerId]);
 
-    return { ownerId, memberId, member2Id, pendingId, creatorIds, inviteToken, creatorInviteToken, lioInviteToken: lioToken };
+    // Seed and enroll the two verified 50/50 platform owners (Jade = OWNER_001, Kael Veyre = OWNER_002)
+    // using their verified auth_user_ids, with independent TOTP factors and no duplicate user rows.
+    const jadeUserId = VERIFIED_OWNER_USER_IDS.OWNER_001;
+    const kaelUserId = VERIFIED_OWNER_USER_IDS.OWNER_002;
+    await q.query(
+      `insert into app.users (id, email, password_hash, role, status, alias, adult_attested_at, approved_at, email_verified_at, created_at)
+       values
+         ($1, $2, $3, 'owner', 'active', 'hjaouhari0', now(), now(), now(), now() + interval '1 second'),
+         ($4, $5, $3, 'owner', 'active', 'mehdialaouiismaili9', now(), now(), now(), now() + interval '2 seconds')
+       on conflict (id) do nothing`,
+      [jadeUserId, JADE_OWNER_TEST_EMAIL, pw, kaelUserId, KAEL_OWNER_TEST_EMAIL],
+    );
+    await q.query(
+      `insert into app.mfa_factors (user_id, secret_enc, confirmed_at)
+       values
+         ($1, $2, now()),
+         ($3, $4, now())
+       on conflict (user_id) do nothing`,
+      [jadeUserId, encryptSecret(devTotpSecret(JADE_OWNER_TEST_EMAIL)), kaelUserId, encryptSecret(devTotpSecret(KAEL_OWNER_TEST_EMAIL))],
+    );
+    await q.query(`select app.enroll_verified_owners()`);
+
+    return { ownerId, jadeUserId, kaelUserId, memberId, member2Id, pendingId, creatorIds, inviteToken, creatorInviteToken, lioInviteToken: lioToken };
   });
 }

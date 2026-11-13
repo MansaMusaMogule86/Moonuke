@@ -105,7 +105,7 @@ export async function submitVerification(viewer: Viewer) {
   });
   // Let the owner know (privileged: a creator cannot mail the owner directly).
   await system(async (q) => {
-    const owner = await q.one<{ id: string; email: string }>(`select id, email::text as email from app.users where role = 'owner'`);
+    const owner = await q.one<{ id: string; email: string }>(`select id, email::text as email from app.users where role = 'owner' order by created_at asc limit 1`);
     if (owner) {
       await enqueue(q, owner.email, emails.verificationSubmitted({ url: `${appUrl()}/admin/creators` }), owner.id);
     }

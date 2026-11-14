@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ClubShell } from "@/components/layout/ClubShell";
+import { unreadMessagesCount } from "@/server/services/messaging";
 import { unreadCount } from "@/server/services/notifications";
 import { redirect } from "next/navigation";
 import { requireViewer } from "@/server/auth/request";
@@ -16,5 +17,10 @@ export default async function ClubLayout({ children }: { children: React.ReactNo
   // off this returns "allowed" without any lookup.
   const gate = await gateRequest(viewer);
   if (!gate.allowed) redirect(gate.reason === "region_blocked" ? "/unavailable" : "/verify-age");
-  return <ClubShell viewer={viewer} unread={await unreadCount(viewer)}>{children}</ClubShell>;
+  const [unread, unreadMessages] = await Promise.all([unreadCount(viewer), unreadMessagesCount(viewer)]);
+  return (
+    <ClubShell viewer={viewer} unread={unread} unreadMessages={unreadMessages}>
+      {children}
+    </ClubShell>
+  );
 }

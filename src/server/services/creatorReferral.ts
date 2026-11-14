@@ -6,6 +6,7 @@ import { AppError } from "@/server/errors";
 import { featureEnabled } from "@/server/flags";
 import { checkText } from "@/server/ai/safety";
 import type { PortraitStudy } from "@/components/ui/Portrait";
+import { formatCreatorPublicName } from "@/lib/creatorName";
 import { audit } from "./audit";
 import { createSession } from "./sessions";
 
@@ -52,7 +53,7 @@ export async function referralCreator(handle: string): Promise<ReferralCreator |
     );
     if (!c) return null;
     return {
-      id: c.id, handle: c.handle, displayName: c.display_name, discipline: c.discipline, city: c.city,
+      id: c.id, handle: c.handle, displayName: formatCreatorPublicName(c.display_name), discipline: c.discipline, city: c.city,
       tagline: c.tagline, bio: c.bio, cover: c.cover, tiers: c.tiers,
     };
   });

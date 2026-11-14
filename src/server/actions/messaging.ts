@@ -31,8 +31,33 @@ export async function sendMessageAction(_prev: FormState, fd: FormData): Promise
   const viewer = await requireViewer("club.discover");
   const id = str(fd, "conversationId");
   const body = typeof fd.get("body") === "string" ? (fd.get("body") as string) : "";
+  const isPaid = str(fd, "isPaid") === "on";
   if (!uuid.safeParse(id).success) return { status: "error", message: "Invalid request." };
   try {
+    if (isPaid) {
+      const priceDollars = Number(str(fd, "priceDollars"));
+      const priceCents = Number.isFinite(priceDollars) ? Math.round(priceDollars * 100) : 0;
+      const previewText = str(fd, "previewText");
+      const mediaKindRaw = str(fd, "mediaKind");
+      const mediaKind = (["text", "image", "set", "video", "audio"].includes(mediaKindRaw) ? mediaKindRaw : "text") as
+        | "text"
+        | "image"
+        | "set"
+        | "video"
+        | "audio";
+      const r = await msg.sendPaidMessage(viewer, id, {
+        body,
+        previewText,
+        priceCents,
+        mediaKind,
+        clientKey: str(fd, "clientKey"),
+      });
+      return {
+        status: "success",
+        message: r.status === "held" ? "Your message is being checked by the house before it's delivered." : undefined,
+        data: { id: r.id, status: r.status },
+      };
+    }
     const r = await msg.sendMessage(viewer, id, body, str(fd, "clientKey"));
     return {
       status: "success",
@@ -41,7 +66,11 @@ export async function sendMessageAction(_prev: FormState, fd: FormData): Promise
     };
   } catch (e) {
     // Echo the draft back so it isn't lost.
-    return fail(e, { body: body.slice(0, 2000) });
+    return fail(e, {
+      body: body.slice(0, 2000),
+      previewText: str(fd, "previewText").slice(0, 280),
+      priceDollars: str(fd, "priceDollars"),
+    });
   }
 }
 

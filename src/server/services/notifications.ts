@@ -3,6 +3,7 @@ import { asViewer, system } from "@/server/db";
 import type { Viewer } from "@/server/auth/permissions";
 import { AppError } from "@/server/errors";
 import type { PortraitStudy } from "@/components/ui/Portrait";
+import { formatCreatorPublicName } from "@/lib/creatorName";
 
 // =====================================================================
 // Notification centre. Rows are references only; what's displayed is
@@ -35,18 +36,25 @@ type Row = {
 const ACCESS_LABEL: Record<string, string> = { preview: "Open to all", members: "Members", vip: "VIP", ppv: "Pay per view" };
 
 function present(r: Row): FanNotification {
-  const creator = r.handle ? { handle: r.handle, displayName: r.display_name!, cover: r.cover! } : null;
+  const creator = r.handle ? { handle: r.handle, displayName: formatCreatorPublicName(r.display_name), cover: r.cover! } : null;
   const base = { id: r.id, kind: r.kind, at: new Date(r.available_at).toISOString(), read: !!r.read_at, creator };
   switch (r.kind) {
     case "post.published":
       return { ...base, title: `${creator?.displayName ?? "A creator"} posted`, detail: r.teaser ? `${r.teaser} · ${ACCESS_LABEL[r.access ?? ""] ?? ""}` : null, href: creator ? `/c/${creator.handle}#post-${r.post_id}` : null };
-    case "message.received":
+    case "message.received": {
+      const fromSender =
+        r.data.sender_is_creator === true && creator
+          ? creator.displayName
+          : typeof r.data.from === "string"
+            ? r.data.from
+            : "a member";
       return {
         ...base,
-        title: `New message from ${typeof r.data.from === "string" ? r.data.from : "a member"}`,
+        title: `New message from ${fromSender}`,
         detail: "Open the conversation to read it.",
         href: typeof r.data.conversation === "string" ? `/messages/${r.data.conversation}` : "/messages",
       };
+    }
     case "proposal.received":
       return { ...base, title: r.data.source === "import" ? "Imported details are ready to review" : "The house prepared a profile draft for you", detail: "Nothing changes until you accept it.", href: "/studio" };
     case "system":

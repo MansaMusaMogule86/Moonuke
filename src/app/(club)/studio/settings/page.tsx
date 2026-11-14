@@ -5,13 +5,14 @@ import { Stepper } from "@/components/onboarding/Stepper";
 import { CopyLink } from "@/components/studio/CopyLink";
 import { StudioHeader } from "@/components/studio/StudioHeader";
 import { Badge } from "@/components/ui/Badge";
+import { normalizeCreatorChosenName } from "@/lib/creatorName";
 import { requireViewer } from "@/server/auth/request";
 import { featureEnabled } from "@/server/flags";
 import { listCategories } from "@/server/services/club";
 import { getOnboarding } from "@/server/services/creatorOnboarding";
 import { myReferralCount } from "@/server/services/creatorReferral";
 import { assistantInfo, myOnboarding, myProposals, mySocials, STAGES } from "@/server/services/onboarding";
-import { ProfileEditor, ProposalCard, SocialsManager, VerificationForm } from "../StudioForms";
+import { CreatorNameForm, ProfileEditor, ProposalCard, SocialsManager, VerificationForm } from "../StudioForms";
 
 export const metadata: Metadata = { title: "Settings · Studio" };
 
@@ -40,14 +41,37 @@ export default async function StudioSettingsPage() {
   const [label, help] = statusCopy[ob.verification.status];
   const canSubmit = !!ob.profile && ["not_started", "needs_more_info", "rejected"].includes(ob.verification.status);
   const open = proposals.find((p) => p.status === "proposed");
+  const initialChosenName = normalizeCreatorChosenName(
+    ob.profile?.creatorName ?? ob.profile?.displayName ?? viewer.alias,
+  );
 
   return (
     <div className="mx-auto max-w-[1000px] px-5 pb-28 pt-6 md:px-10 md:pt-8">
       <StudioHeader
         eyebrow="Studio"
         title="Settings"
-        lede="Your profile, socials and verification. Members can't see your profile until the house verifies you and publishes it."
+        lede="Your creator name, profile, socials and verification. Members can't see your profile until the house verifies you and publishes it."
       />
+
+      <section aria-labelledby="creator-name-h" className="mt-8 rounded-[var(--radius-xl)] border border-gold/35 bg-ink-2 p-6 md:p-8">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="eyebrow text-gold">Public identity</p>
+            <h2 id="creator-name-h" className="mt-1 text-[18px] font-medium text-ivory">Creator name</h2>
+          </div>
+          <Badge tone="vip">Fixed prefix · Diva</Badge>
+        </div>
+        <p className="mt-2 max-w-2xl text-[14px] leading-relaxed text-stone">
+          Every creator on DivaFans appears publicly as <strong className="text-ivory">Diva [chosen name]</strong>. You can change the portion after &ldquo;Diva&rdquo; at any time.
+        </p>
+        <div className="mt-5">
+          <CreatorNameForm
+            initialCreatorName={initialChosenName}
+            handle={handle}
+            hasProfile={!!ob.profile}
+          />
+        </div>
+      </section>
 
       <div className="mt-8 grid gap-6 lg:grid-cols-12">
         <section aria-labelledby="share-h" className="rounded-[var(--radius-xl)] border border-gold/30 bg-ink-2 p-6 md:p-8 lg:col-span-12">
@@ -97,7 +121,14 @@ export default async function StudioSettingsPage() {
           </div>
           <div className="mt-6">
             {/* Remount only when a house proposal was accepted (to load its values) — never on an ordinary save, which would drop the confirmation. */}
-            <ProfileEditor key={proposals.find((p) => p.status === "accepted")?.id ?? "draft"} initial={ob.profile} categories={categories} assist={assistantInfo()} userId={viewer.id} />
+            <ProfileEditor
+              key={proposals.find((p) => p.status === "accepted")?.id ?? "draft"}
+              initial={ob.profile}
+              defaultChosenName={initialChosenName}
+              categories={categories}
+              assist={assistantInfo()}
+              userId={viewer.id}
+            />
           </div>
         </section>
 

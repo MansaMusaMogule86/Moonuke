@@ -8,6 +8,12 @@ import { enqueue } from "@/server/email/outbox";
 import { emails } from "@/server/email/templates";
 import { REQUIRED_CHECKS, type VerificationCheck } from "@/server/verification";
 import type { PortraitStudy } from "@/components/ui/Portrait";
+import {
+  formatCreatorPublicName,
+  normalizeCreatorChosenName,
+  validateCreatorChosenName,
+} from "@/lib/creatorName";
+import { checkText } from "@/server/ai/safety";
 import { audit } from "./audit";
 
 export type VerificationStatus = "not_started" | "submitted" | "in_review" | "needs_more_info" | "verified" | "rejected";
@@ -15,6 +21,7 @@ export type VerificationStatus = "not_started" | "submitted" | "in_review" | "ne
 export type ProfileInput = {
   handle: string;
   displayName: string;
+  creatorName?: string;
   discipline: string;
   category: string;
   city?: string;
@@ -24,7 +31,7 @@ export type ProfileInput = {
 };
 
 export type Onboarding = {
-  profile: (ProfileInput & { published: boolean }) | null;
+  profile: (ProfileInput & { creatorName: string; needsNameSetup: boolean; published: boolean }) | null;
   verification: { status: VerificationStatus; reviewNote: string | null; submittedAt: Date | null };
 };
 
@@ -43,8 +50,20 @@ function coverFor(userId: string): PortraitStudy {
 export async function getOnboarding(viewer: Viewer): Promise<Onboarding> {
   assertCreator(viewer);
   return asViewer(viewer, async (q) => {
-    const c = await q.one<{ handle: string; display_name: string; discipline: string; category: string; city: string | null; tagline: string | null; bio: string | null; visibility: ProfileInput["visibility"]; published_at: Date | null }>(
-      `select handle::text as handle, display_name, discipline, category, city, tagline, bio, visibility, published_at from app.creators where user_id = $1`,
+    const c = await q.one<{
+      handle: string;
+      creator_name: string;
+      display_name: string;
+      needs_name_setup: boolean;
+      discipline: string;
+      category: string;
+      city: string | null;
+      tagline: string | null;
+      bio: string | null;
+      visibility: ProfileInput["visibility"];
+      published_at: Date | null;
+    }>(
+      `select handle::text as handle, creator_name, display_name, needs_name_setup, discipline, category, city, tagline, bio, visibility, published_at from app.creators where user_id = $1`,
       [viewer.id],
     );
     const v = await q.one<{ status: VerificationStatus; review_note: string | null; submitted_at: Date | null }>(
@@ -53,7 +72,19 @@ export async function getOnboarding(viewer: Viewer): Promise<Onboarding> {
     );
     return {
       profile: c
-        ? { handle: c.handle, displayName: c.display_name, discipline: c.discipline, category: c.category, city: c.city ?? undefined, tagline: c.tagline ?? undefined, bio: c.bio ?? undefined, visibility: c.visibility, published: !!c.published_at }
+        ? {
+            handle: c.handle,
+            creatorName: normalizeCreatorChosenName(c.creator_name || c.display_name),
+            displayName: formatCreatorPublicName(c.creator_name || c.display_name),
+            needsNameSetup: !!c.needs_name_setup,
+            discipline: c.discipline,
+            category: c.category,
+            city: c.city ?? undefined,
+            tagline: c.tagline ?? undefined,
+            bio: c.bio ?? undefined,
+            visibility: c.visibility,
+            published: !!c.published_at,
+          }
         : null,
       verification: { status: v?.status ?? "not_started", reviewNote: v?.review_note ?? null, submittedAt: v?.submitted_at ?? null },
     };
@@ -63,22 +94,127 @@ export async function getOnboarding(viewer: Viewer): Promise<Onboarding> {
 /** Create or update the creator's own profile draft. Publication is owner-only. */
 export async function saveProfile(viewer: Viewer, input: ProfileInput) {
   assertCreator(viewer);
+  const rawName = input.creatorName ?? input.displayName;
+  const validated = validateCreatorChosenName(rawName);
+  if (!validated.ok) {
+    throw new AppError("validation", validated.error, "displayName");
+  }
+  const safety = checkText(validated.chosenName);
+  if (!safety.ok) {
+    throw new AppError("validation", safety.reason ?? "Choose another creator name.", "displayName");
+  }
+
   await asViewer(viewer, async (q) => {
     try {
       await q.query(
-        `insert into app.creators (user_id, handle, display_name, discipline, category, city, tagline, bio, visibility, cover)
-         values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-         on conflict (user_id) do update set handle = excluded.handle, display_name = excluded.display_name, discipline = excluded.discipline,
-           category = excluded.category, city = excluded.city, tagline = excluded.tagline, bio = excluded.bio, visibility = excluded.visibility`,
-        [viewer.id, input.handle, input.displayName, input.discipline, input.category, input.city ?? null, input.tagline ?? null, input.bio ?? null, input.visibility, JSON.stringify(coverFor(viewer.id))],
+        `insert into app.creators (user_id, handle, creator_name, display_name, needs_name_setup, discipline, category, city, tagline, bio, visibility, cover)
+         values ($1, $2, $3, $4, false, $5, $6, $7, $8, $9, $10, $11)
+         on conflict (user_id) do update set
+           handle = excluded.handle,
+           creator_name = excluded.creator_name,
+           display_name = excluded.display_name,
+           needs_name_setup = false,
+           discipline = excluded.discipline,
+           category = excluded.category,
+           city = excluded.city,
+           tagline = excluded.tagline,
+           bio = excluded.bio,
+           visibility = excluded.visibility`,
+        [
+          viewer.id,
+          input.handle,
+          validated.chosenName,
+          validated.publicName,
+          input.discipline,
+          input.category,
+          input.city ?? null,
+          input.tagline ?? null,
+          input.bio ?? null,
+          input.visibility,
+          JSON.stringify(coverFor(viewer.id)),
+        ],
       );
     } catch (e) {
       const code = (e as { code?: string; constraint?: string }).code;
       if (code === "23505") throw new AppError("conflict", "That handle is taken.", "handle");
       if (code === "23503") throw new AppError("validation", "Choose a category.", "category");
+      if (code === "23514") throw new AppError("validation", "Enter a valid creator name.", "displayName");
       throw e;
     }
-    await audit(q, { actorId: viewer.id, action: "creator.profile_save", targetType: "creator", targetId: viewer.id });
+    await audit(q, {
+      actorId: viewer.id,
+      action: "creator.profile_save",
+      targetType: "creator",
+      targetId: viewer.id,
+      metadata: { creatorName: validated.chosenName, displayName: validated.publicName },
+    });
+  });
+}
+
+/**
+ * Update a creator's editable name portion after "Diva".
+ * Only the creator themselves or an authorized administrator (owner with
+ * `creators.verify`) can change that creator's name. Does not alter the
+ * creator's unique `@handle`, profile URL, referral link, or relationships.
+ */
+export async function updateCreatorName(
+  viewer: Viewer,
+  targetUserId: string,
+  rawChosenName: string,
+): Promise<{ userId: string; handle: string; creatorName: string; displayName: string }> {
+  const isSelfCreator = viewer.id === targetUserId && viewer.role === "creator" && viewer.status === "active";
+  const isAuthorizedAdmin = can(viewer, "creators.verify");
+  if (!isSelfCreator && !isAuthorizedAdmin) {
+    throw new AppError("forbidden", "Only the creator or an authorized administrator can change this creator's name.");
+  }
+
+  const validated = validateCreatorChosenName(rawChosenName);
+  if (!validated.ok) {
+    throw new AppError("validation", validated.error, "creatorName");
+  }
+  const safety = checkText(validated.chosenName);
+  if (!safety.ok) {
+    throw new AppError("validation", safety.reason ?? "Choose another creator name.", "creatorName");
+  }
+
+  return asViewer(viewer, async (q) => {
+    const updated = await q.one<{
+      user_id: string;
+      handle: string;
+      creator_name: string;
+      display_name: string;
+    }>(
+      `update app.creators
+          set creator_name = $2,
+              display_name = $3,
+              needs_name_setup = false
+        where user_id = $1
+        returning user_id, handle::text as handle, creator_name, display_name`,
+      [targetUserId, validated.chosenName, validated.publicName],
+    );
+
+    if (!updated) {
+      throw new AppError("not_found", "Save your initial creator profile before changing your creator name.", "creatorName");
+    }
+
+    await audit(q, {
+      actorId: viewer.id,
+      action: "creator.name_update",
+      targetType: "creator",
+      targetId: targetUserId,
+      metadata: {
+        creatorName: updated.creator_name,
+        displayName: updated.display_name,
+        byAdmin: !isSelfCreator,
+      },
+    });
+
+    return {
+      userId: updated.user_id,
+      handle: updated.handle,
+      creatorName: updated.creator_name,
+      displayName: updated.display_name,
+    };
   });
 }
 

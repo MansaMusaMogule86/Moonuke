@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { validateCreatorChosenName } from "@/lib/creatorName";
 
 export const email = z.string().trim().toLowerCase().min(3).max(254).email("Enter a valid email address.");
 export const password = z
@@ -8,7 +9,19 @@ export const password = z
 export const alias = z
   .string()
   .trim()
-  .regex(/^[\p{L}\p{N}][\p{L}\p{N} ._'-]{1,30}[\p{L}\p{N}]$/u, "3–32 letters or numbers; spaces, dots, dashes and apostrophes are fine inside.");
+  .regex(/^[\p{L}\p{N}][\p{L}\p{N}\p{M} ._'’-]{1,30}[\p{L}\p{N}\p{M}]$/u, "3–32 letters or numbers; spaces, dots, dashes and apostrophes are fine inside.");
+export const creatorChosenName = z
+  .string()
+  .superRefine((val, ctx) => {
+    const r = validateCreatorChosenName(val);
+    if (!r.ok) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: r.error });
+    }
+  })
+  .transform((val) => {
+    const r = validateCreatorChosenName(val);
+    return r.ok ? r.chosenName : val;
+  });
 export const invitableRole = z.enum(["member", "creator"]);
 export const uuid = z.string().uuid();
 export const note = z.string().trim().max(500).optional().transform((v) => (v ? v : undefined));
@@ -19,6 +32,18 @@ export const applySchema = z.object({
   password,
   adult: z.literal("on", { message: "You must confirm you are 18 or older." }),
   terms: z.literal("on", { message: "Please accept the community rules." }),
+});
+
+export const creatorApplySchema = z.object({
+  alias: creatorChosenName,
+  email,
+  password,
+  adult: z.literal("on", { message: "You must confirm you are 18 or older." }),
+  terms: z.literal("on", { message: "Please accept the community rules." }),
+});
+
+export const creatorNameSchema = z.object({
+  creatorName: creatorChosenName,
 });
 
 export const signinSchema = z.object({ email, password: z.string().min(1).max(200) });

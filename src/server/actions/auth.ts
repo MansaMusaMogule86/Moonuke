@@ -13,7 +13,7 @@ import { registerFanViaReferral } from "@/server/services/creatorReferral";
 import { confirmEmail } from "@/server/services/emailVerification";
 import { recordLoginFailure } from "@/server/security/monitor";
 import { hit, hitIp, LIMITS } from "@/server/services/rateLimit";
-import { activateSchema, applySchema, fieldErrors, forgotSchema, resetSchema, signinSchema } from "@/server/validation";
+import { activateSchema, applySchema, creatorApplySchema, fieldErrors, forgotSchema, resetSchema, signinSchema } from "@/server/validation";
 
 const str = (fd: FormData, k: string) => (typeof fd.get(k) === "string" ? (fd.get(k) as string) : "");
 
@@ -47,7 +47,8 @@ export async function signInAction(_prev: FormState, fd: FormData): Promise<Form
 export async function applyAction(token: string, _prev: FormState, fd: FormData): Promise<FormState> {
   // Echo consent choices so a failed submit doesn't silently untick them (React resets the form). Never echo the password.
   const values = { alias: str(fd, "alias"), email: str(fd, "email"), adult: str(fd, "adult"), terms: str(fd, "terms") };
-  const parsed = applySchema.safeParse({
+  const schema = str(fd, "role") === "creator" ? creatorApplySchema : applySchema;
+  const parsed = schema.safeParse({
     alias: str(fd, "alias"),
     email: str(fd, "email"),
     password: str(fd, "password"),

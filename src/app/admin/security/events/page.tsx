@@ -19,7 +19,7 @@ const filters = z.object({
 });
 
 const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v) || undefined;
-const input = "mt-2 h-11 w-full rounded-[var(--radius-sm)] border border-line-strong bg-ink-3 px-3 text-[14px] text-ivory";
+const input = "mt-2 h-11 w-full rounded-[var(--radius-sm)] border border-line-strong bg-ink-3 px-3 text-[14px] text-ivory [&>option]:bg-ink-2 [&>option]:text-ivory";
 
 export default async function SecurityEventsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const viewer = await requireViewer("security.view");

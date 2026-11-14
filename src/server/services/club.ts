@@ -5,6 +5,7 @@ import { AppError } from "@/server/errors";
 import { signMediaUrl } from "@/server/media/sign";
 import { formatMoney, providerFor, type Money } from "@/server/payments";
 import type { PortraitStudy } from "@/components/ui/Portrait";
+import { formatCreatorPublicName } from "@/lib/creatorName";
 import { audit } from "./audit";
 
 function assertClub(viewer: Viewer) {
@@ -26,6 +27,7 @@ export type CreatorCard = {
   featured: boolean;
   cover: PortraitStudy;
   members: number;
+  member_from_cents: number | null;
   vip_from_cents: number | null;
   currency: string | null;
 };
@@ -45,17 +47,21 @@ export async function discover(
   assertClub(viewer);
   const order =
     opts.sort === "newest" ? "c.created_at desc" : opts.sort === "members" ? "members desc, c.display_name" : "c.featured desc, members desc, c.display_name";
-  return asViewer(viewer, (q) =>
+  const rows = await asViewer(viewer, (q) =>
     q.query<CreatorCard>(
       `select * from (
          select c.user_id as id, c.handle::text as handle, c.display_name, c.discipline, c.category, c.city, c.tagline,
                 c.featured, c.cover, c.created_at,
                 coalesce((select s.members from app.creator_stats(c.user_id) s), 0) as members,
+                (select min(t.price_cents) from app.tiers t where t.creator_id = c.user_id and t.kind = 'member' and t.active) as member_from_cents,
                 (select min(t.price_cents) from app.tiers t where t.creator_id = c.user_id and t.kind = 'vip' and t.active) as vip_from_cents,
-                (select t.currency from app.tiers t where t.creator_id = c.user_id and t.kind = 'vip' and t.active order by t.price_cents limit 1) as currency
+                coalesce(
+                  (select t.currency from app.tiers t where t.creator_id = c.user_id and t.active order by t.price_cents limit 1),
+                  'USD'
+                ) as currency
            from app.creators c
           where c.visibility = 'listed'
-            and ($1::text is null or c.display_name ilike $1 or c.handle::text ilike $1 or c.discipline ilike $1 or c.city ilike $1 or c.tagline ilike $1)
+            and ($1::text is null or c.display_name ilike $1 or c.creator_name ilike $1 or c.handle::text ilike $1 or c.discipline ilike $1 or c.city ilike $1 or c.tagline ilike $1)
             and ($2::text is null or c.category = $2)
        ) c
        order by ${order}
@@ -63,6 +69,7 @@ export async function discover(
       [opts.q ? `%${likeEscape(opts.q)}%` : null, opts.category ?? null],
     ),
   );
+  return rows.map((r) => ({ ...r, display_name: formatCreatorPublicName(r.display_name) }));
 }
 
 // ---------------------------------------------------------------- profile
@@ -148,7 +155,7 @@ export async function getProfile(viewer: Viewer, handle: string): Promise<Profil
     return {
       id: c.user_id,
       handle: c.handle,
-      displayName: c.display_name,
+      displayName: formatCreatorPublicName(c.display_name),
       discipline: c.discipline,
       category: c.category,
       city: c.city,
@@ -210,58 +217,186 @@ export async function setFollow(viewer: Viewer, creatorId: string, follow: boole
   });
 }
 
-// ---------------------------------------------------------------- checkout (quote only)
+// ---------------------------------------------------------------- checkout quote
+
+export type QuoteTarget = { kind: "tier" | "post" | "message"; id: string };
 
 export type Quote = {
+  kind: "tier" | "post" | "message";
+  targetId: string;
+  creatorId: string;
+  creatorName: string;
+  creatorHandle: string;
   title: string;
   subtitle: string;
+  itemDescription: string;
+  amountCents: number;
+  currency: string;
   amountLabel: string;
+  feeLabel: string;
+  totalLabel: string;
   cadence: string | null;
+  accessTerms: string;
+  supportedMethods: string[];
+  sandboxAvailable: boolean;
   available: false;
   reason: string;
 };
 
 /**
  * Prices come only from the database; the client sends an id, never an amount.
- * With no approved provider, the quote is always unavailable.
+ * Live processor availability (`available`) remains false until an approved
+ * processor is configured; in non-production environments `sandboxAvailable`
+ * enables verified sandbox payment simulation through the ledger engine.
  */
-export async function quote(viewer: Viewer, target: { kind: "tier" | "post"; id: string }): Promise<Quote> {
+export async function quote(viewer: Viewer, target: QuoteTarget): Promise<Quote> {
   assertClub(viewer);
+  const sandboxAvailable = process.env.NODE_ENV !== "production" && process.env.SANDBOX_CHECKOUT_ENABLED !== "false";
+  const supportedMethods = sandboxAvailable ? ["Sandbox Card •••• 4242 (Verified Test Checkout)"] : [];
+
   return asViewer(viewer, async (q) => {
     if (target.kind === "tier") {
-      const t = await q.one<{ id: string; kind: string; name: string; price_cents: number; currency: string; seat_limit: number | null; seats_taken: number | null; display_name: string; creator_id: string }>(
-        `select t.id, t.kind, t.name, t.price_cents, t.currency, t.seat_limit, app.tier_seats_taken(t.id) as seats_taken, c.display_name, c.user_id as creator_id
-           from app.tiers t join app.creators c on c.user_id = t.creator_id where t.id = $1 and t.active`,
+      const t = await q.one<{
+        id: string;
+        kind: string;
+        name: string;
+        price_cents: number;
+        currency: string;
+        seat_limit: number | null;
+        seats_taken: number | null;
+        display_name: string;
+        handle: string;
+        creator_id: string;
+      }>(
+        `select t.id, t.kind, t.name, t.price_cents, t.currency, t.seat_limit,
+                app.tier_seats_taken(t.id) as seats_taken,
+                c.display_name, c.handle::text as handle, c.user_id as creator_id
+           from app.tiers t
+           join app.creators c on c.user_id = t.creator_id
+          where t.id = $1 and t.active`,
         [target.id],
       );
       if (!t) throw new AppError("not_found", "This membership is no longer available.");
       if (t.creator_id === viewer.id) throw new AppError("validation", "You can't join your own membership.");
       if (t.seat_limit != null && (t.seats_taken ?? 0) >= t.seat_limit) throw new AppError("conflict", "Every VIP seat is taken right now.");
       const provider = providerFor("subscription");
+      const creatorName = formatCreatorPublicName(t.display_name);
+      const amountLabel = formatMoney({ amountCents: t.price_cents, currency: t.currency });
       return {
-        title: `${t.name} · ${t.display_name}`,
+        kind: "tier",
+        targetId: t.id,
+        creatorId: t.creator_id,
+        creatorName,
+        creatorHandle: t.handle,
+        title: `${t.name} · ${creatorName}`,
         subtitle: t.kind === "vip" ? "VIP membership" : "Membership",
-        amountLabel: formatMoney({ amountCents: t.price_cents, currency: t.currency }),
+        itemDescription:
+          t.kind === "vip"
+            ? `Monthly VIP membership to ${creatorName} (includes all Member and VIP subscription posts; individual pay-per-view posts and locked messages are sold separately).`
+            : `Monthly membership to ${creatorName} (includes all Member subscription posts; VIP posts, individual pay-per-view posts, and locked messages are sold separately).`,
+        amountCents: t.price_cents,
+        currency: t.currency,
+        amountLabel,
+        feeLabel: formatMoney({ amountCents: 0, currency: t.currency }),
+        totalLabel: amountLabel,
         cadence: "per month",
+        accessTerms: "Renews monthly until canceled. Cancel anytime from My Access.",
+        supportedMethods,
+        sandboxAvailable,
         available: false as const,
-        reason: provider ? "Checkout is disabled in this build." : "Payments are not active yet. No payment provider has been approved.",
+        reason: provider ? "Checkout is disabled in this build." : "Live card processing requires FEATURE_PAYMENTS=on and an approved payment provider adapter.",
       };
     }
-    const p = await q.one<{ id: string; access: string; price_cents: number | null; currency: string; teaser: string; display_name: string; unlocked: boolean }>(
-      `select p.id, p.access, p.price_cents, p.currency, p.teaser, c.display_name, app.can_view_post(p.id) as unlocked
-         from app.posts p join app.creators c on c.user_id = p.creator_id where p.id = $1`,
+
+    if (target.kind === "message") {
+      const m = await q.one<{
+        message_id: string;
+        conversation_id: string;
+        creator_id: string;
+        fan_id: string;
+        price_cents: number;
+        preview_text: string;
+        media_kind: string;
+        unlocked: boolean;
+      }>(`select * from app.paid_message_quote($1)`, [target.id]);
+      if (!m) throw new AppError("not_found", "Locked message not found.");
+      if (m.creator_id === viewer.id) throw new AppError("validation", "You sent this message.");
+      if (m.unlocked) throw new AppError("conflict", "You already unlocked this message.");
+      const c = await q.one<{ display_name: string; handle: string }>(
+        `select display_name, handle::text as handle from app.creators where user_id = $1`,
+        [m.creator_id],
+      );
+      const creatorName = formatCreatorPublicName(c?.display_name);
+      const currency = "USD";
+      const amountLabel = formatMoney({ amountCents: m.price_cents, currency });
+      return {
+        kind: "message",
+        targetId: m.message_id,
+        creatorId: m.creator_id,
+        creatorName,
+        creatorHandle: c?.handle ?? "",
+        title: m.preview_text,
+        subtitle: `Exclusive message unlock · ${creatorName}`,
+        itemDescription: `One-time unlock for exclusive ${m.media_kind || "message"} from ${creatorName} in your private conversation.`,
+        amountCents: m.price_cents,
+        currency,
+        amountLabel,
+        feeLabel: formatMoney({ amountCents: 0, currency }),
+        totalLabel: amountLabel,
+        cadence: null,
+        accessTerms: "One-time purchase. Permanent access in your conversation and My Access.",
+        supportedMethods,
+        sandboxAvailable,
+        available: false as const,
+        reason: "Live card processing requires FEATURE_PAYMENTS=on and an approved payment provider adapter.",
+      };
+    }
+
+    const p = await q.one<{
+      id: string;
+      access: string;
+      price_cents: number | null;
+      currency: string;
+      teaser: string;
+      display_name: string;
+      handle: string;
+      creator_id: string;
+      unlocked: boolean;
+    }>(
+      `select p.id, p.access, p.price_cents, p.currency, p.teaser,
+              c.display_name, c.handle::text as handle, c.user_id as creator_id,
+              app.can_view_post(p.id) as unlocked
+         from app.posts p
+         join app.creators c on c.user_id = p.creator_id
+        where p.id = $1`,
       [target.id],
     );
     if (!p) throw new AppError("not_found", "Post not found.");
     if (p.access !== "ppv" || p.price_cents == null) throw new AppError("validation", "This post isn't sold individually.");
+    if (p.creator_id === viewer.id) throw new AppError("validation", "You own this post.");
     if (p.unlocked) throw new AppError("conflict", "You already have this post.");
+    const creatorName = formatCreatorPublicName(p.display_name);
+    const amountLabel = formatMoney({ amountCents: p.price_cents, currency: p.currency });
     return {
+      kind: "post",
+      targetId: p.id,
+      creatorId: p.creator_id,
+      creatorName,
+      creatorHandle: p.handle,
       title: p.teaser,
-      subtitle: `Single unlock · ${p.display_name}`,
-      amountLabel: formatMoney({ amountCents: p.price_cents, currency: p.currency }),
+      subtitle: `Single unlock · ${creatorName}`,
+      itemDescription: `One-time pay-per-view post unlock from ${creatorName}.`,
+      amountCents: p.price_cents,
+      currency: p.currency,
+      amountLabel,
+      feeLabel: formatMoney({ amountCents: 0, currency: p.currency }),
+      totalLabel: amountLabel,
       cadence: null,
+      accessTerms: "One-time purchase. Permanent access on the creator profile and in My Access.",
+      supportedMethods,
+      sandboxAvailable,
       available: false as const,
-      reason: "Payments are not active yet. No payment provider has been approved.",
+      reason: "Live card processing requires FEATURE_PAYMENTS=on and an approved payment provider adapter.",
     };
   });
 }

@@ -3,6 +3,7 @@ import { featureEnabled } from "@/server/flags";
 import { system, type Q } from "@/server/db";
 import { randomToken, sha256 } from "@/server/auth/crypto";
 import type { Viewer } from "@/server/auth/permissions";
+import { formatCreatorPublicName } from "@/lib/creatorName";
 
 export const SESSION_TTL_DAYS = 14;
 
@@ -25,10 +26,13 @@ export async function resolveSession(token: string | undefined | null): Promise<
   if (!token || token.length > 100) return null;
   return system(async (q) => {
     const row = await q.one<Omit<Viewer, "aal" | "mfa"> & { last_seen_at: Date; has_factor: boolean; mfa_verified: boolean; public_id: string; email_verified: boolean }>(
-      `select u.id, u.role, u.status, u.alias::text as alias, u.email::text as email, s.last_seen_at, s.public_id,
+      `select u.id, u.role, u.status,
+              case when u.role = 'creator' then coalesce(c.display_name, u.alias::text) else u.alias::text end as alias,
+              u.email::text as email, s.last_seen_at, s.public_id,
               u.email_verified_at is not null as email_verified,
               (f.confirmed_at is not null) as has_factor, (s.mfa_verified_at is not null) as mfa_verified
          from app.sessions s join app.users u on u.id = s.user_id
+         left join app.creators c on c.user_id = u.id
          left join app.mfa_factors f on f.user_id = u.id
         where s.id_hash = $1 and s.revoked_at is null and s.expires_at > now()
           and u.status in ('pending', 'active')`,
@@ -53,7 +57,7 @@ export async function resolveSession(token: string | undefined | null): Promise<
       id: row.id,
       role: row.role,
       status: row.status,
-      alias: row.alias,
+      alias: row.role === "creator" ? formatCreatorPublicName(row.alias) : row.alias,
       email: row.email,
       mfa,
       aal,

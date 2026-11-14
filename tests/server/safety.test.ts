@@ -26,7 +26,7 @@ describe("blocking hides profile metadata, feeds, media and search — both dire
     expect((await discover(v, { q: "Isadora" }))).toHaveLength(0);
     expect(await getEntitledMedia(v, preview, 0)).toBeNull();
     expect(await asViewer(v, (q) => q.query(`select 1 from app.posts where creator_id = $1`, [s.creatorIds.isadora]))).toHaveLength(0);
-    expect((await myBlocks(v)).map((b) => b.name)).toEqual(["Isadora Lune"]);
+    expect((await myBlocks(v)).map((b) => b.name)).toEqual(["Diva Isadora Lune"]);
     await unblock(v, s.creatorIds.isadora);
     expect(await getProfile(v, "isadora")).not.toBeNull();
   });

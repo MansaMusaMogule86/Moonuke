@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import type { FormState } from "@/lib/forms";
 import { requireViewer } from "@/server/auth/request";
 import { isAppError } from "@/server/errors";
@@ -23,11 +24,28 @@ export async function membershipAction(_prev: FormState, fd: FormData): Promise<
   try {
     await hit(`membership:${viewer.id}`, LIMITS.membershipChange);
     await fan.setSubscriptionCancel(viewer, id, intent === "cancel");
+    revalidatePath("/library");
+    revalidatePath("/library/memberships");
     return {
       status: "success",
       message: intent === "cancel" ? "Your membership will end at the close of this period. You keep access until then." : "Your membership will continue.",
       data: { state: intent === "cancel" ? "ending" : "active" },
     };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+export async function saveUserPreferencesAction(_prev: FormState, fd: FormData): Promise<FormState> {
+  const viewer = await requireViewer("club.discover");
+  try {
+    await fan.saveUserPreferences(viewer, {
+      notifyNewPosts: fd.get("notifyNewPosts") === "on",
+      notifyMessages: fd.get("notifyMessages") === "on",
+      notifyBilling: fd.get("notifyBilling") === "on",
+    });
+    revalidatePath("/account/security");
+    return { status: "success", message: "Notification preferences saved." };
   } catch (e) {
     return fail(e);
   }

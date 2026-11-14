@@ -5,6 +5,7 @@ import { CopyLink } from "@/components/studio/CopyLink";
 import { StudioHeader } from "@/components/studio/StudioHeader";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import { formatCreatorPublicName } from "@/lib/creatorName";
 import { requireViewer } from "@/server/auth/request";
 import { myBlasts } from "@/server/services/blasts";
 import { getOnboarding } from "@/server/services/creatorOnboarding";
@@ -63,6 +64,8 @@ export default async function StudioOverviewPage() {
   const doneCount = checks.filter((c) => c.done).length;
   const handle = onboarding.profile?.handle;
   const profileUrl = handle ? `https://www.divafans.io/c/${handle}` : null;
+  const publicCreatorName = formatCreatorPublicName(onboarding.profile?.displayName ?? viewer.alias);
+  const needsNamePrompt = !onboarding.profile || onboarding.profile.needsNameSetup;
 
   return (
     <div className="mx-auto max-w-[1100px] px-5 pb-28 pt-6 md:px-10 md:pt-8">
@@ -71,7 +74,7 @@ export default async function StudioOverviewPage() {
         title="Overview"
         lede={
           <>
-            Signed in as <span className="text-ivory">{viewer.alias}</span>
+            Signed in as <span className="text-ivory">{publicCreatorName}</span>
             {verified ? " · verified" : " · verification in progress"}. Numbers below come from your own data — never fan identities.
           </>
         }
@@ -82,6 +85,22 @@ export default async function StudioOverviewPage() {
           </>
         }
       />
+
+      {needsNamePrompt && (
+        <section
+          aria-label="Creator name setup required"
+          className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-[var(--radius-lg)] border border-gold/45 bg-ink-2 p-5"
+        >
+          <div>
+            <p className="eyebrow text-gold">Creator identity</p>
+            <h2 className="mt-1 font-display text-[22px] text-ivory">Choose your public Diva name</h2>
+            <p className="mt-1 text-[14px] text-stone">
+              Every creator on DivaFans appears publicly as <strong className="text-ivory">Diva [your name]</strong>. Confirm your chosen name in Settings before publishing.
+            </p>
+          </div>
+          <Button href="/studio/settings">Choose creator name</Button>
+        </section>
+      )}
 
       <section aria-label="Key numbers" className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="Active members" value={a.members.active} sub={`${a.members.vip} VIP`} href="/studio/analytics" accent="gold" />

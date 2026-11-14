@@ -3,7 +3,12 @@ import type { PostView } from "@/server/services/club";
 import { CheckoutButton } from "./CheckoutButton";
 import { ReportButton } from "./SafetyButtons";
 
-const accessLabel = { preview: "Free preview", members: "Members", vip: "VIP", ppv: "Pay-per-view" } as const;
+const accessLabel = {
+  preview: "Free content",
+  members: "Included in Subscription",
+  vip: "Included in VIP Subscription",
+  ppv: "Sold individually",
+} as const;
 const kindLabel = (p: PostView) => (p.mediaKind === "set" ? `${p.mediaCount} photos` : p.mediaKind === "video" ? "Video" : "Photo");
 const date = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 
@@ -22,8 +27,15 @@ export function PostTile({ post, vipTierId, memberTierId, canReport = false }: {
           // eslint-disable-next-line @next/next/no-img-element -- signed, short-lived, per-viewer URL; must not be cached by the image optimiser
           <img src={post.media?.[0]} alt={post.teaser} loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover transition-transform duration-[1400ms] ease-lux group-hover:scale-[1.03]" />
         )}
-        <div className="absolute left-4 top-4 flex gap-2">
-          <Badge tone={post.access === "vip" ? "vip" : post.access === "ppv" ? "locked" : "member"}>{accessLabel[post.access]}</Badge>
+        <div className="absolute left-4 top-4 flex flex-wrap gap-2">
+          <Badge tone={post.access === "vip" ? "vip" : post.access === "ppv" ? "locked" : "member"}>
+            {accessLabel[post.access]}
+          </Badge>
+          {!locked && post.access !== "preview" && (
+            <span className="rounded-full border border-emerald-500/45 bg-emerald-500/15 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.16em] text-emerald-300 backdrop-blur-sm">
+              Unlocked
+            </span>
+          )}
         </div>
         {locked && (
           <div className="absolute inset-0 grid place-items-center p-6 text-center">
@@ -32,16 +44,26 @@ export function PostTile({ post, vipTierId, memberTierId, canReport = false }: {
                 <LockGlyph className="h-5 w-5" />
               </span>
               <p className="mt-4 font-display text-[22px] italic text-ivory">
-                {post.access === "ppv" ? `${post.priceLabel} to unlock` : post.access === "vip" ? "For the VIP room" : "For members"}
+                {post.access === "ppv"
+                  ? `Unlock for ${post.priceLabel}`
+                  : post.access === "vip"
+                    ? "VIP Subscription Required"
+                    : "Subscription Required"}
               </p>
               <p className="mt-1 text-[12px] text-stone">{kindLabel(post)}</p>
               <div className="mt-5">
                 {post.access === "ppv" ? (
-                  <CheckoutButton target={{ kind: "post", id: post.id }} size="sm" variant="outline">Unlock</CheckoutButton>
+                  <CheckoutButton target={{ kind: "post", id: post.id }} size="sm" variant="gold">
+                    Unlock for {post.priceLabel}
+                  </CheckoutButton>
                 ) : post.access === "vip" && vipTierId ? (
-                  <CheckoutButton target={{ kind: "tier", id: vipTierId }} size="sm">Join VIP</CheckoutButton>
+                  <CheckoutButton target={{ kind: "tier", id: vipTierId }} size="sm">
+                    Subscribe to VIP
+                  </CheckoutButton>
                 ) : memberTierId ? (
-                  <CheckoutButton target={{ kind: "tier", id: memberTierId }} size="sm" variant="outline">Become a member</CheckoutButton>
+                  <CheckoutButton target={{ kind: "tier", id: memberTierId }} size="sm" variant="outline">
+                    Subscribe to access
+                  </CheckoutButton>
                 ) : null}
               </div>
             </div>

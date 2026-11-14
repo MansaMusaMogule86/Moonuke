@@ -120,9 +120,40 @@ export async function applyEvent(provider: string, ev: VerifiedEvent, rawBody: s
       if (e === "succeeded") await q.query(`update app.payments set fee_bps = $2 where id = $1`, [pay.id, bps]);
     }
     await q.query(`update app.payments set status = $2, updated_at = now() where id = $1`, [pay.id, next]);
-    // Entitlements follow money: a successful PPV payment grants the purchase.
+    // Entitlements follow money: a successful payment grants the corresponding access.
     if (e === "succeeded" && pay.kind === "ppv" && pay.target_id) {
       await q.query(`insert into app.purchases (fan_id, post_id) values ($1, $2) on conflict do nothing`, [pay.fan_id, pay.target_id]);
+    }
+    if (e === "succeeded" && pay.kind === "paid_message" && pay.target_id) {
+      await q.query(
+        `insert into app.message_purchases (fan_id, message_id, payment_id) values ($1, $2, $3)
+         on conflict (fan_id, message_id) do nothing`,
+        [pay.fan_id, pay.target_id, pay.id],
+      );
+    }
+    if (e === "succeeded" && pay.kind === "subscription" && pay.target_id) {
+      const existingSub = await q.one<{ id: string }>(
+        `select id from app.subscriptions where fan_id = $1 and creator_id = $2 order by current_period_end desc limit 1`,
+        [pay.fan_id, pay.creator_id],
+      );
+      if (existingSub) {
+        await q.query(
+          `update app.subscriptions
+              set tier_id = $2,
+                  status = 'active',
+                  cancel_at_period_end = false,
+                  canceled_at = null,
+                  current_period_end = greatest(current_period_end, now()) + interval '30 days'
+            where id = $1`,
+          [existingSub.id, pay.target_id],
+        );
+      } else {
+        await q.query(
+          `insert into app.subscriptions (fan_id, creator_id, tier_id, status, current_period_end)
+           values ($1, $2, $3, 'active', now() + interval '30 days')`,
+          [pay.fan_id, pay.creator_id, pay.target_id],
+        );
+      }
     }
     // Refund or chargeback: the purchase stays (PAY2) unless the policy says
     // otherwise. Never revoked while another successful payment covers it.

@@ -39,6 +39,7 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
         canSend={c.canSend === "ok"}
         blockedReason={c.canSend === "ok" ? null : CAN_SEND_COPY[c.canSend]}
         peerName={c.peer.name}
+        side={c.side}
       />
     </div>
   );

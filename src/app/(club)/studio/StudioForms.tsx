@@ -1,34 +1,161 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useActionState, useState } from "react";
+import { useActionState, useId, useState } from "react";
 import { Check, FormMessage, Select, Submit, TextArea } from "@/components/forms";
 import { AssistPanel, type AssistInfo } from "@/components/onboarding/AssistPanel";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Field } from "@/components/ui/Field";
+import {
+  CREATOR_CHOSEN_NAME_MAX_LENGTH,
+  CREATOR_NAME_PREFIX,
+  formatCreatorPublicName,
+  normalizeCreatorChosenName,
+} from "@/lib/creatorName";
 import { idle } from "@/lib/forms";
-import { saveProfileAction, submitVerificationAction } from "@/server/actions/creators";
+import { saveProfileAction, submitVerificationAction, updateCreatorNameAction } from "@/server/actions/creators";
 import { addSocialAction, decideProposalAction, socialSettingAction } from "@/server/actions/onboarding";
 import type { ProfileInput } from "@/server/services/creatorOnboarding";
 import type { ProposalRow, SocialRow } from "@/server/services/onboarding";
 
 type Cat = { slug: string; label: string };
 
+/**
+ * Dedicated Creator Name setting card.
+ * Shows fixed "Diva" prefix, editable name portion after "Diva", and live
+ * public preview ("Diva Miriam"), without altering the creator's @handle.
+ */
+export function CreatorNameForm({
+  initialCreatorName,
+  handle,
+  hasProfile,
+}: {
+  initialCreatorName: string;
+  handle?: string | null;
+  hasProfile: boolean;
+}) {
+  const [state, action] = useActionState(updateCreatorNameAction, idle);
+  const initialClean = normalizeCreatorChosenName(state.values?.creatorName ?? initialCreatorName);
+  const [chosenName, setChosenName] = useState(initialClean);
+  const id = useId();
+  const inputId = `${id}-creator-name-setting`;
+  const previewId = `${id}-creator-name-preview`;
+  const hintId = `${id}-creator-name-hint`;
+  const errId = `${id}-creator-name-err`;
+
+  const livePreview = chosenName.trim()
+    ? formatCreatorPublicName(chosenName)
+    : `${CREATOR_NAME_PREFIX} Miriam`;
+
+  return (
+    <form action={action} className="space-y-5" noValidate>
+      <FormMessage state={state} />
+      <div className="grid gap-4 sm:grid-cols-12 sm:items-end">
+        <div className="space-y-2 sm:col-span-7">
+          <label htmlFor={inputId} className="block text-[11px] uppercase tracking-[0.22em] text-stone">
+            Creator name (after {CREATOR_NAME_PREFIX})
+          </label>
+          <div className="flex min-w-0 items-stretch overflow-hidden rounded-[var(--radius-md)] border border-line-strong bg-ink/70 focus-within:border-gold/70">
+            <span
+              aria-label="Fixed prefix: Diva"
+              className="inline-flex shrink-0 select-none items-center border-r border-line-strong bg-ink-3/85 px-3.5 font-display text-[17px] tracking-[0.04em] text-gold sm:px-4"
+            >
+              {CREATOR_NAME_PREFIX}
+            </span>
+            <input
+              id={inputId}
+              name="creatorName"
+              type="text"
+              dir="auto"
+              required
+              disabled={!hasProfile}
+              maxLength={CREATOR_CHOSEN_NAME_MAX_LENGTH}
+              placeholder="Miriam"
+              defaultValue={initialClean}
+              onChange={(e) => setChosenName(e.target.value)}
+              aria-invalid={state.fields?.creatorName ? true : undefined}
+              aria-describedby={state.fields?.creatorName ? `${previewId} ${errId}` : `${previewId} ${hintId}`}
+              className="min-w-0 flex-1 bg-transparent px-3.5 py-2.5 text-[15px] text-ivory placeholder:text-ash/60 focus:outline-none disabled:opacity-50 sm:px-4"
+            />
+          </div>
+        </div>
+        <div
+          id={previewId}
+          aria-live="polite"
+          className="rounded-[var(--radius-md)] border border-gold/25 bg-ink/60 px-4 py-2.5 sm:col-span-5"
+        >
+          <p className="text-[10px] uppercase tracking-[0.2em] text-ash">Public preview</p>
+          <p dir="auto" className="mt-0.5 truncate font-display text-[20px] leading-tight text-ivory">
+            {livePreview}
+          </p>
+        </div>
+      </div>
+
+      {state.fields?.creatorName ? (
+        <p id={errId} role="alert" className="text-[12px] text-danger">
+          {state.fields.creatorName}
+        </p>
+      ) : (
+        <p id={hintId} className="text-[12px] leading-relaxed text-ash">
+          Fans always see <strong className="text-ivory">{livePreview}</strong> across your profile, posts, messages, and discovery.
+          {handle ? (
+            <>
+              {" "}Your unique handle <code className="text-stone">@{handle}</code> and profile link <code className="text-stone">/c/{handle}</code> stay unchanged.
+            </>
+          ) : null}
+        </p>
+      )}
+
+      <div className="flex flex-wrap items-center gap-3">
+        {hasProfile ? (
+          <Submit>Update creator name</Submit>
+        ) : (
+          <span className="text-[13px] text-ash">Save your initial profile below first to activate quick name updates.</span>
+        )}
+      </div>
+    </form>
+  );
+}
+
 /** Profile draft + assistant. The assistant only fills fields; saving is the creator's explicit action. */
-export function ProfileEditor({ initial, categories, assist, userId }: { initial: (ProfileInput & { published: boolean }) | null; categories: Cat[]; assist: AssistInfo; userId: string }) {
+export function ProfileEditor({
+  initial,
+  categories,
+  assist,
+  userId,
+  defaultChosenName = "",
+}: {
+  initial: (ProfileInput & { creatorName?: string; published: boolean }) | null;
+  categories: Cat[];
+  assist: AssistInfo;
+  userId: string;
+  defaultChosenName?: string;
+}) {
   const [state, action] = useActionState(saveProfileAction, idle);
   const v = (k: keyof ProfileInput) => state.values?.[k] ?? (initial?.[k] as string | undefined) ?? "";
+  const initialEditableName = normalizeCreatorChosenName(
+    state.values?.displayName ?? initial?.creatorName ?? initial?.displayName ?? defaultChosenName,
+  );
+  const [chosenName, setChosenName] = useState(initialEditableName);
   const [tagline, setTagline] = useState(v("tagline"));
   const [bio, setBio] = useState(v("bio"));
   const [fromAssistant, setFromAssistant] = useState(false);
+  const id = useId();
+  const nameInputId = `${id}-profile-creator-name`;
+  const namePreviewId = `${id}-profile-creator-preview`;
+  const nameErrId = `${id}-profile-creator-err`;
+
+  const livePublicName = chosenName.trim()
+    ? formatCreatorPublicName(chosenName)
+    : `${CREATOR_NAME_PREFIX} Miriam`;
 
   return (
     <div className="space-y-6">
       <AssistPanel
         info={assist}
         targetUserId={userId}
-        defaults={{ displayName: v("displayName"), discipline: v("discipline"), city: v("city") }}
+        defaults={{ displayName: livePublicName, discipline: v("discipline"), city: v("city") }}
         onUse={(x) => {
           if (x.tagline !== undefined) setTagline(x.tagline);
           if (x.bio !== undefined) setBio(x.bio);
@@ -38,8 +165,42 @@ export function ProfileEditor({ initial, categories, assist, userId }: { initial
       <form action={action} className="space-y-7" noValidate>
         <FormMessage state={state} />
         <div className="grid gap-7 sm:grid-cols-2">
-          <Field label="Handle" name="handle" defaultValue={v("handle")} required maxLength={24} hint="Your profile address: /c/handle" error={state.fields?.handle} />
-          <Field label="Display name" name="displayName" defaultValue={v("displayName")} required maxLength={60} error={state.fields?.displayName} />
+          <Field label="Handle" name="handle" defaultValue={v("handle")} required maxLength={24} hint="Unique URL handle: /c/handle (separate from your Diva name)" error={state.fields?.handle} />
+          <div>
+            <label htmlFor={nameInputId} className="block text-[11px] uppercase tracking-[0.22em] text-stone">
+              Your name (Creator name)
+            </label>
+            <div className="mt-2.5 flex min-w-0 items-stretch overflow-hidden rounded-[var(--radius-md)] border border-line-strong bg-ink-2/70 focus-within:border-gold/70">
+              <span
+                aria-label="Fixed prefix: Diva"
+                className="inline-flex shrink-0 select-none items-center border-r border-line-strong bg-ink-3/85 px-3 font-display text-[16px] tracking-[0.04em] text-gold sm:px-3.5"
+              >
+                {CREATOR_NAME_PREFIX}
+              </span>
+              <input
+                id={nameInputId}
+                name="displayName"
+                type="text"
+                dir="auto"
+                required
+                maxLength={CREATOR_CHOSEN_NAME_MAX_LENGTH}
+                placeholder="Miriam"
+                defaultValue={initialEditableName}
+                onChange={(e) => setChosenName(e.target.value)}
+                aria-invalid={state.fields?.displayName ? true : undefined}
+                aria-describedby={state.fields?.displayName ? `${namePreviewId} ${nameErrId}` : namePreviewId}
+                className="min-w-0 flex-1 bg-transparent px-3.5 py-3 text-[15px] text-ivory placeholder:text-ash/60 focus:outline-none"
+              />
+            </div>
+            <p id={namePreviewId} aria-live="polite" className="mt-2 text-[12px] text-ash">
+              Public preview: <strong dir="auto" className="font-medium text-ivory">{livePublicName}</strong>
+            </p>
+            {state.fields?.displayName && (
+              <p id={nameErrId} role="alert" className="mt-1.5 text-[12px] text-danger">
+                {state.fields.displayName}
+              </p>
+            )}
+          </div>
           <Field label="Discipline" name="discipline" defaultValue={v("discipline")} required maxLength={60} placeholder="Photographer" error={state.fields?.discipline} />
           <Select label="Category" name="category" defaultValue={v("category") || categories[0]?.slug} error={state.fields?.category}>
             {categories.map((c) => (

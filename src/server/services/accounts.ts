@@ -10,6 +10,8 @@ import { emails } from "@/server/email/templates";
 import { appUrl } from "@/server/env";
 import { emailVerificationToken } from "./emailVerification";
 import { creatorEmailAllowed } from "@/server/auth/creatorAllowlist";
+import { validateCreatorChosenName } from "@/lib/creatorName";
+import { checkText } from "@/server/ai/safety";
 import { createSession, revokeAllSessions } from "./sessions";
 
 const INVALID = "This invitation is no longer valid.";
@@ -67,10 +69,23 @@ export async function redeemInvitation(
       throw new AppError("invalid_invitation", INVALID);
     }
 
+    let finalAlias = input.alias.trim();
+    if (inv.intended_role === "creator") {
+      const nameValidation = validateCreatorChosenName(input.alias);
+      if (!nameValidation.ok) {
+        throw new AppError("validation", nameValidation.error, "alias");
+      }
+      const safety = checkText(nameValidation.chosenName);
+      if (!safety.ok) {
+        throw new AppError("validation", safety.reason ?? "Choose another creator name.", "alias");
+      }
+      finalAlias = nameValidation.publicName;
+    }
+
     const clash = await q.one<{ email_taken: boolean; alias_taken: boolean }>(
       `select exists(select 1 from app.users where email = $1) as email_taken,
               exists(select 1 from app.users where alias = $2) as alias_taken`,
-      [input.email, input.alias],
+      [input.email, finalAlias],
     );
     if (clash?.email_taken) throw new AppError("conflict", "An account with this email already exists. Sign in instead.", "email");
     if (clash?.alias_taken) throw new AppError("conflict", "That alias is taken. Choose another.", "alias");
@@ -78,7 +93,7 @@ export async function redeemInvitation(
     const user = await q.one<{ id: string }>(
       `insert into app.users (email, password_hash, role, status, alias, adult_attested_at, invitation_id)
        values ($1, $2, $3, 'pending', $4, now(), $5) returning id`,
-      [input.email, passwordHash, inv.intended_role, input.alias, inv.id],
+      [input.email, passwordHash, inv.intended_role, finalAlias, inv.id],
     );
     const application = await q.one<{ id: string }>(`insert into app.applications (user_id, invitation_id) values ($1, $2) returning id`, [user!.id, inv.id]);
     // White-glove: attach the new account to its onboarding case, if the house opened one.
@@ -92,7 +107,7 @@ export async function redeemInvitation(
       metadata: { role: inv.intended_role },
     });
     // Same transaction as the account: this email exists only if the account was really created.
-    await enqueue(q, input.email, emails.accountCreated({ alias: input.alias, verifyUrl: `${appUrl()}/verify-email/${emailVerificationToken(user!.id)}` }), user!.id);
+    await enqueue(q, input.email, emails.accountCreated({ alias: finalAlias, verifyUrl: `${appUrl()}/verify-email/${emailVerificationToken(user!.id)}` }), user!.id);
     const sessionToken = await createSession(user!.id, meta.userAgent, q);
     return { sessionToken, userId: user!.id, role: inv.intended_role, invitationId: inv.id, applicationId: application!.id };
   });

@@ -7,8 +7,8 @@ import type { FormState } from "@/lib/forms";
 import { requireViewer } from "@/server/auth/request";
 import { deliverPending } from "@/server/email/outbox";
 import { isAppError } from "@/server/errors";
-import { reviewVerification, saveProfile, submitVerification, type ReviewAction } from "@/server/services/creatorOnboarding";
-import { fieldErrors, uuid } from "@/server/validation";
+import { reviewVerification, saveProfile, submitVerification, updateCreatorName, type ReviewAction } from "@/server/services/creatorOnboarding";
+import { creatorChosenName, creatorNameSchema, fieldErrors, uuid } from "@/server/validation";
 
 const str = (fd: FormData, k: string) => (typeof fd.get(k) === "string" ? (fd.get(k) as string) : "");
 const opt = (max: number) => z.string().trim().max(max).optional().transform((v) => (v ? v : undefined));
@@ -19,7 +19,7 @@ const fail = (e: unknown): FormState => {
 
 const profileSchema = z.object({
   handle: z.string().trim().toLowerCase().regex(/^[a-z0-9_]{2,24}$/, "2–24 lowercase letters, numbers or underscores."),
-  displayName: z.string().trim().min(1, "Add your display name.").max(60),
+  displayName: creatorChosenName,
   discipline: z.string().trim().min(1, "What do you do?").max(60),
   category: z.string().regex(/^[a-z-]{2,32}$/, "Choose a category."),
   city: opt(60),
@@ -36,7 +36,45 @@ export async function saveProfileAction(_prev: FormState, fd: FormData): Promise
   try {
     await saveProfile(viewer, parsed.data);
     revalidatePath("/studio");
-    return { status: "success", message: "Profile saved. It stays private until the house verifies you.", values };
+    revalidatePath("/studio/settings");
+    revalidatePath("/discover");
+    revalidatePath(`/c/${parsed.data.handle}`);
+    return {
+      status: "success",
+      message: `Profile saved as Diva ${parsed.data.displayName}.`,
+      values: { ...values, displayName: parsed.data.displayName },
+    };
+  } catch (e) {
+    return { ...fail(e), values };
+  }
+}
+
+export async function updateCreatorNameAction(_prev: FormState, fd: FormData): Promise<FormState> {
+  const viewer = await requireViewer("club.discover");
+  const rawName = str(fd, "creatorName");
+  const targetUserId = str(fd, "targetUserId") || viewer.id;
+  const values = { creatorName: rawName };
+  const parsed = creatorNameSchema.safeParse({ creatorName: rawName });
+  if (!parsed.success) {
+    return {
+      status: "error",
+      message: "Please check your creator name.",
+      fields: fieldErrors(parsed.error),
+      values,
+    };
+  }
+  try {
+    const res = await updateCreatorName(viewer, targetUserId, parsed.data.creatorName);
+    revalidatePath("/studio");
+    revalidatePath("/studio/settings");
+    revalidatePath("/discover");
+    revalidatePath(`/c/${res.handle}`);
+    return {
+      status: "success",
+      message: `Creator name updated to ${res.displayName}.`,
+      values: { creatorName: res.creatorName },
+      data: { creatorName: res.creatorName, displayName: res.displayName },
+    };
   } catch (e) {
     return { ...fail(e), values };
   }

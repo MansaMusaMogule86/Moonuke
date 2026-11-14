@@ -1,11 +1,14 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Badge } from "@/components/ui/Badge";
 import { requireViewer } from "@/server/auth/request";
 import { listSessions } from "@/server/services/account";
+import { getUserPreferences } from "@/server/services/fan";
 import { mfaStatus } from "@/server/services/mfa";
+import { PreferencesForm } from "./PreferencesForm";
 import { MfaManage, MfaSetup, PasswordForm, RevokeOthersForm, RevokeSessionForm } from "./SecurityForms";
 
-export const metadata: Metadata = { title: "Account security" };
+export const metadata: Metadata = { title: "Account Settings" };
 
 /** Coarse, non-identifying description of a user agent. */
 function device(ua: string | null) {
@@ -19,50 +22,115 @@ const when = (d: Date) => new Date(d).toLocaleString("en-GB", { day: "numeric", 
 export default async function SecurityPage({ searchParams }: { searchParams: Promise<{ setup?: string }> }) {
   const viewer = await requireViewer(undefined, { allowMfaSetup: true });
   const { setup } = await searchParams;
-  const [mfa, sessions] = await Promise.all([mfaStatus(viewer), listSessions(viewer)]);
+  const [mfa, sessions, prefs] = await Promise.all([
+    mfaStatus(viewer),
+    listSessions(viewer),
+    getUserPreferences(viewer),
+  ]);
   const mustEnrol = viewer.role === "owner" && !mfa.enrolled;
+  const isFan = viewer.role === "member" || viewer.role === "creator";
 
   return (
-    <div className="mx-auto max-w-[1200px] px-5 pb-28 pt-14 md:px-10 md:pt-20">
-      <p className="eyebrow mb-5">Account · {viewer.alias}</p>
-      <h1 className="font-display text-[52px] leading-[0.98] tracking-[-0.03em] text-ivory md:text-[84px]">
-        Sign-in & <em className="text-metal">security.</em>
+    <div className="mx-auto max-w-[1100px] px-5 pb-28 pt-8 md:px-10 md:pt-12">
+      <h1 className="font-display text-[40px] leading-[0.98] tracking-[-0.03em] text-ivory md:text-[64px]">
+        Account & <em className="text-metal">settings.</em>
       </h1>
 
       {mustEnrol && (
-        <p role="alert" className="mt-8 max-w-2xl rounded-[var(--radius-md)] border border-gold/45 bg-gold/[0.07] px-5 py-4 text-[15px] leading-relaxed text-gold-soft">
+        <p role="alert" className="mt-6 max-w-2xl rounded-[var(--radius-md)] border border-gold/45 bg-gold/[0.07] px-5 py-4 text-[15px] leading-relaxed text-gold-soft">
           Two-step sign-in is required for the owner account. Set it up below to unlock the House{setup === "required" ? "" : "."}
           {setup === "required" ? " — every owner page stays closed until you do." : ""}
         </p>
       )}
 
-      <div className="mt-14 grid gap-6 lg:grid-cols-2">
-        <section aria-labelledby="mfa-h" className="rounded-[var(--radius-xl)] border border-line bg-ink-2 p-6 md:p-9">
+      {/* Login & Security */}
+      <div className="mt-10 grid gap-6 lg:grid-cols-2">
+        <section aria-labelledby="mfa-h" className="rounded-[var(--radius-xl)] border border-line bg-ink-2 p-6 md:p-8">
           <div className="flex flex-wrap items-center gap-3">
-            <h2 id="mfa-h" className="font-display text-[30px] text-ivory">Two-step sign-in</h2>
+            <h2 id="mfa-h" className="font-display text-[28px] text-ivory">Two-step sign-in</h2>
             <Badge tone={mfa.enrolled ? "vip" : "neutral"}>{mfa.enrolled ? "On" : "Off"}</Badge>
             {mfa.mandatory && <Badge tone="member">Required for owner</Badge>}
           </div>
-          <p className="mt-3 text-[14px] leading-relaxed text-stone">
+          <p className="mt-2.5 text-[14px] leading-relaxed text-stone">
             A 6-digit code from an authenticator app (1Password, Google Authenticator, Authy…) after your password.
           </p>
-          <div className="mt-8">
+          <div className="mt-6">
             {mfa.enrolled ? <MfaManage recoveryLeft={mfa.recoveryCodesLeft} mandatory={mfa.mandatory} /> : <MfaSetup />}
           </div>
         </section>
 
-        <section aria-labelledby="pw-h" className="rounded-[var(--radius-xl)] border border-line bg-ink-2 p-6 md:p-9">
-          <h2 id="pw-h" className="font-display text-[30px] text-ivory">Password</h2>
-          <p className="mt-3 text-[14px] leading-relaxed text-stone">Changing it signs out every other session.</p>
-          <div className="mt-8">
+        <section aria-labelledby="pw-h" className="rounded-[var(--radius-xl)] border border-line bg-ink-2 p-6 md:p-8">
+          <h2 id="pw-h" className="font-display text-[28px] text-ivory">Password</h2>
+          <p className="mt-2.5 text-[14px] leading-relaxed text-stone">Changing it signs out every other session.</p>
+          <div className="mt-6">
             <PasswordForm />
           </div>
         </section>
       </div>
 
-      <section aria-labelledby="sess-h" className="mt-6 rounded-[var(--radius-xl)] border border-line bg-ink-2 p-6 md:p-9">
+      {/* Notification Preferences & Billing Management (Fan-relevant settings) */}
+      {isFan && (
+        <div className="mt-6 grid gap-6 lg:grid-cols-2">
+          <section aria-labelledby="notif-h" className="rounded-[var(--radius-xl)] border border-line bg-ink-2 p-6 md:p-8">
+            <h2 id="notif-h" className="font-display text-[28px] text-ivory">Notification preferences</h2>
+            <p className="mt-2 text-[14px] leading-relaxed text-stone">
+              Choose which activity updates appear in your DivaFans notification feed.
+            </p>
+            <div className="mt-5">
+              <PreferencesForm initial={prefs} />
+            </div>
+          </section>
+
+          <div className="flex flex-col gap-6">
+            <section aria-labelledby="billing-h" className="rounded-[var(--radius-xl)] border border-line bg-ink-2 p-6 md:p-8">
+              <h2 id="billing-h" className="font-display text-[28px] text-ivory">Billing & payment management</h2>
+              <p className="mt-2 text-[14px] leading-relaxed text-stone">
+                Manage recurring subscriptions, cancel upcoming renewals, and view receipts for unlocked posts and messages.
+              </p>
+              <div className="mt-5 flex flex-wrap gap-3">
+                <Link
+                  href="/library?tab=subscriptions"
+                  className="inline-flex h-10 items-center rounded-full border border-gold/45 bg-gold/[0.1] px-4 text-[13px] text-gold-soft hover:bg-gold/[0.18]"
+                >
+                  Manage subscriptions
+                </Link>
+                <Link
+                  href="/library?tab=history"
+                  className="inline-flex h-10 items-center rounded-full border border-line-strong px-4 text-[13px] text-ivory hover:border-gold/50"
+                >
+                  Purchase history & receipts
+                </Link>
+              </div>
+            </section>
+
+            <section aria-labelledby="support-h" className="rounded-[var(--radius-xl)] border border-line bg-ink-2 p-6 md:p-8">
+              <h2 id="support-h" className="font-display text-[28px] text-ivory">Help & support</h2>
+              <p className="mt-2 text-[14px] leading-relaxed text-stone">
+                Need help with an unlock, subscription, or safety report? Review our policies or manage blocked accounts.
+              </p>
+              <div className="mt-5 flex flex-wrap gap-3 text-[13px]">
+                <Link href="/account/privacy" className="rounded-full border border-line-strong px-4 py-2 text-ivory hover:border-gold/50">
+                  Privacy & blocked accounts
+                </Link>
+                <Link href="/rules" className="rounded-full border border-line px-4 py-2 text-stone hover:text-ivory">
+                  Community rules
+                </Link>
+                <Link href="/terms" className="rounded-full border border-line px-4 py-2 text-stone hover:text-ivory">
+                  Terms of service
+                </Link>
+                <Link href="/privacy" className="rounded-full border border-line px-4 py-2 text-stone hover:text-ivory">
+                  Privacy policy
+                </Link>
+              </div>
+            </section>
+          </div>
+        </div>
+      )}
+
+      {/* Signed-in Sessions */}
+      <section aria-labelledby="sess-h" className="mt-6 rounded-[var(--radius-xl)] border border-line bg-ink-2 p-6 md:p-8">
         <div className="flex flex-wrap items-center justify-between gap-4">
-          <h2 id="sess-h" className="font-display text-[30px] text-ivory">Signed-in sessions</h2>
+          <h2 id="sess-h" className="font-display text-[28px] text-ivory">Signed-in sessions</h2>
           <RevokeOthersForm />
         </div>
         <ul className="mt-6 divide-y divide-line border-y border-line">

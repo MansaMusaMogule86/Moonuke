@@ -46,7 +46,7 @@ describe("Blasts", () => {
     expect(msgs).toHaveLength(fans.length);
     expect(new Set(msgs.map((m) => m.conversation_id)).size).toBe(fans.length);
     const nocturne = await viewer(s.memberId);
-    const conv = (await myConversations(nocturne)).find((c) => c.peer.name === "Isadora Lune")!;
+    const conv = (await myConversations(nocturne)).find((c) => c.peer.name === "Diva Isadora Lune")!;
     const thread = await conversationMessages(nocturne, conv.id);
     expect(thread.map((m) => m.body)).toEqual(["Dear Nocturne, the new letter is up."]);
     const [b] = await myBlasts(isadora);

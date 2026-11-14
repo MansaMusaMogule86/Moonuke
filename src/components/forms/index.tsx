@@ -60,18 +60,28 @@ export function Select({ label, error, children, className, ...props }: SelectHT
   return (
     <div className={cn("group/field", className)}>
       <label htmlFor={id} className="eyebrow mb-2 block text-stone group-focus-within/field:text-gold">{label}</label>
-      <select
-        id={id}
-        aria-invalid={error ? true : undefined}
-        className={cn(
-          "h-12 w-full appearance-none rounded-[var(--radius-md)] border bg-ink-2 bg-[length:12px] bg-[right_1rem_center] bg-no-repeat px-4 pr-10 text-[15px] text-ivory outline-none transition-colors",
-          "bg-[url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'><path d='M1 1l5 5 5-5' fill='none' stroke='%23AAA39A' stroke-width='1.4'/></svg>\")]",
-          error ? "border-danger" : "border-line-strong focus:border-gold",
-        )}
-        {...props}
-      >
-        {children}
-      </select>
+      <div className="relative">
+        <select
+          id={id}
+          aria-invalid={error ? true : undefined}
+          style={{ colorScheme: "dark" }}
+          className={cn(
+            "h-12 w-full appearance-none rounded-[var(--radius-md)] border bg-ink-2 px-4 pr-10 text-[15px] text-ivory outline-none transition-colors",
+            "[&>option]:bg-ink-2 [&>option]:text-ivory [&>option:disabled]:bg-ink-2 [&>option:disabled]:text-ash [&>optgroup]:bg-ink-2 [&>optgroup]:text-stone",
+            error ? "border-danger" : "border-line-strong focus:border-gold",
+          )}
+          {...props}
+        >
+          {children}
+        </select>
+        <svg
+          aria-hidden
+          viewBox="0 0 12 8"
+          className="pointer-events-none absolute right-4 top-1/2 h-2 w-3 -translate-y-1/2 text-stone"
+        >
+          <path d="M1 1l5 5 5-5" fill="none" stroke="currentColor" strokeWidth="1.4" />
+        </svg>
+      </div>
       {error && <p role="alert" className="mt-2 text-[13px] text-danger">{error}</p>}
     </div>
   );

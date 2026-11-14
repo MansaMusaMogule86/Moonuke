@@ -3,7 +3,9 @@ import { asViewer, system } from "@/server/db";
 import { can, type Viewer } from "@/server/auth/permissions";
 import { AppError } from "@/server/errors";
 import { scoreMessage, type RiskRule } from "@/server/messaging/risk";
+import { formatMoney } from "@/server/payments";
 import type { PortraitStudy } from "@/components/ui/Portrait";
+import { formatCreatorPublicName } from "@/lib/creatorName";
 import { audit } from "./audit";
 import { hit, LIMITS } from "./rateLimit";
 
@@ -49,7 +51,7 @@ type ConvRow = {
   id: string; side: "fan" | "creator"; peer_id: string; peer_alias: string;
   handle: string | null; display_name: string | null; cover: PortraitStudy | null;
   last_message_at: Date | null; my_read: Date | null; muted: boolean; restricted: boolean; can_send: CanSend;
-  preview: string | null; last_sender: string | null;
+  preview: string | null; last_sender: string | null; last_price_cents: number | null; last_unlocked: boolean | null;
 };
 
 const CONV_SELECT = `
@@ -60,21 +62,29 @@ const CONV_SELECT = `
          case when p.my_side = 'fan' then c.fan_muted else c.creator_muted end as muted,
          c.creator_restricted as restricted,
          app.can_send_in(c.id) as can_send,
-         lm.body as preview, lm.sender_id as last_sender
+         lm.preview as preview, lm.sender_id as last_sender, lm.price_cents as last_price_cents, lm.unlocked as last_unlocked
     from app.my_conversation_peers() p
     join app.conversations c on c.id = p.conversation_id
     left join app.creators cr on p.my_side = 'fan' and cr.user_id = p.peer_id
-    left join lateral (select m.body, m.sender_id from app.messages m where m.conversation_id = c.id order by m.created_at desc limit 1) lm on true`;
+    left join lateral (select x.preview, x.sender_id, x.price_cents, x.unlocked from app.conversation_last_message(c.id) x) lm on true`;
 
 const toSummary = (r: ConvRow, me: string): ConversationSummary => ({
   id: r.id,
   side: r.side,
   // A fan sees the creator's public name (if the profile is visible); a creator sees the fan's alias.
   peer: r.side === "fan"
-    ? { id: r.peer_id, name: r.display_name ?? "Creator unavailable", handle: r.handle, cover: r.cover }
+    ? { id: r.peer_id, name: r.display_name ? formatCreatorPublicName(r.display_name) : "Creator unavailable", handle: r.handle, cover: r.cover }
     : { id: r.peer_id, name: r.peer_alias, handle: null, cover: null },
   lastMessageAt: r.last_message_at ? new Date(r.last_message_at).toISOString() : null,
-  preview: r.preview ? (r.last_sender === me ? `You: ${r.preview}` : r.preview).slice(0, 90) : null,
+  preview: r.preview
+    ? (
+        r.last_price_cents != null && !r.last_unlocked
+          ? `🔒 ${r.preview}`
+          : r.last_sender === me
+            ? `You: ${r.preview}`
+            : r.preview
+      ).slice(0, 90)
+    : null,
   unread: !!r.last_message_at && r.last_sender !== me && (!r.my_read || new Date(r.my_read) < new Date(r.last_message_at)),
   muted: r.muted,
   restricted: r.restricted,
@@ -88,33 +98,70 @@ export async function myConversations(viewer: Viewer): Promise<ConversationSumma
   );
 }
 
+export async function unreadMessagesCount(viewer: Viewer): Promise<number> {
+  if (!(viewer.role === "member" || viewer.role === "creator") || viewer.status !== "active") return 0;
+  const convs = await myConversations(viewer);
+  return convs.filter((c) => c.unread).length;
+}
+
 export async function getConversation(viewer: Viewer, id: string): Promise<ConversationSummary | null> {
   assertParticipantRole(viewer);
   const r = await asViewer(viewer, (q) => q.one<ConvRow>(`${CONV_SELECT} where c.id = $1`, [id]));
   return r ? toSummary(r, viewer.id) : null;
 }
 
-export type ChatMessage = { id: string; mine: boolean; body: string; status: "sent" | "held" | "removed"; at: string };
+export type ChatMessage = {
+  id: string;
+  mine: boolean;
+  body: string | null;
+  previewText: string | null;
+  mediaKind: "text" | "image" | "set" | "video" | "audio" | null;
+  priceCents: number | null;
+  priceLabel: string | null;
+  unlocked: boolean;
+  status: "sent" | "held" | "removed";
+  at: string;
+};
 
-/** Messages visible to this viewer (RLS). Optionally only those after a timestamp (for polling). */
+/** Messages visible to this viewer (RLS + paid message masking). Optionally only those after a timestamp (for polling). */
 export async function conversationMessages(viewer: Viewer, id: string, opts: { after?: string; markRead?: boolean } = {}): Promise<ChatMessage[]> {
   assertParticipantRole(viewer);
   const after = opts.after && !Number.isNaN(Date.parse(opts.after)) ? new Date(opts.after) : null;
   return asViewer(viewer, async (q) => {
     const ok = await q.one<{ ok: boolean }>(`select app.is_conversation_participant($1) as ok`, [id]);
     if (!ok?.ok) throw new AppError("not_found", "Conversation not found.");
-    const rows = await q.query<{ id: string; sender_id: string; body: string; status: ChatMessage["status"]; created_at: Date }>(
-      `select id, sender_id, body, status, created_at from (
-         select id, sender_id, body, status, created_at from app.messages
-          where conversation_id = $1 and status <> 'removed' and ($2::timestamptz is null or created_at > $2)
-          order by created_at desc limit 200) t order by created_at asc`,
+    const rows = await q.query<{
+      id: string;
+      sender_id: string;
+      body: string | null;
+      preview_text: string | null;
+      media_kind: ChatMessage["mediaKind"];
+      price_cents: number | null;
+      unlocked: boolean;
+      status: ChatMessage["status"];
+      created_at: Date;
+    }>(
+      `select id, sender_id, body, preview_text, media_kind, price_cents, unlocked, status, created_at
+         from app.list_conversation_messages($1, $2)
+        order by created_at asc`,
       [id, after],
     );
     if (opts.markRead !== false) await q.query(`select app.set_conversation_flags($1, null, null, true)`, [id]);
     if (opts.markRead !== false) {
       await q.query(`update app.notifications set read_at = now() where user_id = $1 and kind = 'message.received' and read_at is null and data->>'conversation' = $2`, [viewer.id, id]);
     }
-    return rows.map((m) => ({ id: m.id, mine: m.sender_id === viewer.id, body: m.body, status: m.status, at: new Date(m.created_at).toISOString() }));
+    return rows.map((m) => ({
+      id: m.id,
+      mine: m.sender_id === viewer.id,
+      body: m.unlocked ? m.body : null,
+      previewText: m.preview_text,
+      mediaKind: m.media_kind,
+      priceCents: m.price_cents,
+      priceLabel: m.price_cents != null ? formatMoney({ amountCents: m.price_cents, currency: "USD" }) : null,
+      unlocked: m.unlocked,
+      status: m.status,
+      at: new Date(m.created_at).toISOString(),
+    }));
   });
 }
 
@@ -171,6 +218,77 @@ export async function sendMessage(viewer: Viewer, conversationId: string, rawBod
   if (status === "held") {
     await system((q) => audit(q, { actorId: null, action: "message.auto_held", targetType: "message", targetId: id, metadata: { rules: risk.rules, score: risk.score } }));
   }
+  return { id, status };
+}
+
+/**
+ * Send a creator-authored locked paid message (`priceCents` in 100..100000).
+ * The locked `body` is stored server-side and never returned to the fan until
+ * `app.message_purchases` records a verified payment for `(fan_id, message_id)`.
+ */
+export async function sendPaidMessage(
+  viewer: Viewer,
+  conversationId: string,
+  input: {
+    body: string;
+    previewText: string;
+    priceCents: number;
+    mediaKind?: "text" | "image" | "set" | "video" | "audio";
+    clientKey: string;
+  },
+): Promise<SendResult> {
+  if (viewer.role !== "creator" || viewer.status !== "active") {
+    throw new AppError("forbidden", "Only creators can send locked paid messages.");
+  }
+  const body = input.body.replace(/\r\n/g, "\n").replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F‪-‮⁦-⁩]/g, "").trim();
+  const previewText = input.previewText.replace(/\r\n/g, " ").replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F‪-‮⁦-⁩]/g, "").trim();
+  if (!body) throw new AppError("validation", "Write the exclusive message content first.", "body");
+  if (body.length > MESSAGE_MAX) throw new AppError("validation", `Keep messages under ${MESSAGE_MAX.toLocaleString("en")} characters.`, "body");
+  if (!previewText || previewText.length > 280) {
+    throw new AppError("validation", "Include a safe preview description (1–280 characters).", "previewText");
+  }
+  if (!Number.isInteger(input.priceCents) || input.priceCents < 100 || input.priceCents > 100000) {
+    throw new AppError("validation", "Set a price between $1 and $1,000.", "priceCents");
+  }
+  if (!/^[A-Za-z0-9_-]{8,64}$/.test(input.clientKey)) throw new AppError("validation", "Invalid request.");
+
+  const bodyRisk = scoreMessage(body, { recentSameBody: 0, accountAgeHours: 1000 });
+  if (bodyRisk.action === "reject") {
+    throw new AppError("validation", bodyRisk.message ?? "That message can't be sent.", "body");
+  }
+  const previewRisk = scoreMessage(previewText, { recentSameBody: 0, accountAgeHours: 1000 });
+  if (previewRisk.action === "reject") {
+    throw new AppError("validation", previewRisk.message ?? "That preview can't be sent.", "previewText");
+  }
+
+  const status = bodyRisk.action === "hold" || previewRisk.action === "hold" ? "held" : "sent";
+  const rules = [...new Set([...bodyRisk.rules, ...previewRisk.rules])];
+  const score = Math.max(bodyRisk.score, previewRisk.score);
+
+  const id = await asViewer(viewer, async (q) => {
+    try {
+      const r = await q.one<{ id: string }>(
+        `select app.send_paid_message($1, $2, $3, $4, $5, $6, $7, $8, $9) as id`,
+        [
+          conversationId,
+          body,
+          previewText,
+          input.priceCents,
+          input.mediaKind ?? "text",
+          input.clientKey,
+          status,
+          score,
+          rules,
+        ],
+      );
+      return r!.id;
+    } catch (e) {
+      const err = e as { code?: string; message?: string };
+      if (err.code === "42501") throw new AppError("forbidden", "You can't send paid messages in this conversation right now.");
+      if (err.code === "23514") throw new AppError("validation", "Keep conversations here: links and contact details can't be shared.", "body");
+      throw e;
+    }
+  });
   return { id, status };
 }
 

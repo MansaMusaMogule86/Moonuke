@@ -6,6 +6,7 @@ import { signMediaUrl } from "@/server/media/sign";
 import { formatMoney, providerFor, type Money } from "@/server/payments";
 import type { PortraitStudy } from "@/components/ui/Portrait";
 import { formatCreatorPublicName } from "@/lib/creatorName";
+import { describePaymentIdentities, getPlatformFinancialConfig } from "@/server/payments/descriptors";
 import { audit } from "./audit";
 
 function assertClub(viewer: Viewer) {
@@ -237,6 +238,7 @@ export type Quote = {
   totalLabel: string;
   cadence: string | null;
   accessTerms: string;
+  statementDescriptorNotice?: string;
   supportedMethods: string[];
   sandboxAvailable: boolean;
   available: false;
@@ -253,6 +255,8 @@ export async function quote(viewer: Viewer, target: QuoteTarget): Promise<Quote>
   assertClub(viewer);
   const sandboxAvailable = process.env.NODE_ENV !== "production" && process.env.SANDBOX_CHECKOUT_ENABLED !== "false";
   const supportedMethods = sandboxAvailable ? ["Sandbox Card •••• 4242 (Verified Test Checkout)"] : [];
+  const cfg = await getPlatformFinancialConfig();
+  const statementDescriptorNotice = describePaymentIdentities(cfg).fanCardStatement.checkoutNotice;
 
   return asViewer(viewer, async (q) => {
     if (target.kind === "tier") {
@@ -301,6 +305,7 @@ export async function quote(viewer: Viewer, target: QuoteTarget): Promise<Quote>
         totalLabel: amountLabel,
         cadence: "per month",
         accessTerms: "Renews monthly until canceled. Cancel anytime from My Access.",
+        statementDescriptorNotice,
         supportedMethods,
         sandboxAvailable,
         available: false as const,
@@ -345,6 +350,7 @@ export async function quote(viewer: Viewer, target: QuoteTarget): Promise<Quote>
         totalLabel: amountLabel,
         cadence: null,
         accessTerms: "One-time purchase. Permanent access in your conversation and My Access.",
+        statementDescriptorNotice,
         supportedMethods,
         sandboxAvailable,
         available: false as const,
@@ -393,6 +399,7 @@ export async function quote(viewer: Viewer, target: QuoteTarget): Promise<Quote>
       totalLabel: amountLabel,
       cadence: null,
       accessTerms: "One-time purchase. Permanent access on the creator profile and in My Access.",
+      statementDescriptorNotice,
       supportedMethods,
       sandboxAvailable,
       available: false as const,

@@ -119,6 +119,7 @@ create policy messages_participants on app.messages
   for select to mk_app
   using (
     app.is_conversation_participant(conversation_id)
+    and status <> 'removed'
     and (status = 'sent' or sender_id = app.uid())
     and app.can_view_message(id)
   );
@@ -157,6 +158,7 @@ as $$
   from app.messages m
   where m.conversation_id = p_conv
     and app.is_conversation_participant(p_conv)
+    and m.status <> 'removed'
     and (m.status = 'sent' or m.sender_id = app.uid())
     and (p_after is null or m.created_at > p_after)
   order by m.created_at desc

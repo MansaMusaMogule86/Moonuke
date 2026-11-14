@@ -217,6 +217,11 @@ export function CheckoutButton({
                     : "No active payment method configured"}
                 </p>
                 <p className="mt-1 text-ash">{quote.accessTerms}</p>
+                {quote.statementDescriptorNotice && (
+                  <p className="mt-1.5 border-t border-line pt-1.5 text-[11px] text-ash">
+                    {quote.statementDescriptorNotice}
+                  </p>
+                )}
               </div>
 
               {quote.sandboxAvailable ? (

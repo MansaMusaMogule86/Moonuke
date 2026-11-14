@@ -43,6 +43,7 @@ export type WaterfallInput = {
   applicableTaxesMinor: number;
   transactionReversalsMinor: number;
   creatorContractualEarningsMinor?: number;
+  referralLiabilitiesMinor?: number;
   processingAndSettlementCostsMinor: number;
   approvedOperatingExpensesMinor: number;
   reserveAllocationsMinor: number;
@@ -57,6 +58,7 @@ export type WaterfallResult = {
   transactionReversalsMinor: number;
   netSettledCollectionsMinor: number;
   creatorContractualEarningsMinor: number;
+  referralLiabilitiesMinor: number;
   platformRevenueBeforeCostsMinor: number;
   processingAndSettlementCostsMinor: number;
   approvedOperatingExpensesMinor: number;
@@ -440,6 +442,9 @@ export function calculateWaterfallPure(input: WaterfallInput): WaterfallResult {
   if (input.creatorContractualEarningsMinor !== undefined) {
     assertSafeIntegerMinor(input.creatorContractualEarningsMinor, "creatorContractualEarningsMinor");
   }
+  if (input.referralLiabilitiesMinor !== undefined) {
+    assertSafeIntegerMinor(input.referralLiabilitiesMinor, "referralLiabilitiesMinor");
+  }
   if (input.availableCashMinor !== undefined) {
     assertSafeIntegerMinor(input.availableCashMinor, "availableCashMinor");
   }
@@ -479,6 +484,8 @@ export function calculateWaterfallPure(input: WaterfallInput): WaterfallResult {
       ? BigInt(input.creatorContractualEarningsMinor)
       : defaultCreatorEarningsBig;
 
+  const referralLiabilitiesBig = BigInt(input.referralLiabilitiesMinor ?? 0);
+
   if (
     input.creatorContractualEarningsMinor !== undefined &&
     creatorEarningsBig < defaultCreatorEarningsBig &&
@@ -490,9 +497,9 @@ export function calculateWaterfallPure(input: WaterfallInput): WaterfallResult {
     );
   }
 
-  const rawPlatformRevenueBig = netSettledCollectionsBig - creatorEarningsBig;
+  const rawPlatformRevenueBig = netSettledCollectionsBig - creatorEarningsBig - referralLiabilitiesBig;
   if (rawPlatformRevenueBig < 0n) {
-    exceptions.push("Creator contractual liabilities exceed net settled fan collections.");
+    exceptions.push("Creator and referral contractual liabilities exceed net settled fan collections.");
   }
   const platformRevenueBeforeCostsBig = rawPlatformRevenueBig > 0n ? rawPlatformRevenueBig : 0n;
 
@@ -508,10 +515,10 @@ export function calculateWaterfallPure(input: WaterfallInput): WaterfallResult {
 
   let cashConstrainedBig = rawEarningsAfterDeductionsBig;
   if (input.availableCashMinor !== undefined) {
-    const availAfterCreatorBig = BigInt(input.availableCashMinor) - creatorEarningsBig;
+    const availAfterCreatorBig = BigInt(input.availableCashMinor) - creatorEarningsBig - referralLiabilitiesBig;
     const maxDistributableCashBig = availAfterCreatorBig > 0n ? availAfterCreatorBig : 0n;
     if (maxDistributableCashBig < cashConstrainedBig) {
-      exceptions.push("Available cash after covering creator liabilities is less than calculated net earnings.");
+      exceptions.push("Available cash after covering creator and referral liabilities is less than calculated net earnings.");
       cashConstrainedBig = maxDistributableCashBig;
     }
   }
@@ -530,6 +537,7 @@ export function calculateWaterfallPure(input: WaterfallInput): WaterfallResult {
     transactionReversalsMinor: Number(reversalsBig),
     netSettledCollectionsMinor: Number(netSettledCollectionsBig),
     creatorContractualEarningsMinor: Number(creatorEarningsBig),
+    referralLiabilitiesMinor: Number(referralLiabilitiesBig),
     platformRevenueBeforeCostsMinor: Number(platformRevenueBeforeCostsBig),
     processingAndSettlementCostsMinor: Number(processingBig),
     approvedOperatingExpensesMinor: Number(expensesBig),
@@ -570,12 +578,14 @@ async function aggregateRealDatabaseActivity(
     [normCurrency, periodStart, periodEnd],
   );
 
-  // 2. Ledger entries for creator earnings and platform fees in the window
+  // 2. Ledger entries for creator earnings, referral commissions, and platform fees in the window
   const ledgerAgg = await q.one<{
     creator_net_minor: string;
+    referral_net_minor: string;
     platform_fee_minor: string;
   }>(
     `select coalesce(sum(amount_cents) filter (where account like 'creator:%' or account like 'creator_hold:%'), 0)::bigint::text as creator_net_minor,
+            coalesce(sum(amount_cents) filter (where account like 'referral:%' or account like 'referral_hold:%'), 0)::bigint::text as referral_net_minor,
             coalesce(sum(amount_cents) filter (where account = 'platform_fees'), 0)::bigint::text as platform_fee_minor
        from app.ledger_entries
       where upper(currency) = $1
@@ -669,6 +679,7 @@ async function aggregateRealDatabaseActivity(
       BigInt(TOTAL_OWNERSHIP_BPS),
   );
   const creatorContractualEarningsMinor = Math.max(ledgerCreatorMinor, defaultCreatorMinor);
+  const referralLiabilitiesMinor = Math.max(0, Number(ledgerAgg?.referral_net_minor ?? "0"));
 
   const reconciliationExceptionsCount = (unbalancedTx?.n ?? 0) + (unbookedPayments?.n ?? 0);
 
@@ -677,6 +688,7 @@ async function aggregateRealDatabaseActivity(
     applicableTaxesMinor,
     transactionReversalsMinor,
     creatorContractualEarningsMinor,
+    referralLiabilitiesMinor,
     processingAndSettlementCostsMinor,
     approvedOperatingExpensesMinor,
     reserveAllocationsMinor,
@@ -878,6 +890,7 @@ export async function createOrCalculateDistributionPeriod(
       applicableTaxesMinor: dbMetrics.applicableTaxesMinor,
       transactionReversalsMinor: dbMetrics.transactionReversalsMinor,
       creatorContractualEarningsMinor: dbMetrics.creatorContractualEarningsMinor,
+      referralLiabilitiesMinor: dbMetrics.referralLiabilitiesMinor,
       processingAndSettlementCostsMinor: dbMetrics.processingAndSettlementCostsMinor,
       approvedOperatingExpensesMinor: dbMetrics.approvedOperatingExpensesMinor,
       reserveAllocationsMinor: dbMetrics.reserveAllocationsMinor,
@@ -917,14 +930,15 @@ export async function createOrCalculateDistributionPeriod(
                 taxes_minor = $6,
                 refunds_chargebacks_minor = $7,
                 creator_liabilities_minor = $8,
-                platform_revenue_minor = $9,
-                processing_costs_minor = $10,
-                operating_expenses_minor = $11,
-                reserves_minor = $12,
-                deductions_minor = $13,
-                distributable_amount_minor = $14,
-                reconciliation_exceptions = $15,
-                calculation_version = $16,
+                referral_liabilities_minor = $9,
+                platform_revenue_minor = $10,
+                processing_costs_minor = $11,
+                operating_expenses_minor = $12,
+                reserves_minor = $13,
+                deductions_minor = $14,
+                distributable_amount_minor = $15,
+                reconciliation_exceptions = $16,
+                calculation_version = $17,
                 status = 'CALCULATED',
                 updated_at = now()
           where id = $1`,
@@ -937,6 +951,7 @@ export async function createOrCalculateDistributionPeriod(
           wf.applicableTaxesMinor,
           wf.transactionReversalsMinor,
           wf.creatorContractualEarningsMinor,
+          wf.referralLiabilitiesMinor,
           wf.platformRevenueBeforeCostsMinor,
           wf.processingAndSettlementCostsMinor,
           wf.approvedOperatingExpensesMinor,
@@ -952,10 +967,10 @@ export async function createOrCalculateDistributionPeriod(
         `insert into app.financial_distribution_periods
            (period_start, period_end, currency,
             gross_collections_minor, taxes_minor, refunds_chargebacks_minor, creator_liabilities_minor,
-            platform_revenue_minor, processing_costs_minor, operating_expenses_minor, reserves_minor,
+            referral_liabilities_minor, platform_revenue_minor, processing_costs_minor, operating_expenses_minor, reserves_minor,
             deductions_minor, distributable_amount_minor,
             reconciliation_exceptions, calculation_version, status)
-         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,1,'CALCULATED')
+         values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,1,'CALCULATED')
          returning id, calculation_version`,
         [
           input.periodStart,
@@ -965,6 +980,7 @@ export async function createOrCalculateDistributionPeriod(
           wf.applicableTaxesMinor,
           wf.transactionReversalsMinor,
           wf.creatorContractualEarningsMinor,
+          wf.referralLiabilitiesMinor,
           wf.platformRevenueBeforeCostsMinor,
           wf.processingAndSettlementCostsMinor,
           wf.approvedOperatingExpensesMinor,

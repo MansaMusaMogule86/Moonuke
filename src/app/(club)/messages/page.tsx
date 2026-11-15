@@ -2,15 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
 import { Portrait } from "@/components/ui/Portrait";
 import { cn } from "@/lib/cn";
 import { requireViewer } from "@/server/auth/request";
-import { myConversations } from "@/server/services/messaging";
+import { myFanConversations } from "@/server/services/messaging";
 import { myMessagingPause } from "@/server/services/blasts";
 import { PauseBanner } from "@/components/messaging/PauseBanner";
 
-export const metadata: Metadata = { title: "Messages" };
+export const metadata: Metadata = { title: "Messages · Fan View" };
 
 type SP = Promise<Record<string, string | string[] | undefined>>;
 
@@ -23,7 +22,8 @@ export default async function MessagesPage({ searchParams }: { searchParams?: SP
   const qRaw = Array.isArray(rawSp.q) ? rawSp.q[0] : rawSp.q;
   const q = (qRaw ?? "").trim();
 
-  const list = await myConversations(viewer);
+  // Strictly scoped to Fan View conversations (messages sent or purchased as a fan)
+  const list = await myFanConversations(viewer);
   const pause = await myMessagingPause(viewer);
   const unreadTotal = list.filter((c) => c.unread).length;
 
@@ -40,7 +40,7 @@ export default async function MessagesPage({ searchParams }: { searchParams?: SP
     <div className="mx-auto max-w-[900px] px-5 pb-28 pt-10 md:px-10 md:pt-14">
       <div className="flex flex-wrap items-end justify-between gap-4 border-b border-line pb-6">
         <div>
-          <p className="eyebrow mb-2">Private Conversations</p>
+          <p className="eyebrow mb-2">Fan View · Private Conversations</p>
           <div className="flex items-center gap-3">
             <h1 className="font-display text-[42px] leading-[0.98] tracking-[-0.03em] text-ivory md:text-[60px]">
               Messages
@@ -52,14 +52,9 @@ export default async function MessagesPage({ searchParams }: { searchParams?: SP
             )}
           </div>
           <p className="mt-2 max-w-2xl text-[14px] leading-relaxed text-stone">
-            Direct conversations with Diva creators and unlockable exclusive messages.
+            Direct conversations you have opened as a fan with Diva creators, including unlockable exclusive messages.
           </p>
         </div>
-        {viewer.role === "creator" && (
-          <Button href="/messages/new" variant="outline">
-            Message a member
-          </Button>
-        )}
       </div>
 
       {pause && (
@@ -106,20 +101,16 @@ export default async function MessagesPage({ searchParams }: { searchParams?: SP
 
       {list.length === 0 ? (
         <div className="mt-8 rounded-[var(--radius-xl)] border border-line bg-ink-2 p-8 text-[15px] text-stone">
-          <p className="font-display text-[24px] text-ivory">No conversations yet.</p>
+          <p className="font-display text-[24px] text-ivory">No fan conversations yet.</p>
           <p className="mt-2 text-[14px] text-stone">
-            {viewer.role === "creator"
-              ? "Start a conversation with any of your active members."
-              : "Subscribe to a Diva creator to open a private conversation and receive exclusive messages."}
+            Subscribe to a Diva creator to open a private conversation and receive exclusive messages.
           </p>
-          {viewer.role !== "creator" && (
-            <Link
-              href="/discover"
-              className="mt-5 inline-flex h-10 items-center rounded-full bg-gold px-5 text-[13px] font-medium text-ink hover:bg-gold-soft"
-            >
-              Explore creators
-            </Link>
-          )}
+          <Link
+            href="/discover"
+            className="mt-5 inline-flex h-10 items-center rounded-full bg-gold px-5 text-[13px] font-medium text-ink hover:bg-gold-soft"
+          >
+            Explore creators
+          </Link>
         </div>
       ) : filtered.length === 0 ? (
         <p className="mt-8 rounded-[var(--radius-xl)] border border-line bg-ink-2 p-8 text-[15px] text-stone">

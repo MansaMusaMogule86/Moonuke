@@ -5,12 +5,13 @@ import { after } from "next/server";
 import { deliverPending } from "@/server/email/outbox";
 import { requestPasswordReset, resetPassword } from "@/server/services/recovery";
 import type { FormState } from "@/lib/forms";
-import { clearSession, requestMeta, setSessionCookie } from "@/server/auth/request";
+import { clearSession, requestMeta, setSessionCookie, setWorkspaceCookie } from "@/server/auth/request";
 import { bucketKey } from "@/server/auth/crypto";
 import { isAppError } from "@/server/errors";
 import { activateProvisionedAccount, redeemInvitation, signIn } from "@/server/services/accounts";
 import { registerFanViaReferral } from "@/server/services/creatorReferral";
 import { confirmEmail } from "@/server/services/emailVerification";
+import { resolvePostLoginDestination } from "@/server/services/workspace";
 import { recordLoginFailure } from "@/server/security/monitor";
 import { hit, hitIp, LIMITS } from "@/server/services/rateLimit";
 import { activateSchema, applySchema, creatorApplySchema, fieldErrors, forgotSchema, resetSchema, signinSchema } from "@/server/validation";
@@ -19,29 +20,25 @@ const str = (fd: FormData, k: string) => (typeof fd.get(k) === "string" ? (fd.ge
 
 export async function signInAction(_prev: FormState, fd: FormData): Promise<FormState> {
   const values = { email: str(fd, "email") };
+  const next = str(fd, "next") || null;
   const parsed = signinSchema.safeParse({ email: str(fd, "email"), password: str(fd, "password") });
   if (!parsed.success) return { status: "error", message: "Enter your email and password.", fields: fieldErrors(parsed.error), values };
 
   const meta = await requestMeta();
-  let status: string;
-  let mfa: string;
-  let role: string;
+  let destination: string;
   try {
     await hitIp("signin", meta.ipHash, LIMITS.signinIp);
     await hit(`signin:email:${bucketKey("email", parsed.data.email)}`, LIMITS.signinEmail);
     const r = await signIn(parsed.data.email, parsed.data.password, meta);
     await setSessionCookie(r.sessionToken);
-    status = r.viewer.status;
-    mfa = r.viewer.mfa;
-    role = r.viewer.role;
+    await setWorkspaceCookie(r.viewer.role === "creator" ? "studio" : "fan");
+    destination = await resolvePostLoginDestination(r.viewer, next);
   } catch (e) {
     if (isAppError(e) && e.code === "rate_limited") await recordLoginFailure(parsed.data.email, null, meta.security, "rate_limited");
     if (isAppError(e)) return { status: "error", message: e.message, values };
     throw e;
   }
-  if (mfa === "pending") redirect("/signin/verify");
-  if (role === "owner" && mfa === "none") redirect("/account/security?setup=required");
-  redirect(status === "active" ? "/discover" : "/pending");
+  redirect(destination);
 }
 
 export async function applyAction(token: string, _prev: FormState, fd: FormData): Promise<FormState> {

@@ -13,18 +13,21 @@ const fail = (e: unknown, values?: Record<string, string>): FormState => {
   throw e;
 };
 
-/** Open (or find) a conversation and go to it. */
+/** Open (or find) a conversation and go to its matching workspace route. */
 export async function openConversationAction(_prev: FormState, fd: FormData): Promise<FormState> {
   const viewer = await requireViewer("club.discover");
   const other = str(fd, "userId");
   if (!uuid.safeParse(other).success) return { status: "error", message: "Invalid request." };
   let id: string;
+  let side: "fan" | "creator" = "fan";
   try {
     id = await msg.openConversation(viewer, other);
+    const conv = await msg.getConversation(viewer, id);
+    if (conv) side = conv.side;
   } catch (e) {
     return fail(e);
   }
-  redirect(`/messages/${id}`);
+  redirect(side === "creator" && viewer.role === "creator" ? `/studio/messaging/${id}` : `/messages/${id}`);
 }
 
 export async function sendMessageAction(_prev: FormState, fd: FormData): Promise<FormState> {

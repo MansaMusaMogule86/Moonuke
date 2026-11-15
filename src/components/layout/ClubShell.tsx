@@ -3,123 +3,189 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { Symbol } from "@/components/brand/Symbol";
 import { Wordmark } from "@/components/brand/Wordmark";
-import { Submit } from "@/components/forms";
 import {
   can,
   isVerifiedPlatformOwnerUserId,
-  VERIFIED_OWNER_USER_IDS,
   type Viewer,
+  type WorkspaceMode,
 } from "@/server/auth/permissions";
-import { signOutAction } from "@/server/actions/auth";
-import { formatCreatorPublicName } from "@/lib/creatorName";
-import { ClubNav, type NavItem } from "./ClubNav";
+import { getWorkspaceCopy, type Locale } from "@/lib/i18n";
+import { resolveWorkspaceIdentity } from "@/server/services/workspace";
+import { ClubHeaderControls, ClubNav, type NavItem } from "./ClubNav";
 
 /**
- * Signed-in chrome.
- * Fan navigation exposes five clear destinations:
- *   1. Home (/home)
- *   2. Explore (/discover)
- *   3. Messages (/messages)
- *   4. My Access (/library)
- *   5. Account (/account/security)
- * Creator Studio and Owner tools are kept strictly in secondary workspace links
- * and never shown to ordinary fan accounts.
+ * Signed-in chrome with strict separation between Fan View and Creator Studio:
+ *   - Uses ONE primary desktop navigation system (the left sidebar).
+ *   - Keeps the top bar focused on identity, notifications, localization, and
+ *     explicit workspace switching (`Switch to Fan View` / `Switch to Creator Studio`).
+ *   - Scopes mobile navigation strictly to the active workspace.
+ *   - Never exposes `Diva [Name]` as the fan identity in Fan View.
  */
 export function ClubShell({
   viewer,
   children,
   unread = 0,
   unreadMessages = 0,
+  unreadFanMessages,
+  unreadCreatorMessages,
+  workspace,
+  locale = "en",
 }: {
   viewer: Viewer;
   children: ReactNode;
   unread?: number;
   unreadMessages?: number;
+  unreadFanMessages?: number;
+  unreadCreatorMessages?: number;
+  workspace?: WorkspaceMode;
+  locale?: Locale;
 }) {
-  const displayAlias =
-    viewer.id === VERIFIED_OWNER_USER_IDS.OWNER_001
-      ? "Jade"
-      : viewer.id === VERIFIED_OWNER_USER_IDS.OWNER_002
-        ? "Kael Veyre"
-        : viewer.role === "creator"
-          ? formatCreatorPublicName(viewer.alias)
-          : viewer.alias;
+  const defaultWorkspace: WorkspaceMode =
+    viewer.role === "creator"
+      ? (workspace ?? viewer.preferredWorkspace ?? "studio")
+      : "fan";
 
+  const copy = getWorkspaceCopy(locale);
+  const fanIdentity = resolveWorkspaceIdentity(viewer, "fan", locale);
+  const studioIdentity = resolveWorkspaceIdentity(viewer, "studio", locale);
+
+  const isCreator = viewer.role === "creator" && can(viewer, "club.discover");
   const isFanCapable = viewer.role === "member" || viewer.role === "creator";
 
-  const primaryItems: NavItem[] = isFanCapable
+  const fanUnreadBadge = unreadFanMessages ?? unreadMessages;
+  const creatorUnreadBadge = unreadCreatorMessages ?? 0;
+
+  // Fan View Navigation (5 primary destinations)
+  const fanItems: NavItem[] = isFanCapable
     ? [
-        { href: "/home", label: "Home", icon: "home" },
-        { href: "/discover", label: "Explore", icon: "discover" },
-        { href: "/messages", label: "Messages", icon: "messages", badge: unreadMessages },
-        { href: "/library", label: "My Access", icon: "library" },
-        { href: "/account/security", label: "Account", icon: "account" },
+        { href: "/home", label: copy.fanNav.home, icon: "home", exact: true },
+        { href: "/discover", label: copy.fanNav.explore, icon: "discover" },
+        { href: "/messages", label: copy.fanNav.messages, icon: "messages", badge: fanUnreadBadge },
+        { href: "/library", label: copy.fanNav.myAccess, icon: "library" },
+        { href: "/account/security", label: copy.fanNav.account, icon: "account" },
       ]
     : [
-        { href: "/discover", label: "Explore", icon: "discover" },
-        { href: "/account/security", label: "Account", icon: "account" },
+        { href: "/discover", label: copy.fanNav.explore, icon: "discover" },
+        { href: "/account/security", label: copy.fanNav.account, icon: "account" },
       ];
 
-  const secondaryItems: NavItem[] = [];
-  if (viewer.role === "creator" && can(viewer, "club.discover")) {
-    secondaryItems.push({ href: "/studio", label: "Creator Studio", icon: "studio" });
-  }
+  const fanSecondaryItems: NavItem[] = [];
   if (can(viewer, "referrals.request")) {
-    secondaryItems.push({ href: "/refer", label: "Invite Someone", icon: "invite" });
+    fanSecondaryItems.push({
+      href: "/refer",
+      label: copy.fanNav.inviteFriends,
+      icon: "invite",
+    });
+  }
+  if (viewer.role === "member") {
+    fanSecondaryItems.push({
+      href: "/account/security#creator-application",
+      label: copy.fanNav.applyCreator,
+      icon: "studio",
+    });
   }
   if (isVerifiedPlatformOwnerUserId(viewer.id) && can(viewer, "owner.dashboard.view")) {
-    secondaryItems.push({ href: "/owner", label: "Owner", icon: "house" });
+    fanSecondaryItems.push({ href: "/owner", label: "Owner", icon: "house" });
   }
   if (can(viewer, "applications.review")) {
-    secondaryItems.push({ href: "/admin", label: "Admin", icon: "house" });
+    fanSecondaryItems.push({ href: "/admin", label: "Admin", icon: "house" });
   }
+
+  // Creator Studio Navigation (11 primary destinations + secondary compliance/account links)
+  const studioItems: NavItem[] = isCreator
+    ? [
+        { href: "/studio", label: copy.studioNav.overview, icon: "studio", exact: true },
+        { href: "/studio/posts", label: copy.studioNav.posts, icon: "posts" },
+        { href: "/studio/vault", label: copy.studioNav.mediaVault, icon: "vault" },
+        {
+          href: "/studio/messaging",
+          label: copy.studioNav.inbox,
+          icon: "messages",
+          badge: creatorUnreadBadge,
+        },
+        { href: "/studio/blasts", label: copy.studioNav.blasts, icon: "blasts" },
+        { href: "/studio/analytics", label: copy.studioNav.members, icon: "members" },
+        { href: "/studio/tiers", label: copy.studioNav.tiers, icon: "tiers" },
+        { href: "/studio/earnings", label: copy.studioNav.earnings, icon: "earnings" },
+        { href: "/studio/referrals", label: copy.studioNav.referrals, icon: "referrals" },
+        { href: "/studio/notices", label: copy.studioNav.notifications, icon: "notices" },
+        { href: "/studio/settings", label: copy.studioNav.settings, icon: "settings" },
+      ]
+    : [];
+
+  const studioSecondaryItems: NavItem[] = isCreator
+    ? [
+        {
+          href: "/studio/participants",
+          label: copy.studioNav.participants,
+          icon: "participants",
+        },
+        {
+          href: "/account/security",
+          label: copy.fanNav.account,
+          icon: "account",
+        },
+      ]
+    : [];
+
+  const homeHref =
+    viewer.role === "owner"
+      ? isVerifiedPlatformOwnerUserId(viewer.id)
+        ? "/owner"
+        : "/admin"
+      : defaultWorkspace === "studio" && isCreator
+        ? "/studio"
+        : "/home";
 
   return (
     <div className="min-h-[100svh] pb-[calc(68px+env(safe-area-inset-bottom))] md:pb-0">
       <header className="sticky top-0 z-50 border-b border-line bg-ink/85 backdrop-blur-md">
         <div className="mx-auto flex h-[68px] max-w-[1600px] items-center justify-between gap-4 px-5 md:px-8">
-          <Link href={isFanCapable ? "/home" : "/discover"} className="flex items-center gap-3 rounded-md">
+          <Link href={homeHref} className="flex items-center gap-3 rounded-md">
             <span className="sr-only">{`${brand.name} — Home`}</span>
             <Symbol size={36} />
             <Wordmark decorative tone="duotone" className="hidden text-[15px] sm:inline-flex" />
           </Link>
-          <div className="hidden xl:block">
-            <ClubNav items={primaryItems} secondaryItems={secondaryItems} variant="top" />
-          </div>
-          <div className="flex items-center gap-3">
-            <Link
-              href="/notifications"
-              className="relative grid h-10 w-10 place-items-center rounded-full border border-line-strong text-stone hover:text-ivory"
-              aria-label={unread ? `Notifications, ${unread} unread` : "Notifications"}
-            >
-              <svg aria-hidden viewBox="0 0 20 20" className="h-[18px] w-[18px]" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round">
-                <path d="M10 2.8a4.7 4.7 0 0 0-4.7 4.7v2.9L3.8 13.5h12.4l-1.5-3.1V7.5A4.7 4.7 0 0 0 10 2.8ZM8 15.6a2 2 0 0 0 4 0" />
-              </svg>
-              {unread > 0 && (
-                <span aria-hidden className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-gold px-1 text-[11px] font-medium text-ink">
-                  {unread > 9 ? "9+" : unread}
-                </span>
-              )}
-            </Link>
-            <span className="hidden text-right text-[13px] leading-tight sm:block">
-              <span className="block font-medium text-ivory">{displayAlias}</span>
-              <span className="block text-[11px] uppercase tracking-[0.18em] text-ash">
-                {viewer.role === "owner" ? "Owner" : viewer.role === "member" ? "Fan" : viewer.role}
-              </span>
-            </span>
-            <form action={signOutAction}>
-              <Submit variant="ghost" className="h-10 px-4 text-[13px]">Sign out</Submit>
-            </form>
-          </div>
+
+          <ClubHeaderControls
+            isCreator={isCreator}
+            isOwner={viewer.role === "owner"}
+            defaultWorkspace={defaultWorkspace}
+            fanDisplayName={fanIdentity.displayName}
+            creatorDisplayName={studioIdentity.displayName}
+            ownerDisplayName={fanIdentity.displayName}
+            unreadNotifications={unread}
+            locale={locale}
+          />
         </div>
       </header>
+
       <div className="mx-auto flex max-w-[1600px]">
-        <ClubNav items={primaryItems} secondaryItems={secondaryItems} variant="sidebar" />
+        <ClubNav
+          fanItems={fanItems}
+          fanSecondaryItems={fanSecondaryItems}
+          studioItems={studioItems}
+          studioSecondaryItems={studioSecondaryItems}
+          isCreator={isCreator}
+          defaultWorkspace={defaultWorkspace}
+          creatorDisplayName={studioIdentity.displayName}
+          fanDisplayName={fanIdentity.displayName}
+          locale={locale}
+          variant="sidebar"
+        />
         <main id="main" tabIndex={-1} className="min-w-0 flex-1 outline-none">
           {children}
         </main>
       </div>
-      <ClubNav items={primaryItems} variant="bottom" />
+
+      <ClubNav
+        fanItems={fanItems}
+        studioItems={studioItems}
+        isCreator={isCreator}
+        defaultWorkspace={defaultWorkspace}
+        locale={locale}
+        variant="bottom"
+      />
     </div>
   );
 }

@@ -14,6 +14,7 @@ import {
   revokeSessionAction,
   startMfaAction,
 } from "@/server/actions/security";
+import { updateFanAliasAction } from "@/server/actions/workspace";
 
 function RecoveryCodes({ codes }: { codes: string }) {
   const [copied, setCopied] = useState(false);
@@ -146,6 +147,36 @@ export function RevokeOthersForm() {
     <form action={action} className="flex items-center gap-3">
       <Submit variant="outline" className="h-10 px-5 text-[13px]">Sign out all other sessions</Submit>
       <FormMessage state={state} />
+    </form>
+  );
+}
+
+export function FanAliasForm({
+  initialFanAlias,
+  isCreator,
+}: {
+  initialFanAlias: string;
+  isCreator: boolean;
+}) {
+  const [state, action] = useActionState(updateFanAliasAction, idle);
+  return (
+    <form action={action} className="space-y-5" noValidate>
+      <FormMessage state={state} />
+      <Field
+        label="Fan View alias"
+        name="fanAlias"
+        required
+        minLength={2}
+        maxLength={40}
+        defaultValue={state.values?.fanAlias ?? initialFanAlias}
+        error={state.fields?.fanAlias}
+        hint={
+          isCreator
+            ? "Shown when you browse, subscribe, or message other creators in Fan View. Never exposes your public Diva creator identity or email."
+            : "Shown to creators when you subscribe or send messages. Never exposes your private email address."
+        }
+      />
+      <Submit variant="outline">Save fan alias</Submit>
     </form>
   );
 }

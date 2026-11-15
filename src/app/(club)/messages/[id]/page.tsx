@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { BlockButton } from "@/components/club/SafetyButtons";
 import { ConversationControls } from "@/components/messaging/ConversationControls";
 import { Thread } from "@/components/messaging/Thread";
@@ -10,7 +10,7 @@ import { requireViewer } from "@/server/auth/request";
 import { CAN_SEND_COPY, conversationMessages, getConversation } from "@/server/services/messaging";
 import { uuid } from "@/server/validation";
 
-export const metadata: Metadata = { title: "Conversation" };
+export const metadata: Metadata = { title: "Conversation · Fan View" };
 
 export default async function ConversationPage({ params }: { params: Promise<{ id: string }> }) {
   const viewer = await requireViewer("club.discover");
@@ -19,6 +19,10 @@ export default async function ConversationPage({ params }: { params: Promise<{ i
   if (!uuid.safeParse(id).success) notFound();
   const c = await getConversation(viewer, id);
   if (!c) notFound();
+  // Creator-managed conversations belong in Creator Studio Inbox
+  if (c.side === "creator" && viewer.role === "creator") {
+    redirect(`/studio/messaging/${id}`);
+  }
   const messages = await conversationMessages(viewer, id);
   return (
     <div className="mx-auto max-w-[860px] px-5 pb-10 pt-10 md:px-10 md:pt-14">

@@ -17,6 +17,9 @@ export type ReferralInput = {
  */
 export async function requestReferral(viewer: Viewer, input: ReferralInput, meta: { ipHash?: string | null } = {}) {
   if (!can(viewer, "referrals.request")) throw new AppError("forbidden", "Not allowed.");
+  if (input.role === "creator" && viewer.role !== "creator") {
+    throw new AppError("forbidden", "Only approved creators can refer a creator.");
+  }
   if (input.inviteeEmail.toLowerCase() === viewer.email.toLowerCase()) {
     throw new AppError("validation", "That's your own email address.", "inviteeEmail");
   }

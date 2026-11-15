@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/Button";
 import { requireViewer } from "@/server/auth/request";
 import { myVault } from "@/server/services/fan";
 
-export const metadata: Metadata = { title: "Vault · Library" };
+export const metadata: Metadata = { title: "Unlocked Posts · My Access" };
 
 const VIA = { purchase: "Purchased", vip: "VIP membership", membership: "Membership" } as const;
 
@@ -23,8 +23,8 @@ export default async function VaultPage({ searchParams }: { searchParams: Promis
   return (
     <div className="mx-auto max-w-[1200px] px-5 pb-28 pt-14 md:px-10 md:pt-20">
       <LibraryHeader
-        title={<>The <em className="text-metal">vault.</em></>}
-        intro="Posts you've unlocked. Access is checked every time you open one — if a membership ends or a post is withdrawn, it leaves your vault. Images are private links that expire in minutes."
+        title={<>Unlocked <em className="text-metal">posts.</em></>}
+        intro="Posts you've purchased or unlocked through your active memberships. Access is checked every time you open one — if a membership ends or a post is withdrawn, it leaves your unlocked posts. Media links are private and expire in minutes."
       />
       {creator && (
         <p className="mt-6 text-[14px] text-stone">

@@ -25,9 +25,23 @@ export async function createSession(userId: string, userAgent: string | null, q?
 export async function resolveSession(token: string | undefined | null): Promise<Viewer | null> {
   if (!token || token.length > 100) return null;
   return system(async (q) => {
-    const row = await q.one<Omit<Viewer, "aal" | "mfa"> & { last_seen_at: Date; has_factor: boolean; mfa_verified: boolean; public_id: string; email_verified: boolean }>(
+    const row = await q.one<
+      Omit<Viewer, "aal" | "mfa"> & {
+        last_seen_at: Date;
+        has_factor: boolean;
+        mfa_verified: boolean;
+        public_id: string;
+        email_verified: boolean;
+        fan_alias: string | null;
+        creator_display_name: string | null;
+        preferred_workspace: "fan" | "studio" | null;
+      }
+    >(
       `select u.id, u.role, u.status,
               case when u.role = 'creator' then coalesce(c.display_name, u.alias::text) else u.alias::text end as alias,
+              u.fan_alias::text as fan_alias,
+              c.display_name as creator_display_name,
+              u.preferred_workspace as preferred_workspace,
               u.email::text as email, s.last_seen_at, s.public_id,
               u.email_verified_at is not null as email_verified,
               (f.confirmed_at is not null) as has_factor, (s.mfa_verified_at is not null) as mfa_verified
@@ -53,11 +67,21 @@ export async function resolveSession(token: string | undefined | null): Promise<
       );
       staff = g?.caps ?? [];
     }
+    const creatorDisplayName = row.role === "creator" ? formatCreatorPublicName(row.creator_display_name ?? row.alias) : null;
+    const fanAlias =
+      row.fan_alias && row.fan_alias.trim().length > 0
+        ? row.fan_alias
+        : row.role === "member"
+          ? row.alias
+          : `Member ${row.id.slice(0, 4).toUpperCase()}`;
     return {
       id: row.id,
       role: row.role,
       status: row.status,
-      alias: row.role === "creator" ? formatCreatorPublicName(row.alias) : row.alias,
+      alias: row.role === "creator" ? creatorDisplayName! : row.alias,
+      fanAlias,
+      creatorDisplayName,
+      preferredWorkspace: row.role === "creator" ? (row.preferred_workspace ?? "studio") : "fan",
       email: row.email,
       mfa,
       aal,

@@ -7,11 +7,14 @@ import { env, isProd } from "@/server/env";
 import { clientIp, type TrustedProxy } from "@/server/net/ip";
 import { contextFrom } from "@/server/security/monitor";
 import { hashIp } from "./crypto";
-import { can, type Permission, type Viewer } from "./permissions";
+import { can, type Permission, type Viewer, type WorkspaceMode } from "./permissions";
+import { normalizeLocale, type Locale } from "@/lib/i18n";
 import { resolveSession, revokeSession, SESSION_TTL_DAYS } from "@/server/services/sessions";
 
 /** `__Host-` pins the cookie to this exact origin over HTTPS (production). */
 export const SESSION_COOKIE = isProd() ? `__Host-${brand.cookiePrefix}_session` : `${brand.cookiePrefix}_session`;
+export const WORKSPACE_COOKIE = `${brand.cookiePrefix}_workspace`;
+export const LOCALE_COOKIE = `${brand.cookiePrefix}_locale`;
 
 export async function setSessionCookie(token: string) {
   (await cookies()).set(SESSION_COOKIE, token, {
@@ -21,6 +24,36 @@ export async function setSessionCookie(token: string) {
     path: "/",
     maxAge: SESSION_TTL_DAYS * 24 * 60 * 60,
   });
+}
+
+export async function setWorkspaceCookie(workspace: WorkspaceMode) {
+  (await cookies()).set(WORKSPACE_COOKIE, workspace, {
+    httpOnly: false,
+    secure: isProd(),
+    sameSite: "lax",
+    path: "/",
+    maxAge: 90 * 24 * 60 * 60,
+  });
+}
+
+export async function getWorkspaceCookie(): Promise<WorkspaceMode | null> {
+  const val = (await cookies()).get(WORKSPACE_COOKIE)?.value;
+  return val === "studio" || val === "fan" ? val : null;
+}
+
+export async function setLocaleCookie(locale: Locale) {
+  (await cookies()).set(LOCALE_COOKIE, locale, {
+    httpOnly: false,
+    secure: isProd(),
+    sameSite: "lax",
+    path: "/",
+    maxAge: 365 * 24 * 60 * 60,
+  });
+}
+
+export async function getLocaleCookie(): Promise<Locale> {
+  const val = (await cookies()).get(LOCALE_COOKIE)?.value;
+  return normalizeLocale(val);
 }
 
 export async function clearSession() {

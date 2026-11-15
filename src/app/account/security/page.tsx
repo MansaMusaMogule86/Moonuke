@@ -5,8 +5,16 @@ import { requireViewer } from "@/server/auth/request";
 import { listSessions } from "@/server/services/account";
 import { getUserPreferences } from "@/server/services/fan";
 import { mfaStatus } from "@/server/services/mfa";
+import { resolveWorkspaceIdentity } from "@/server/services/workspace";
 import { PreferencesForm } from "./PreferencesForm";
-import { MfaManage, MfaSetup, PasswordForm, RevokeOthersForm, RevokeSessionForm } from "./SecurityForms";
+import {
+  FanAliasForm,
+  MfaManage,
+  MfaSetup,
+  PasswordForm,
+  RevokeOthersForm,
+  RevokeSessionForm,
+} from "./SecurityForms";
 
 export const metadata: Metadata = { title: "Account Settings" };
 
@@ -29,6 +37,8 @@ export default async function SecurityPage({ searchParams }: { searchParams: Pro
   ]);
   const mustEnrol = viewer.role === "owner" && !mfa.enrolled;
   const isFan = viewer.role === "member" || viewer.role === "creator";
+  const fanIdentity = resolveWorkspaceIdentity(viewer, "fan");
+  const studioIdentity = resolveWorkspaceIdentity(viewer, "studio");
 
   return (
     <div className="mx-auto max-w-[1100px] px-5 pb-28 pt-8 md:px-10 md:pt-12">
@@ -43,8 +53,95 @@ export default async function SecurityPage({ searchParams }: { searchParams: Pro
         </p>
       )}
 
+      {/* Fan View Identity & Creator Studio Identity Separation */}
+      {isFan && (
+        <div className="mt-10 grid gap-6 lg:grid-cols-2">
+          <section
+            aria-labelledby="fan-alias-h"
+            className="rounded-[var(--radius-xl)] border border-line bg-ink-2 p-6 md:p-8"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 id="fan-alias-h" className="font-display text-[28px] text-ivory">
+                Fan View alias
+              </h2>
+              <Badge tone="neutral">Fan Identity</Badge>
+            </div>
+            <p className="mt-2.5 text-[14px] leading-relaxed text-stone">
+              {viewer.role === "creator"
+                ? `This alias is shown when you browse Fan View, subscribe to other creators, or send fan messages. Your public Creator Studio identity (${studioIdentity.displayName}) is never automatically exposed as your fan alias.`
+                : "This alias is shown in Fan View and in private messages with creators. Your private email address is never shown."}
+            </p>
+            <div className="mt-6">
+              <FanAliasForm
+                initialFanAlias={fanIdentity.displayName}
+                isCreator={viewer.role === "creator"}
+              />
+            </div>
+          </section>
+
+          {viewer.role === "creator" ? (
+            <section
+              aria-labelledby="creator-id-h"
+              className="rounded-[var(--radius-xl)] border border-gold/30 bg-ink-2 p-6 md:p-8"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <h2 id="creator-id-h" className="font-display text-[28px] text-ivory">
+                  Creator Studio identity
+                </h2>
+                <Badge tone="vip">Creator Studio</Badge>
+              </div>
+              <p className="mt-2.5 text-[14px] leading-relaxed text-stone">
+                In Creator Studio and on your public profile, you appear as{" "}
+                <strong className="font-medium text-ivory">{studioIdentity.displayName}</strong>.
+                You can update your chosen Diva name and public profile in Creator Studio Settings.
+              </p>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <Link
+                  href="/studio/settings"
+                  className="inline-flex h-10 items-center rounded-full border border-gold/45 bg-gold/[0.12] px-4 text-[13px] font-medium text-gold-soft hover:bg-gold/[0.2]"
+                >
+                  Open Creator Studio Settings →
+                </Link>
+                <Link
+                  href="/studio"
+                  className="inline-flex h-10 items-center rounded-full border border-line-strong px-4 text-[13px] text-ivory hover:border-gold/50"
+                >
+                  Go to Creator Studio
+                </Link>
+              </div>
+            </section>
+          ) : (
+            <section
+              id="creator-application"
+              aria-labelledby="apply-creator-h"
+              className="rounded-[var(--radius-xl)] border border-line bg-ink-2 p-6 md:p-8"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <h2 id="apply-creator-h" className="font-display text-[28px] text-ivory">
+                  Apply to become a creator
+                </h2>
+                <Badge tone="member">By invitation & review</Badge>
+              </div>
+              <p className="mt-2.5 text-[14px] leading-relaxed text-stone">
+                Creator Studio is reserved for approved DivaFans creators. If you are a creator
+                and would like to open a profile on DivaFans, apply for a creator invitation or
+                redeem a creator recruitment link.
+              </p>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <Link
+                  href="/signup"
+                  className="inline-flex h-10 items-center rounded-full border border-gold/45 bg-gold/[0.12] px-4 text-[13px] font-medium text-gold-soft hover:bg-gold/[0.2]"
+                >
+                  Apply to become a creator →
+                </Link>
+              </div>
+            </section>
+          )}
+        </div>
+      )}
+
       {/* Login & Security */}
-      <div className="mt-10 grid gap-6 lg:grid-cols-2">
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <section aria-labelledby="mfa-h" className="rounded-[var(--radius-xl)] border border-line bg-ink-2 p-6 md:p-8">
           <div className="flex flex-wrap items-center gap-3">
             <h2 id="mfa-h" className="font-display text-[28px] text-ivory">Two-step sign-in</h2>

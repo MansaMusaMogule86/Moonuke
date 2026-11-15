@@ -6,10 +6,11 @@ import { Field } from "@/components/ui/Field";
 import { idle } from "@/lib/forms";
 import { verifyChallengeAction } from "@/server/actions/security";
 
-export function VerifyForm() {
+export function VerifyForm({ next }: { next?: string }) {
   const [state, action] = useActionState(verifyChallengeAction, idle);
   return (
     <form action={action} className="space-y-8" noValidate>
+      {next && <input type="hidden" name="next" value={next} />}
       <FormMessage state={state} />
       <Field
         label="Code"

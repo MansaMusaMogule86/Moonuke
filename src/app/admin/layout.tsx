@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { ClubShell } from "@/components/layout/ClubShell";
 import { unreadCount } from "@/server/services/notifications";
-import { requireViewer } from "@/server/auth/request";
+import { getLocaleCookie, requireViewer } from "@/server/auth/request";
 import { AdminTabs } from "./AdminTabs";
 
 export const metadata: Metadata = { title: { default: "The House", template: "%s · The House" }, robots: { index: false, follow: false } };
@@ -10,8 +10,9 @@ export const dynamic = "force-dynamic";
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   // Non-owners get a 404, not a 403. Each page and action re-checks too.
   const viewer = await requireViewer("applications.review");
+  const [unread, locale] = await Promise.all([unreadCount(viewer), getLocaleCookie()]);
   return (
-    <ClubShell viewer={viewer} unread={await unreadCount(viewer)}>
+    <ClubShell viewer={viewer} unread={unread} locale={locale}>
       <div className="mx-auto max-w-[1400px] px-5 pb-28 pt-12 md:px-10 md:pt-16">
         <p className="eyebrow mb-4">The House · owner console</p>
         <AdminTabs />

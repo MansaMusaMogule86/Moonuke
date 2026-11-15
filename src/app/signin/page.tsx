@@ -4,14 +4,19 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AuthShell } from "@/components/layout/AuthShell";
 import { getViewer } from "@/server/auth/request";
+import { resolvePostLoginDestination } from "@/server/services/workspace";
 import { SignInForm } from "./SignInForm";
 
 export const metadata: Metadata = { title: "Sign in", robots: { index: false } };
 
-export default async function SignInPage({ searchParams }: { searchParams: Promise<{ reset?: string; activated?: string }> }) {
-  const { reset, activated } = await searchParams;
+export default async function SignInPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ reset?: string; activated?: string; next?: string }>;
+}) {
+  const { reset, activated, next } = await searchParams;
   const viewer = await getViewer();
-  if (viewer) redirect(viewer.mfa === "pending" ? "/signin/verify" : viewer.status === "active" ? "/discover" : "/pending");
+  if (viewer) redirect(await resolvePostLoginDestination(viewer, next));
   return (
     <AuthShell
       eyebrow="Members & creators"
@@ -37,7 +42,7 @@ export default async function SignInPage({ searchParams }: { searchParams: Promi
           Your password was changed and every session was signed out. Sign in with the new password.
         </p>
       )}
-      <SignInForm />
+      <SignInForm next={next} />
       <p className="mt-8 text-[14px] text-stone">
         <Link href="/forgot" className="text-gold underline decoration-gold/40 underline-offset-4 hover:decoration-gold">Forgot your password?</Link>
       </p>

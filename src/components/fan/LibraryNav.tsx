@@ -5,9 +5,9 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/cn";
 
 const TABS = [
-  { href: "/library", label: "Overview" },
-  { href: "/library/vault", label: "Vault" },
-  { href: "/library/memberships", label: "Memberships" },
+  { href: "/library", label: "My Access" },
+  { href: "/library/vault", label: "Unlocked posts" },
+  { href: "/library/memberships", label: "Subscriptions" },
   { href: "/library/purchases", label: "Purchases" },
 ] as const;
 

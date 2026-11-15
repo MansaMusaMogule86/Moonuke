@@ -5,13 +5,13 @@ import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { z } from "zod";
 import type { FormState } from "@/lib/forms";
-import { getViewer, requestMeta, requireViewer } from "@/server/auth/request";
-import { isVerifiedPlatformOwnerUserId } from "@/server/auth/permissions";
+import { getViewer, requestMeta, requireViewer, setWorkspaceCookie } from "@/server/auth/request";
 import { deliverPending } from "@/server/email/outbox";
 import { isAppError } from "@/server/errors";
 import { changePassword, revokeOtherSessions, revokeOwnSession } from "@/server/services/account";
 import { confirmEnrollment, disableMfa, regenerateRecoveryCodes, startEnrollment, verifyChallenge } from "@/server/services/mfa";
 import { hit, hitIp, LIMITS } from "@/server/services/rateLimit";
+import { resolvePostLoginDestination } from "@/server/services/workspace";
 import { fieldErrors, password, uuid } from "@/server/validation";
 
 const str = (fd: FormData, k: string) => (typeof fd.get(k) === "string" ? (fd.get(k) as string) : "");
@@ -25,8 +25,9 @@ const code = z.string().trim().min(6, "Enter the code.").max(20);
 /** Second-factor challenge after password sign-in. Brute force is capped per account and per IP. */
 export async function verifyChallengeAction(_prev: FormState, fd: FormData): Promise<FormState> {
   const viewer = await getViewer();
+  const next = str(fd, "next") || null;
   if (!viewer) redirect("/signin");
-  if (viewer.mfa !== "pending") redirect("/discover");
+  if (viewer.mfa !== "pending") redirect(await resolvePostLoginDestination(viewer, next));
   const parsed = code.safeParse(str(fd, "code"));
   if (!parsed.success) return { status: "error", message: "Enter the 6-digit code or a recovery code.", fields: { code: "Required." } };
   const meta = await requestMeta();
@@ -34,19 +35,12 @@ export async function verifyChallengeAction(_prev: FormState, fd: FormData): Pro
     await hit(`mfa:user:${viewer.id}`, LIMITS.mfaChallenge);
     await hitIp("mfa", meta.ipHash, LIMITS.mfaChallengeIp);
     await verifyChallenge(viewer, parsed.data, meta);
+    await setWorkspaceCookie(viewer.role === "creator" ? "studio" : "fan");
     flush();
   } catch (e) {
     return fail(e);
   }
-  redirect(
-    viewer.status === "active"
-      ? viewer.role === "owner"
-        ? isVerifiedPlatformOwnerUserId(viewer.id)
-          ? "/owner"
-          : "/admin"
-        : "/discover"
-      : "/pending",
-  );
+  redirect(await resolvePostLoginDestination({ ...viewer, mfa: "verified", aal: 2 }, next));
 }
 
 export async function startMfaAction(_prev: FormState): Promise<FormState> {

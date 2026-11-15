@@ -81,12 +81,19 @@ const matrix: Record<Role, readonly Permission[]> = {
 };
 
 export type MfaState = "none" | "pending" | "verified";
+export type WorkspaceMode = "fan" | "studio";
 
 export type Viewer = {
   id: string;
   role: Role;
   status: Status;
   alias: string;
+  /** Separate fan-view alias (never exposes creator Diva name or private email). */
+  fanAlias?: string;
+  /** Public creator identity ("Diva [chosen name]") when role === "creator". */
+  creatorDisplayName?: string | null;
+  /** Persisted workspace preference ("studio" for creators by default, "fan" for members). */
+  preferredWorkspace?: WorkspaceMode;
   email: string;
   /** Authenticator assurance level of THIS session: 2 once a second factor was verified. */
   aal: 1 | 2;

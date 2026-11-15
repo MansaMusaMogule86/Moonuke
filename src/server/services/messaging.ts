@@ -91,17 +91,70 @@ const toSummary = (r: ConvRow, me: string): ConversationSummary => ({
   canSend: r.can_send,
 });
 
-export async function myConversations(viewer: Viewer): Promise<ConversationSummary[]> {
+export async function myConversations(
+  viewer: Viewer,
+  opts: { side?: "fan" | "creator" } = {},
+): Promise<ConversationSummary[]> {
   assertParticipantRole(viewer);
+  if (opts.side === "creator" && viewer.role !== "creator") {
+    throw new AppError("forbidden", "Only creators can access the Creator Studio inbox.");
+  }
+  const whereClause =
+    opts.side === "fan"
+      ? "where p.my_side = 'fan'"
+      : opts.side === "creator"
+        ? "where p.my_side = 'creator'"
+        : "";
   return asViewer(viewer, async (q) =>
-    (await q.query<ConvRow>(`${CONV_SELECT} order by c.last_message_at desc nulls last, c.created_at desc limit 200`)).map((r) => toSummary(r, viewer.id)),
+    (
+      await q.query<ConvRow>(
+        `${CONV_SELECT} ${whereClause} order by c.last_message_at desc nulls last, c.created_at desc limit 200`,
+      )
+    ).map((r) => toSummary(r, viewer.id)),
   );
 }
 
-export async function unreadMessagesCount(viewer: Viewer): Promise<number> {
-  if (!(viewer.role === "member" || viewer.role === "creator") || viewer.status !== "active") return 0;
+export async function myFanConversations(viewer: Viewer): Promise<ConversationSummary[]> {
+  return myConversations(viewer, { side: "fan" });
+}
+
+export async function myCreatorConversations(viewer: Viewer): Promise<ConversationSummary[]> {
+  if (viewer.role !== "creator" || viewer.status !== "active") {
+    throw new AppError("forbidden", "Only creators can access the Creator Studio inbox.");
+  }
+  return myConversations(viewer, { side: "creator" });
+}
+
+export async function unreadMessagesByWorkspace(
+  viewer: Viewer,
+): Promise<{ fan: number; creator: number; total: number }> {
+  if (!(viewer.role === "member" || viewer.role === "creator") || viewer.status !== "active") {
+    return { fan: 0, creator: 0, total: 0 };
+  }
   const convs = await myConversations(viewer);
-  return convs.filter((c) => c.unread).length;
+  const fan = convs.filter((c) => c.side === "fan" && c.unread).length;
+  const creator = viewer.role === "creator" ? convs.filter((c) => c.side === "creator" && c.unread).length : 0;
+  return { fan, creator, total: fan + creator };
+}
+
+export async function unreadMessagesCount(
+  viewer: Viewer,
+  opts: { side?: "fan" | "creator" } = {},
+): Promise<number> {
+  if (!(viewer.role === "member" || viewer.role === "creator") || viewer.status !== "active") return 0;
+  if (opts.side === "creator" && viewer.role !== "creator") return 0;
+  const counts = await unreadMessagesByWorkspace(viewer);
+  if (opts.side === "fan") return counts.fan;
+  if (opts.side === "creator") return counts.creator;
+  return counts.total;
+}
+
+export async function unreadFanMessagesCount(viewer: Viewer): Promise<number> {
+  return unreadMessagesCount(viewer, { side: "fan" });
+}
+
+export async function unreadCreatorMessagesCount(viewer: Viewer): Promise<number> {
+  return unreadMessagesCount(viewer, { side: "creator" });
 }
 
 export async function getConversation(viewer: Viewer, id: string): Promise<ConversationSummary | null> {

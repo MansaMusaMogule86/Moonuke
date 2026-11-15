@@ -10,7 +10,7 @@ import { requireViewer } from "@/server/auth/request";
 import { myBlasts } from "@/server/services/blasts";
 import { getOnboarding } from "@/server/services/creatorOnboarding";
 import { myEarnings } from "@/server/services/earnings";
-import { myConversations } from "@/server/services/messaging";
+import { myCreatorConversations } from "@/server/services/messaging";
 import { myAnalytics, myPosts } from "@/server/services/studio";
 
 export const metadata: Metadata = { title: "Overview · Studio" };
@@ -47,7 +47,7 @@ export default async function StudioOverviewPage() {
     myBlasts(viewer),
     myEarnings(viewer),
     getOnboarding(viewer),
-    myConversations(viewer),
+    myCreatorConversations(viewer),
   ]);
   const unread = conversations.filter((c) => c.unread).length;
   const verified = onboarding.verification.status === "verified";
@@ -202,12 +202,12 @@ export default async function StudioOverviewPage() {
           </section>
 
           <section aria-labelledby="msg-h" className="rounded-[var(--radius-xl)] border border-line bg-ink-2 p-6">
-            <h2 id="msg-h" className="text-[18px] font-medium text-ivory">Messages</h2>
+            <h2 id="msg-h" className="text-[18px] font-medium text-ivory">Inbox</h2>
             <p className="mt-3 text-[14px] text-stone">
-              {unread > 0 ? <><span className="text-ivory">{unread}</span> unread conversation{unread === 1 ? "" : "s"}.</> : "You're all caught up."}
+              {unread > 0 ? <><span className="text-ivory">{unread}</span> unread member conversation{unread === 1 ? "" : "s"}.</> : "You're all caught up."}
             </p>
             <div className="mt-4 flex flex-wrap items-center gap-3">
-              <Button href="/messages" variant="outline" size="sm">Open messages</Button>
+              <Button href="/studio/messaging" variant="outline" size="sm">Open Studio Inbox</Button>
               {scheduled > 0 && <span className="text-[12px] text-ash">{scheduled} scheduled</span>}
             </div>
           </section>

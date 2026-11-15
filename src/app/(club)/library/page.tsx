@@ -145,7 +145,7 @@ export default async function MyAccessPage({ searchParams }: { searchParams?: SP
               </p>
             </div>
             <Link href="/library/vault" className="text-[13px] text-gold-soft underline underline-offset-4">
-              Full vault →
+              All unlocked posts →
             </Link>
           </div>
           {vault.items.length === 0 ? (

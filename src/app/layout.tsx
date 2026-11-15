@@ -4,6 +4,8 @@ import { Bodoni_Moda, Jost } from "next/font/google";
 import { Providers } from "@/components/Providers";
 import { brand, pageTitle } from "@/config/brand";
 import { socialOpenGraph, socialTwitter } from "@/config/seo";
+import { localeDirection } from "@/lib/i18n";
+import { getLocaleCookie } from "@/server/auth/request";
 import { env, isIndexable } from "@/server/env";
 import "./globals.css";
 
@@ -50,13 +52,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // Reading request headers makes every page dynamic, which per-request CSP
   // nonces require. Next.js applies the nonce from the CSP header to its scripts.
   await headers();
+  const locale = await getLocaleCookie();
   return (
     // suppressHydrationWarning: browser extensions and inline pre-hydration scripts
     // add attributes to <html> and <body> (e.g. Grammarly's data-gr-* flags,
     // data-trendtrack-*) that React would otherwise flag as a hydration mismatch.
     // It applies one level deep, so it is needed on both elements; React keeps the
     // DOM value instead of re-rendering them.
-    <html lang="en" className={`${bodoni.variable} ${jost.variable}`} suppressHydrationWarning>
+    <html lang={locale} dir={localeDirection(locale)} className={`${bodoni.variable} ${jost.variable}`} suppressHydrationWarning>
       <body suppressHydrationWarning>
         <a
           href="#main"

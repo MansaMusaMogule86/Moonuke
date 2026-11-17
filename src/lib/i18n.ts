@@ -26,6 +26,9 @@ export type WorkspaceCopy = {
   ownerRoleBadge: string;
   signOut: string;
   notifications: string;
+  notificationsTitle: string;
+  notificationsLede: string;
+  notificationsFilters: string;
   // Fan View Navigation (5 primary destinations)
   fanNav: {
     home: string;
@@ -70,6 +73,9 @@ const DICTIONARY: Record<Locale, WorkspaceCopy> = {
     ownerRoleBadge: "OWNER",
     signOut: "Sign out",
     notifications: "Notifications",
+    notificationsTitle: "Notifications",
+    notificationsLede: "Posts, messages, tips, payouts, and security updates.",
+    notificationsFilters: "Filters",
     fanNav: {
       home: "Home",
       explore: "Explore",
@@ -109,6 +115,9 @@ const DICTIONARY: Record<Locale, WorkspaceCopy> = {
     ownerRoleBadge: "PROPRIÉTAIRE",
     signOut: "Déconnexion",
     notifications: "Notifications",
+    notificationsTitle: "Notifications",
+    notificationsLede: "Publications, messages, pourboires, paiements et sécurité.",
+    notificationsFilters: "Filtres",
     fanNav: {
       home: "Accueil",
       explore: "Explorer",
@@ -148,6 +157,9 @@ const DICTIONARY: Record<Locale, WorkspaceCopy> = {
     ownerRoleBadge: "المالك",
     signOut: "تسجيل الخروج",
     notifications: "الإشعارات",
+    notificationsTitle: "الإشعارات",
+    notificationsLede: "المنشورات والرسائل والإكراميات والمدفوعات وتنبيهات الأمان.",
+    notificationsFilters: "عوامل التصفية",
     fanNav: {
       home: "الرئيسية",
       explore: "استكشاف",

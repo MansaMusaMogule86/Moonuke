@@ -145,7 +145,7 @@ export default async function SecurityPage({ searchParams }: { searchParams: Pro
         <section aria-labelledby="mfa-h" className="rounded-[var(--radius-xl)] border border-line bg-ink-2 p-6 md:p-8">
           <div className="flex flex-wrap items-center gap-3">
             <h2 id="mfa-h" className="font-display text-[28px] text-ivory">Two-step sign-in</h2>
-            <Badge tone={mfa.enrolled ? "vip" : "neutral"}>{mfa.enrolled ? "On" : "Off"}</Badge>
+            <Badge tone={mfa.enrolled ? "vip" : "neutral"}>{mfa.enrolled ? "Enabled" : "Set up"}</Badge>
             {mfa.mandatory && <Badge tone="member">Required for owner</Badge>}
           </div>
           <p className="mt-2.5 text-[14px] leading-relaxed text-stone">
@@ -203,20 +203,12 @@ export default async function SecurityPage({ searchParams }: { searchParams: Pro
             <section aria-labelledby="support-h" className="rounded-[var(--radius-xl)] border border-line bg-ink-2 p-6 md:p-8">
               <h2 id="support-h" className="font-display text-[28px] text-ivory">Help & support</h2>
               <p className="mt-2 text-[14px] leading-relaxed text-stone">
-                Need help with an unlock, subscription, or safety report? Review our policies or manage blocked accounts.
+                Need help with an unlock, subscription, or safety report? Manage blocked accounts and reports here.
+                Community rules, terms, and the privacy policy are provided by the house with your invitation.
               </p>
               <div className="mt-5 flex flex-wrap gap-3 text-[13px]">
                 <Link href="/account/privacy" className="rounded-full border border-line-strong px-4 py-2 text-ivory hover:border-gold/50">
                   Privacy & blocked accounts
-                </Link>
-                <Link href="/rules" className="rounded-full border border-line px-4 py-2 text-stone hover:text-ivory">
-                  Community rules
-                </Link>
-                <Link href="/terms" className="rounded-full border border-line px-4 py-2 text-stone hover:text-ivory">
-                  Terms of service
-                </Link>
-                <Link href="/privacy" className="rounded-full border border-line px-4 py-2 text-stone hover:text-ivory">
-                  Privacy policy
                 </Link>
               </div>
             </section>

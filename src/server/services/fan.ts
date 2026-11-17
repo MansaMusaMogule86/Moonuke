@@ -585,6 +585,13 @@ export type UserPreferences = {
   notifyNewPosts: boolean;
   notifyMessages: boolean;
   notifyBilling: boolean;
+  notifyTips: boolean;
+  notifySubscriptions: boolean;
+  notifyReferrals: boolean;
+  notifyPayouts: boolean;
+  notifySecurity: boolean;
+  emailDigest: "off" | "daily" | "weekly";
+  timezone: string;
 };
 
 export async function getUserPreferences(viewer: Viewer): Promise<UserPreferences> {
@@ -593,8 +600,16 @@ export async function getUserPreferences(viewer: Viewer): Promise<UserPreference
       notify_new_posts: boolean;
       notify_messages: boolean;
       notify_billing: boolean;
+      notify_tips: boolean;
+      notify_subscriptions: boolean;
+      notify_referrals: boolean;
+      notify_payouts: boolean;
+      notify_security: boolean;
+      email_digest: "off" | "daily" | "weekly";
+      timezone: string;
     }>(
-      `select notify_new_posts, notify_messages, notify_billing
+      `select notify_new_posts, notify_messages, notify_billing, notify_tips, notify_subscriptions,
+              notify_referrals, notify_payouts, notify_security, email_digest, timezone
          from app.user_preferences
         where user_id = $1`,
       [viewer.id],
@@ -603,21 +618,50 @@ export async function getUserPreferences(viewer: Viewer): Promise<UserPreference
       notifyNewPosts: r?.notify_new_posts ?? true,
       notifyMessages: r?.notify_messages ?? true,
       notifyBilling: r?.notify_billing ?? true,
+      notifyTips: r?.notify_tips ?? true,
+      notifySubscriptions: r?.notify_subscriptions ?? true,
+      notifyReferrals: r?.notify_referrals ?? true,
+      notifyPayouts: r?.notify_payouts ?? true,
+      notifySecurity: r?.notify_security ?? true,
+      emailDigest: r?.email_digest ?? "off",
+      timezone: r?.timezone ?? "UTC",
     };
   });
 }
 
 export async function saveUserPreferences(viewer: Viewer, prefs: UserPreferences): Promise<void> {
+  const digest = prefs.emailDigest === "daily" || prefs.emailDigest === "weekly" ? prefs.emailDigest : "off";
+  const tz = prefs.timezone.trim().slice(0, 60) || "UTC";
   await asViewer(viewer, async (q) => {
     await q.query(
-      `insert into app.user_preferences (user_id, notify_new_posts, notify_messages, notify_billing, updated_at)
-       values ($1, $2, $3, $4, now())
+      `insert into app.user_preferences (user_id, notify_new_posts, notify_messages, notify_billing, notify_tips,
+              notify_subscriptions, notify_referrals, notify_payouts, notify_security, email_digest, timezone, updated_at)
+       values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, now())
        on conflict (user_id) do update
           set notify_new_posts = excluded.notify_new_posts,
               notify_messages = excluded.notify_messages,
               notify_billing = excluded.notify_billing,
+              notify_tips = excluded.notify_tips,
+              notify_subscriptions = excluded.notify_subscriptions,
+              notify_referrals = excluded.notify_referrals,
+              notify_payouts = excluded.notify_payouts,
+              notify_security = excluded.notify_security,
+              email_digest = excluded.email_digest,
+              timezone = excluded.timezone,
               updated_at = now()`,
-      [viewer.id, prefs.notifyNewPosts, prefs.notifyMessages, prefs.notifyBilling],
+      [
+        viewer.id,
+        prefs.notifyNewPosts,
+        prefs.notifyMessages,
+        prefs.notifyBilling,
+        prefs.notifyTips,
+        prefs.notifySubscriptions,
+        prefs.notifyReferrals,
+        prefs.notifyPayouts,
+        prefs.notifySecurity,
+        digest,
+        tz,
+      ],
     );
   });
 }

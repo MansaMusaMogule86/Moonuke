@@ -297,17 +297,53 @@ describe("Fan Dashboard, Paid Post Unlocks, Paid Message Unlocks & My Access", (
 
     // Account notification preferences persist per user under RLS
     const defaultPrefs = await getUserPreferences(velvet);
-    expect(defaultPrefs).toEqual({ notifyNewPosts: true, notifyMessages: true, notifyBilling: true });
-    await saveUserPreferences(velvet, { notifyNewPosts: false, notifyMessages: true, notifyBilling: false });
+    expect(defaultPrefs).toEqual({
+      notifyNewPosts: true,
+      notifyMessages: true,
+      notifyBilling: true,
+      notifyTips: true,
+      notifySubscriptions: true,
+      notifyReferrals: true,
+      notifyPayouts: true,
+      notifySecurity: true,
+      emailDigest: "off",
+      timezone: "UTC",
+    });
+    await saveUserPreferences(velvet, {
+      notifyNewPosts: false,
+      notifyMessages: true,
+      notifyBilling: false,
+      notifyTips: false,
+      notifySubscriptions: true,
+      notifyReferrals: true,
+      notifyPayouts: true,
+      notifySecurity: true,
+      emailDigest: "weekly",
+      timezone: "Europe/Paris",
+    });
     expect(await getUserPreferences(velvet)).toEqual({
       notifyNewPosts: false,
       notifyMessages: true,
       notifyBilling: false,
+      notifyTips: false,
+      notifySubscriptions: true,
+      notifyReferrals: true,
+      notifyPayouts: true,
+      notifySecurity: true,
+      emailDigest: "weekly",
+      timezone: "Europe/Paris",
     });
     expect(await getUserPreferences(nocturne)).toEqual({
       notifyNewPosts: true,
       notifyMessages: true,
       notifyBilling: true,
+      notifyTips: true,
+      notifySubscriptions: true,
+      notifyReferrals: true,
+      notifyPayouts: true,
+      notifySecurity: true,
+      emailDigest: "off",
+      timezone: "UTC",
     });
   });
 });

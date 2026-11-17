@@ -1,5 +1,6 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { deliverPending } from "@/server/email/outbox";
@@ -9,6 +10,8 @@ import { clearSession, requestMeta, setSessionCookie, setWorkspaceCookie } from 
 import { bucketKey } from "@/server/auth/crypto";
 import { isAppError } from "@/server/errors";
 import { activateProvisionedAccount, redeemInvitation, signIn } from "@/server/services/accounts";
+import { RECRUIT_COOKIE } from "@/server/auth/request";
+import { captureCreatorReferralAtSignup, resolveRecruitmentCode } from "@/server/services/creatorReferralsAndWithdrawals";
 import { registerFanViaReferral } from "@/server/services/creatorReferral";
 import { confirmEmail } from "@/server/services/emailVerification";
 import { resolvePostLoginDestination } from "@/server/services/workspace";
@@ -43,7 +46,7 @@ export async function signInAction(_prev: FormState, fd: FormData): Promise<Form
 
 export async function applyAction(token: string, _prev: FormState, fd: FormData): Promise<FormState> {
   // Echo consent choices so a failed submit doesn't silently untick them (React resets the form). Never echo the password.
-  const values = { alias: str(fd, "alias"), email: str(fd, "email"), adult: str(fd, "adult"), terms: str(fd, "terms") };
+  const values = { alias: str(fd, "alias"), email: str(fd, "email"), adult: str(fd, "adult"), terms: str(fd, "terms"), recruitCode: str(fd, "recruitCode") };
   const schema = str(fd, "role") === "creator" ? creatorApplySchema : applySchema;
   const parsed = schema.safeParse({
     alias: str(fd, "alias"),
@@ -54,12 +57,39 @@ export async function applyAction(token: string, _prev: FormState, fd: FormData)
   });
   if (!parsed.success) return { status: "error", message: "Please check the highlighted fields.", fields: fieldErrors(parsed.error), values };
 
+  const isCreatorApply = str(fd, "role") === "creator";
+  const rawCode = (str(fd, "recruitCode") || (await cookies()).get(RECRUIT_COOKIE)?.value || "").trim().toLowerCase();
+  const recruitCode = /^[a-z0-9_-]{4,32}$/.test(rawCode) ? rawCode : null;
+  // Pre-validate the code before creating the account: an unknown or
+  // inactive code is a field error, and applying never depends on it.
+  if (isCreatorApply && recruitCode && !(await resolveRecruitmentCode(recruitCode))) {
+    return {
+      status: "error",
+      message: "That creator referral code is invalid or no longer active. Remove it or fix it to continue.",
+      fields: { recruitCode: "That creator referral code is invalid or no longer active." },
+      values,
+    };
+  }
+
   const meta = await requestMeta();
   try {
     await hitIp("apply", meta.ipHash, LIMITS.applySubmit);
     await hit(`apply:token:${bucketKey("invite", token)}`, LIMITS.applySubmit);
     const r = await redeemInvitation(token, parsed.data, meta);
     await setSessionCookie(r.sessionToken);
+    // Attribution only: records who referred this creator. It grants no
+    // role, no privileges, and no money; approval still decides everything.
+    if (isCreatorApply && recruitCode) {
+      try {
+        await captureCreatorReferralAtSignup({ referredUserId: r.userId, recruitmentCode: recruitCode });
+        (await cookies()).delete(RECRUIT_COOKIE);
+      } catch (e) {
+        // The account is already created; a referral hiccup must not block
+        // it. The service guards self-referral, cycles, and duplicates, and
+        // the code stays in the form for a correction on review.
+        if (!isAppError(e)) throw e;
+      }
+    }
   } catch (e) {
     if (isAppError(e)) {
       return { status: "error", message: e.message, fields: e.field ? { [e.field]: e.message } : undefined, values };

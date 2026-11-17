@@ -15,6 +15,9 @@ import { resolveSession, revokeSession, SESSION_TTL_DAYS } from "@/server/servic
 export const SESSION_COOKIE = isProd() ? `__Host-${brand.cookiePrefix}_session` : `${brand.cookiePrefix}_session`;
 export const WORKSPACE_COOKIE = `${brand.cookiePrefix}_workspace`;
 export const LOCALE_COOKIE = `${brand.cookiePrefix}_locale`;
+/** Remembers a validated creator recruitment code until the creator applies (90 days, HttpOnly, Lax). */
+export const RECRUIT_COOKIE = `${brand.cookiePrefix}_recruit`;
+export const RECRUIT_COOKIE_MAX_AGE = 90 * 24 * 60 * 60;
 
 export async function setSessionCookie(token: string) {
   (await cookies()).set(SESSION_COOKIE, token, {

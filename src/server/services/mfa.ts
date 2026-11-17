@@ -145,11 +145,24 @@ async function requireCurrentCode(q: Q, viewer: Viewer, code: string) {
   await q.query(`update app.mfa_factors set last_used_step = $2 where user_id = $1`, [viewer.id, step]);
 }
 
-/** Anyone but the owner may turn MFA off with a current code; the owner's is mandatory. */
+/** Anyone but the owner may turn MFA off with recent reauthentication + a current code; the owner's is mandatory. Disabling never changes role or creator status. */
 export async function disableMfa(viewer: Viewer, code: string): Promise<void> {
   if (viewer.role === "owner") throw new AppError("forbidden", "Two-step sign-in is mandatory for the owner account.");
   if (viewer.aal !== 2) throw new AppError("forbidden", "Verify two-step sign-in first.");
+  if (!viewer.sessionId) throw new AppError("forbidden", "Verify two-step sign-in again first.");
   await system(async (q) => {
+    // Recent reauthentication: the second factor must have been verified in
+    // the last 30 minutes. Current-step check so boundary tests stay exact.
+    const aging = await q.one<{ verified: number; now: number }>(
+      `select floor(extract(epoch from mfa_verified_at))::int as verified, floor(extract(epoch from now()))::int as now
+         from app.sessions where public_id = $1 and user_id = $2 and revoked_at is null`,
+      [viewer.sessionId, viewer.id],
+    );
+    const verifiedAt = aging?.verified ?? 0;
+    const nowSec = aging?.now ?? Math.floor(Date.now() / 1000);
+    if (!verifiedAt || nowSec - verifiedAt > 30 * 60) {
+      throw new AppError("forbidden", "Verify two-step sign-in again first.");
+    }
     await requireCurrentCode(q, viewer, code);
     await q.query(`delete from app.mfa_recovery_codes where user_id = $1`, [viewer.id]);
     await q.query(`delete from app.mfa_factors where user_id = $1`, [viewer.id]);

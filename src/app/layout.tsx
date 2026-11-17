@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { headers } from "next/headers";
-import { Bodoni_Moda, Jost } from "next/font/google";
+import localFont from "next/font/local";
 import { Providers } from "@/components/Providers";
 import { brand, pageTitle } from "@/config/brand";
 import { socialOpenGraph, socialTwitter } from "@/config/seo";
@@ -9,17 +9,26 @@ import { getLocaleCookie } from "@/server/auth/request";
 import { env, isIndexable } from "@/server/env";
 import "./globals.css";
 
-const bodoni = Bodoni_Moda({
-  subsets: ["latin"],
-  style: ["normal", "italic"],
-  weight: ["400", "500"],
+// Brand fonts self-hosted (OFL: Bodoni Moda + Jost, latin subsets) so the
+// production build never downloads at build time. Same families, weights,
+// and CSS variables as the previous next/font/google setup.
+const bodoni = localFont({
+  src: [
+    { path: "./fonts/bodoni-normal-400-latin.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/bodoni-normal-500-latin.woff2", weight: "500", style: "normal" },
+    { path: "./fonts/bodoni-italic-400-latin.woff2", weight: "400", style: "italic" },
+    { path: "./fonts/bodoni-italic-500-latin.woff2", weight: "500", style: "italic" },
+  ],
   variable: "--font-bodoni",
   display: "swap",
 });
 
-const jost = Jost({
-  subsets: ["latin"],
-  weight: ["300", "400", "500"],
+const jost = localFont({
+  src: [
+    { path: "./fonts/jost-normal-300-latin.woff2", weight: "300", style: "normal" },
+    { path: "./fonts/jost-normal-400-latin.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/jost-normal-500-latin.woff2", weight: "500", style: "normal" },
+  ],
   variable: "--font-jost",
   display: "swap",
 });

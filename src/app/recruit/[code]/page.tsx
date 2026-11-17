@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { resolveRecruitmentCode } from "@/server/services/creatorReferralsAndWithdrawals";
+import { RememberRecruitment } from "./RememberRecruitment";
 
 export const metadata: Metadata = {
   title: "Creator Recruitment · DivaFans",
@@ -18,6 +19,7 @@ export default async function CreatorRecruitmentLandingPage({
 
   return (
     <main className="mx-auto flex min-h-screen max-w-[680px] flex-col justify-center px-6 py-16">
+      <RememberRecruitment code={referrer.recruitmentCode} />
       <div className="rounded-[var(--radius-xl)] border border-line bg-ink-2 p-8 md:p-10">
         <p className="eyebrow text-gold-soft">Direct Creator Recruitment</p>
         <h1 className="mt-2 font-display text-[34px] leading-tight text-ivory">
@@ -51,12 +53,17 @@ export default async function CreatorRecruitmentLandingPage({
           </ul>
         </div>
 
+        <p className="mt-4 text-[13px] leading-relaxed text-ash">
+          There is no open application form: the house sends your personal invitation link after{" "}
+          {referrer.displayName} confirms this referral. This referral has been remembered on this device, so it will be
+          attached automatically when you apply — you can also enter the code by hand on the application form.
+        </p>
         <div className="mt-7 flex flex-wrap gap-3">
           <Link
-            href={`/apply?recruit=${encodeURIComponent(referrer.recruitmentCode)}`}
+            href="/signin"
             className="inline-flex h-11 items-center justify-center rounded-full bg-gold px-6 text-[13px] font-medium text-ink transition hover:bg-gold-soft"
           >
-            Apply as a Creator with {referrer.displayName}&apos;s Referral
+            I already have an account — sign in
           </Link>
           <Link
             href={`/c/${referrer.handle}`}

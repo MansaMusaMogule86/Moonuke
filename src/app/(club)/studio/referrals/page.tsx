@@ -12,7 +12,9 @@ import { formatMoney } from "@/server/payments";
 import { getOnboarding } from "@/server/services/creatorOnboarding";
 import { myReferralCount } from "@/server/services/creatorReferral";
 import { myDetailedStudioEarnings } from "@/server/services/earnings";
+import { myReferralAttribution } from "@/server/services/creatorReferralsAndWithdrawals";
 import { myReferrals } from "@/server/services/referrals";
+import { AttributionForm } from "./AttributionForm";
 
 export const metadata: Metadata = { title: "Referrals & Fan Invites · Creator Studio" };
 
@@ -23,11 +25,12 @@ export default async function StudioReferralsPage() {
   const viewer = await requireViewer("club.discover");
   if (viewer.role !== "creator") notFound();
 
-  const [ob, fanJoinedCount, detailed, houseReferrals] = await Promise.all([
+  const [ob, fanJoinedCount, detailed, houseReferrals, attribution] = await Promise.all([
     getOnboarding(viewer),
     myReferralCount(viewer),
     myDetailedStudioEarnings(viewer),
     myReferrals(viewer),
+    myReferralAttribution(viewer),
   ]);
 
   const handle = ob.profile?.handle;
@@ -47,6 +50,37 @@ export default async function StudioReferralsPage() {
         title="Referrals"
         lede="Separate tools to invite fans to your profile and to refer fellow creators for direct single-level referral rewards."
       />
+
+      {/* 0. Your own referral attribution (when a creator referred you) */}
+      {attribution && (
+        <section
+          aria-labelledby="my-referral-h"
+          className="mt-8 rounded-[var(--radius-xl)] border border-line bg-ink-2 p-6 md:p-8"
+        >
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className="eyebrow text-gold">Referred by a creator</p>
+              <h2 id="my-referral-h" className="mt-1 font-display text-[28px] text-ivory">
+                Your referral
+              </h2>
+            </div>
+            <Badge tone={attribution.status === "confirmed" ? "vip" : "neutral"}>{attribution.status}</Badge>
+          </div>
+          <p className="mt-2 max-w-2xl text-[14px] leading-relaxed text-stone">
+            Referred by <strong className="text-ivory">{attribution.referrerDisplayName}</strong>
+            {attribution.referrerHandle ? ` (@${attribution.referrerHandle})` : ""}. Attribution is direct and
+            single-level only; confirming changes nothing about your Studio access or approval.
+          </p>
+          {attribution.status !== "confirmed" ? (
+            <AttributionForm />
+          ) : (
+            <p className="mt-4 text-[13px] text-ash">
+              Confirmed{attribution.agreementAcceptedAt ? ` on ${new Date(attribution.agreementAcceptedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}` : ""}.
+              Commissions on your content accrue to your referrer only from confirmed attribution.
+            </p>
+          )}
+        </section>
+      )}
 
       {/* 1. Invite Fans */}
       <section

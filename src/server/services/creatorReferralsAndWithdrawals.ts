@@ -220,6 +220,10 @@ export async function captureCreatorReferralAtSignup(input: {
   }
 
   return system(async (q) => {
+    const role = await q.one<{ role: string }>(`select role::text as role from app.users where id = $1`, [input.referredUserId]);
+    if (!role || role.role !== "creator") {
+      throw new AppError("validation", "Referral attribution is for creator accounts only.");
+    }
     const existing = await q.one<{
       referred_creator_id: string;
       referrer_creator_id: string;
@@ -357,6 +361,52 @@ export async function confirmCreatorReferralOnboarding(
       agreementAcceptedAt: row.agreement_accepted_at?.toISOString() ?? null,
       capturedAt: row.captured_at.toISOString(),
       confirmedAt: row.confirmed_at?.toISOString() ?? null,
+    };
+  });
+}
+
+export type MyReferralAttribution = {
+  referrerCreatorId: string;
+  referrerHandle: string | null;
+  referrerDisplayName: string;
+  recruitmentCode: string;
+  status: "captured" | "confirmed" | "revoked";
+  agreementAcceptedAt: string | null;
+  capturedAt: string;
+  confirmedAt: string | null;
+};
+
+/** The signed-in creator's own referral attribution, if any. Never another creator's. */
+export async function myReferralAttribution(viewer: Viewer): Promise<MyReferralAttribution | null> {
+  assertActiveCreator(viewer);
+  return asViewer(viewer, async (q) => {
+    const row = await q.one<{
+      referrer_creator_id: string;
+      handle: string | null;
+      display_name: string | null;
+      recruitment_code: string;
+      status: "captured" | "confirmed" | "revoked";
+      agreement_accepted_at: Date | null;
+      captured_at: Date;
+      confirmed_at: Date | null;
+    }>(
+      `select r.referrer_creator_id, c.handle::text as handle, c.display_name,
+              r.recruitment_code, r.status, r.agreement_accepted_at, r.captured_at, r.confirmed_at
+         from app.creator_recruitments r
+         left join app.creators c on c.user_id = r.referrer_creator_id
+        where r.referred_creator_id = $1`,
+      [viewer.id],
+    );
+    if (!row) return null;
+    return {
+      referrerCreatorId: row.referrer_creator_id,
+      referrerHandle: row.handle,
+      referrerDisplayName: formatCreatorPublicName(row.display_name),
+      recruitmentCode: row.recruitment_code,
+      status: row.status,
+      agreementAcceptedAt: row.agreement_accepted_at ? new Date(row.agreement_accepted_at).toISOString() : null,
+      capturedAt: new Date(row.captured_at).toISOString(),
+      confirmedAt: row.confirmed_at ? new Date(row.confirmed_at).toISOString() : null,
     };
   });
 }

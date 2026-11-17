@@ -12,7 +12,7 @@ import {
 import { idle } from "@/lib/forms";
 import { applyAction } from "@/server/actions/auth";
 
-export function ApplyForm({ token, emailLocked, role }: { token: string; emailLocked: boolean; role: "member" | "creator" }) {
+export function ApplyForm({ token, emailLocked, role, recruitCode }: { token: string; emailLocked: boolean; role: "member" | "creator"; recruitCode?: string | null }) {
   const [state, action] = useActionState(applyAction.bind(null, token), idle);
   const initialCreatorName = normalizeCreatorChosenName(state.values?.alias ?? "");
   const [chosenName, setChosenName] = useState(initialCreatorName);
@@ -30,6 +30,18 @@ export function ApplyForm({ token, emailLocked, role }: { token: string; emailLo
     <form action={action} className="space-y-8" noValidate>
       <FormMessage state={state} />
       <input type="hidden" name="role" value={role} />
+      {role === "creator" && (
+        <Field
+          label="Creator referral code (optional)"
+          name="recruitCode"
+          autoComplete="off"
+          maxLength={32}
+          placeholder="diva-…"
+          hint="Only if a Diva creator referred you. It records who referred you — it never changes your application or approval."
+          defaultValue={state.values?.recruitCode ?? recruitCode ?? ""}
+          error={state.fields?.recruitCode}
+        />
+      )}
       {role === "creator" ? (
         <div className="space-y-2.5">
           <label htmlFor={inputId} className="block text-[11px] uppercase tracking-[0.22em] text-stone">

@@ -1,6 +1,8 @@
+import { cookies } from "next/headers";
 import type { Metadata } from "next";
 import { AuthShell } from "@/components/layout/AuthShell";
 import { Button } from "@/components/ui/Button";
+import { RECRUIT_COOKIE } from "@/server/auth/request";
 import { requestMeta } from "@/server/auth/request";
 import { isAppError } from "@/server/errors";
 import { inspectInvitation } from "@/server/services/accounts";
@@ -80,7 +82,7 @@ export default async function InvitePage({ params }: { params: Promise<{ token: 
         </p>
       }
     >
-      <ApplyForm token={token} emailLocked={invitation.emailLocked} role={invitation.role} />
+      <ApplyForm token={token} emailLocked={invitation.emailLocked} role={invitation.role} recruitCode={(await cookies()).get(RECRUIT_COOKIE)?.value ?? null} />
     </AuthShell>
   );
 }

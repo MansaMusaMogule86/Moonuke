@@ -11,7 +11,25 @@ import { formatCreatorPublicName } from "@/lib/creatorName";
 // may see (notifications about hidden/deleted/blocked posts disappear).
 // =====================================================================
 
-export type NotificationKind = "post.published" | "proposal.received" | "message.received" | "blast.received" | "system";
+export type NotificationKind =
+  | "post.published"
+  | "proposal.received"
+  | "message.received"
+  | "blast.received"
+  | "system"
+  | "tip.received"
+  | "subscription.started"
+  | "subscription.renewed"
+  | "payment.succeeded"
+  | "payment.refunded"
+  | "referral.commission"
+  | "payout.available"
+  | "payout.requested"
+  | "payout.paid"
+  | "payout.failed"
+  | "content.published"
+  | "blast.sent"
+  | "security.alert";
 export type FanNotification = {
   id: string;
   kind: NotificationKind;
@@ -65,8 +83,38 @@ function present(r: Row): FanNotification {
         // Internal paths only.
         href: typeof r.data.href === "string" && /^\/[a-z/-]*$/.test(r.data.href) ? r.data.href : null,
       };
+    case "tip.received":
+      return { ...base, title: "New tip received", detail: "See Studio earnings for the ledger amount.", href: "/studio/earnings" };
+    case "subscription.started":
+      return { ...base, title: "New subscriber", detail: "A fan joined your membership.", href: "/studio/members" };
+    case "subscription.renewed":
+      return { ...base, title: "Subscription renewed", detail: "See My Access for the current period.", href: "/library?tab=subscriptions" };
+    case "payment.succeeded":
+      return { ...base, title: "Payment confirmed", detail: "Your receipt is in My Access.", href: "/library?tab=history" };
+    case "payment.refunded":
+      return { ...base, title: "Refund processed", detail: "See My Access for the updated receipt.", href: "/library?tab=history" };
+    case "referral.commission":
+      return { ...base, title: "Referral commission earned", detail: "See Studio referrals for the ledger entry.", href: "/studio/referrals" };
+    case "payout.available":
+      return { ...base, title: "Funds available", detail: "Matured funds are ready in Studio earnings.", href: "/studio/earnings" };
+    case "payout.requested":
+      return { ...base, title: "Withdrawal requested", detail: "Track status in Studio earnings.", href: "/studio/earnings" };
+    case "payout.paid":
+      return { ...base, title: "Withdrawal paid", detail: "Check your bank statement for the payout sender entry.", href: "/studio/earnings" };
+    case "payout.failed":
+      return { ...base, title: "Withdrawal failed", detail: "Review the destination in Studio earnings.", href: "/studio/earnings" };
+    case "content.published":
+      return { ...base, title: `${creator?.displayName ?? "A creator"} published`, detail: null, href: creator ? `/c/${creator.handle}` : null };
+    case "blast.sent":
+      return { ...base, title: "Blast sent", detail: "See blast history for delivered counts.", href: "/studio/blasts" };
+    case "security.alert":
+      return {
+        ...base,
+        title: typeof r.data.title === "string" ? r.data.title.slice(0, 120) : "Security update",
+        detail: null,
+        href: typeof r.data.href === "string" && /^\/[a-z/-]*$/.test(r.data.href) ? r.data.href : "/account/security",
+      };
     default:
-      // Future kinds (messages, Blasts) render generically until their UI exists.
       return { ...base, title: typeof r.data.title === "string" ? r.data.title.slice(0, 120) : "Notification", detail: null, href: null };
   }
 }
@@ -77,14 +125,19 @@ const SELECT = `select n.id, n.kind, n.available_at, n.read_at, n.data, n.post_i
                   left join app.posts p on p.id = n.post_id
                   left join app.creators c on c.user_id = n.creator_id`;
 
-export async function myNotifications(viewer: Viewer, opts: { unreadOnly?: boolean; limit?: number } = {}): Promise<FanNotification[]> {
+export async function myNotifications(
+  viewer: Viewer,
+  opts: { unreadOnly?: boolean; kind?: NotificationKind; limit?: number; offset?: number } = {},
+): Promise<FanNotification[]> {
   assertMember(viewer);
   const limit = Math.min(Math.max(opts.limit ?? 50, 1), 100);
+  const offset = Math.min(Math.max(opts.offset ?? 0, 0), 10000);
   return asViewer(viewer, async (q) =>
     (
-      await q.query<Row>(`${SELECT} where n.user_id = $1 and ($2::boolean is false or n.read_at is null) order by n.available_at desc limit $3`, [
-        viewer.id, !!opts.unreadOnly, limit,
-      ])
+      await q.query<Row>(
+        `${SELECT} where n.user_id = $1 and ($2::boolean is false or n.read_at is null) and ($3::text is null or n.kind = $3) order by n.available_at desc limit $4 offset $5`,
+        [viewer.id, !!opts.unreadOnly, opts.kind ?? null, limit, offset],
+      )
     ).map(present),
   );
 }
@@ -106,15 +159,59 @@ export async function markAllRead(viewer: Viewer): Promise<number> {
   return asViewer(viewer, async (q) => (await q.query(`update app.notifications set read_at = now() where user_id = $1 and read_at is null returning 1`, [viewer.id])).length);
 }
 
+const PREF_COLUMN: Partial<Record<NotificationKind, string>> = {
+  "post.published": "notify_new_posts",
+  "content.published": "notify_new_posts",
+  "message.received": "notify_messages",
+  "blast.received": "notify_messages",
+  "blast.sent": "notify_messages",
+  "payment.succeeded": "notify_billing",
+  "payment.refunded": "notify_billing",
+  "subscription.started": "notify_subscriptions",
+  "subscription.renewed": "notify_subscriptions",
+  "tip.received": "notify_tips",
+  "referral.commission": "notify_referrals",
+  "payout.available": "notify_payouts",
+  "payout.requested": "notify_payouts",
+  "payout.paid": "notify_payouts",
+  "payout.failed": "notify_payouts",
+};
+
 /**
- * Privileged entry point for future senders (Messaging, Blasts). Not used by
- * any user action yet. Callers must have authorised the send themselves; the
- * payload is size-capped by the table and must never carry message bodies.
+ * Privileged entry point for senders (tips, subs, payments, referrals,
+ * payouts, blasts, security). Callers must have authorised the send; the
+ * payload is size-capped and must never carry message bodies or amounts.
+ * Financial notifications link to ledger-backed pages instead of stating sums.
+ * Delivery is idempotent per idempotencyKey and respects user preferences
+ * (security/system/proposal kinds always deliver).
  */
-export async function deliverNotification(input: { userId: string; kind: Exclude<NotificationKind, "post.published" | "proposal.received">; creatorId?: string; data?: Record<string, string> }) {
-  return system((q) =>
-    q.one<{ id: string }>(`insert into app.notifications (user_id, kind, creator_id, data) values ($1, $2, $3, $4) returning id`, [
-      input.userId, input.kind, input.creatorId ?? null, JSON.stringify(input.data ?? {}),
-    ]),
-  );
+export async function deliverNotification(input: {
+  userId: string;
+  kind: NotificationKind;
+  creatorId?: string;
+  postId?: string;
+  data?: Record<string, string>;
+  idempotencyKey?: string;
+}) {
+  return system(async (q) => {
+    const col = PREF_COLUMN[input.kind];
+    if (col) {
+      const pref = await q.one<Record<string, boolean>>(
+        `select ${col} as on from app.user_preferences where user_id = $1`,
+        [input.userId],
+      );
+      if (pref && pref.on === false) return null;
+    }
+    if (input.idempotencyKey) {
+      const existing = await q.one<{ id: string }>(
+        `select id from app.notifications where user_id = $1 and kind = $2 and idempotency_key = $3`,
+        [input.userId, input.kind, input.idempotencyKey],
+      );
+      if (existing) return existing;
+    }
+    return q.one<{ id: string }>(
+      `insert into app.notifications (user_id, kind, creator_id, post_id, data, idempotency_key) values ($1, $2, $3, $4, $5, $6) returning id`,
+      [input.userId, input.kind, input.creatorId ?? null, input.postId ?? null, JSON.stringify(input.data ?? {}), input.idempotencyKey ?? null],
+    );
+  });
 }

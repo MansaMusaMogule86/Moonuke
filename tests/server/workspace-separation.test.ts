@@ -28,7 +28,7 @@ import { requestReferral } from "@/server/services/referrals";
 import { mySubscriptions } from "@/server/services/fan";
 import { mfaStatus, startEnrollment } from "@/server/services/mfa";
 import type { SeedResult } from "@/server/seed";
-import { closePool, resetDb, system, viewer } from "./helpers";
+import { allowCreatorFixture, closePool, resetDb, system, viewer } from "./helpers";
 
 let s: SeedResult;
 
@@ -42,7 +42,7 @@ afterAll(async () => {
 
 describe("Fan View & Creator Studio Workspace and Identity Separation", () => {
   it("1–4. routes approved creators to /studio, unfinished creators to /studio/settings, fans to /home, and preserves only authorized deep links", async () => {
-    const fanViewer = await viewer(s.member.id);
+    const fanViewer = await viewer(s.memberId);
 
     // Fan default landing -> /home
     expect(await resolvePostLoginDestination(fanViewer)).toBe("/home");
@@ -56,26 +56,27 @@ describe("Fan View & Creator Studio Workspace and Identity Separation", () => {
     expect(isSafeAuthorizedDeepLink(fanViewer, "/owner")).toBe(false);
 
     // Creator with unfinished onboarding (needs verification / setup) -> /studio/settings
+    await allowCreatorFixture("new-creator@test.local");
     const newCreatorRow = await system((q) =>
       q.one<{ id: string }>(
-        `insert into app.users (email, email_verified_at, password_hash, role, status, alias)
-         values ('new-creator@test.local', now(), 'x', 'creator', 'active', 'Soraya')
+        `insert into app.users (email, email_verified_at, password_hash, role, status, alias, adult_attested_at)
+         values ('new-creator@test.local', now(), 'x', 'creator', 'active', 'Soraya', now())
          returning id`,
       ),
     );
     const newCreatorViewer = await viewer(newCreatorRow!.id);
     expect(await resolvePostLoginDestination(newCreatorViewer)).toBe("/studio/settings");
 
-    // Approved creator with completed profile & approved verification -> /studio
+    // Verified creator with completed profile & verification -> /studio
     await system((q) =>
       q.query(
-        `insert into app.creator_verifications (user_id, legal_name, dob, country, status, reviewed_at)
-         values ($1, 'Isadora Legal', '1996-05-10', 'FR', 'approved', now())
-         on conflict (user_id) do update set status = 'approved', reviewed_at = now()`,
-        [s.creator.id],
+        `insert into app.creator_verifications (user_id, status, submitted_at, reviewed_at)
+         values ($1, 'verified', now(), now())
+         on conflict (user_id) do update set status = 'verified', reviewed_at = now()`,
+        [s.creatorIds.isadora],
       ),
     );
-    const approvedCreatorViewer = await viewer(s.creator.id);
+    const approvedCreatorViewer = await viewer(s.creatorIds.isadora);
     expect(await resolvePostLoginDestination(approvedCreatorViewer)).toBe("/studio");
 
     // Creator deep link to a fan route (/library or /messages) is preserved when explicitly requested
@@ -88,8 +89,8 @@ describe("Fan View & Creator Studio Workspace and Identity Separation", () => {
   });
 
   it("5–8. enforces workspace switching permissions and separates Fan View and Creator Studio navigation", async () => {
-    const fanViewer = await viewer(s.member.id);
-    const creatorViewer = await viewer(s.creator.id);
+    const fanViewer = await viewer(s.memberId);
+    const creatorViewer = await viewer(s.creatorIds.isadora);
 
     // Ordinary fan cannot switch to Creator Studio
     await expect(switchWorkspace(fanViewer, "studio")).rejects.toThrow(
@@ -105,7 +106,7 @@ describe("Fan View & Creator Studio Workspace and Identity Separation", () => {
     const dbPrefFan = await system((q) =>
       q.one<{ preferred_workspace: string; role: string }>(
         `select preferred_workspace, role::text as role from app.users where id = $1`,
-        [s.creator.id],
+        [s.creatorIds.isadora],
       ),
     );
     expect(dbPrefFan).toEqual({ preferred_workspace: "fan", role: "creator" });
@@ -116,7 +117,7 @@ describe("Fan View & Creator Studio Workspace and Identity Separation", () => {
     const dbPrefStudio = await system((q) =>
       q.one<{ preferred_workspace: string; role: string }>(
         `select preferred_workspace, role::text as role from app.users where id = $1`,
-        [s.creator.id],
+        [s.creatorIds.isadora],
       ),
     );
     expect(dbPrefStudio).toEqual({ preferred_workspace: "studio", role: "creator" });
@@ -147,14 +148,9 @@ describe("Fan View & Creator Studio Workspace and Identity Separation", () => {
   });
 
   it("9. separates Creator Studio Diva identity from Fan View alias while keeping one immutable user UUID", async () => {
-    const sessCreated = await createSession({
-      userId: s.creator.id,
-      aal: 2,
-      ipHash: null,
-      userAgent: "vitest",
-    });
+    const token = await createSession(s.creatorIds.isadora, "vitest");
     const { resolveSession } = await import("@/server/services/sessions");
-    const session = await resolveSession(sessCreated.token);
+    const session = await resolveSession(token);
     expect(session).not.toBeNull();
     // Creator's primary session alias stays "Diva Isadora Lune" for backward compatibility
     expect(session!.alias).toBe("Diva Isadora Lune");
@@ -177,7 +173,7 @@ describe("Fan View & Creator Studio Workspace and Identity Separation", () => {
 
     // Updating Fan View alias preserves the exact same user UUID and creator Diva name
     const updated = await updateMyFanAlias(session!, "LuneNocturne");
-    expect(updated.userId).toBe(s.creator.id);
+    expect(updated.userId).toBe(s.creatorIds.isadora);
     expect(updated.fanAlias).toBe("LuneNocturne");
     expect(await getMyFanAlias(session!)).toBe("LuneNocturne");
 
@@ -189,26 +185,20 @@ describe("Fan View & Creator Studio Workspace and Identity Separation", () => {
   });
 
   it("10. isolates fan-side messages (/messages) from creator-side inbox (/studio/messaging) and scopes unread counts", async () => {
-    // Creator A (s.creator = "Diva Isadora Lune") acts both as a creator (talking to Fan s.member)
-    // and as a fan (talking to Creator C "Diva Valentina").
-    const creatorCRow = await system((q) =>
-      q.one<{ id: string }>(
-        `insert into app.users (email, email_verified_at, password_hash, role, status, alias)
-         values ('valentina.c@test.local', now(), 'x', 'creator', 'active', 'Valentina')
-         returning id`,
-      ),
-    );
-    const creatorCId = creatorCRow!.id;
-    await system((q) =>
-      q.query(
-        `update app.creators set user_id = $1, published = true where handle = 'valentina'`,
-        [creatorCId],
-      ),
-    );
+    // Creator A ("Diva Isadora Lune") acts both as a creator (talking to Fan s.memberId)
+    // and as a fan (talking to Creator C "Diva Valentin Ash", a seeded creator).
+    const creatorCId = s.creatorIds.valentin;
 
-    const viewerA = await viewer(s.creator.id);
-    const viewerFanB = await viewer(s.member.id);
+    const viewerA = await viewer(s.creatorIds.isadora);
+    const viewerFanB = await viewer(s.memberId);
     const viewerCreatorC = await viewer(creatorCId);
+
+    // Age accounts past new-account messaging limits, as the messaging suite does.
+    await system((q) =>
+      q.query(`update app.users set created_at = now() - interval '30 days' where id = any ($1)`, [
+        [viewerA.id, viewerFanB.id, viewerCreatorC.id],
+      ]),
+    );
 
     await updateMyFanAlias(viewerA, "SolsticeReader");
 
@@ -216,9 +206,9 @@ describe("Fan View & Creator Studio Workspace and Identity Separation", () => {
     const tierA = await system((q) =>
       q.one<{ id: string; creator_id: string }>(
         `select t.id, t.creator_id
-           from app.membership_tiers t
-           join app.creators c on c.id = t.creator_id
-          where c.handle = 'isadora-lune'
+           from app.tiers t
+           join app.creators c on c.user_id = t.creator_id
+          where c.handle = 'isadora'
           limit 1`,
       ),
     );
@@ -227,7 +217,7 @@ describe("Fan View & Creator Studio Workspace and Identity Separation", () => {
         `insert into app.subscriptions (fan_id, creator_id, tier_id, status, current_period_end)
          values ($1, $2, $3, 'active', now() + interval '30 days')
          on conflict do nothing`,
-        [s.member.id, tierA!.creator_id, tierA!.id],
+        [s.memberId, tierA!.creator_id, tierA!.id],
       ),
     );
 
@@ -235,9 +225,9 @@ describe("Fan View & Creator Studio Workspace and Identity Separation", () => {
     const tierC = await system((q) =>
       q.one<{ id: string; creator_id: string }>(
         `select t.id, t.creator_id
-           from app.membership_tiers t
-           join app.creators c on c.id = t.creator_id
-          where c.handle = 'valentina'
+           from app.tiers t
+           join app.creators c on c.user_id = t.creator_id
+          where c.handle = 'valentin'
           limit 1`,
       ),
     );
@@ -246,12 +236,12 @@ describe("Fan View & Creator Studio Workspace and Identity Separation", () => {
         `insert into app.subscriptions (fan_id, creator_id, tier_id, status, current_period_end)
          values ($1, $2, $3, 'active', now() + interval '30 days')
          on conflict do nothing`,
-        [s.creator.id, tierC!.creator_id, tierC!.id],
+        [s.creatorIds.isadora, tierC!.creator_id, tierC!.id],
       ),
     );
 
     // 1. Fan B opens a conversation with Creator A and sends a message
-    const convAsCreatorId = await openConversation(viewerFanB, s.creator.id);
+    const convAsCreatorId = await openConversation(viewerFanB, s.creatorIds.isadora);
     await sendMessage(
       viewerFanB,
       convAsCreatorId,
@@ -264,7 +254,7 @@ describe("Fan View & Creator Studio Workspace and Identity Separation", () => {
     await sendMessage(
       viewerCreatorC,
       convAsFanId,
-      "Welcome to my circle from Diva Valentina!",
+      "Welcome to my circle from Diva Valentin Ash!",
       "clientkey_creatorc_1",
     );
 
@@ -277,7 +267,7 @@ describe("Fan View & Creator Studio Workspace and Identity Separation", () => {
     const fanMatch = fanConvosForA.find((c) => c.id === convAsFanId);
     expect(fanMatch).toBeDefined();
     expect(fanMatch!.side).toBe("fan");
-    expect(fanMatch!.peer.name).toMatch(/^Diva Valentina/i);
+    expect(fanMatch!.peer.name).toMatch(/^Diva Valentin Ash/i);
 
     const creatorMatch = creatorConvosForA.find((c) => c.id === convAsCreatorId);
     expect(creatorMatch).toBeDefined();
@@ -300,8 +290,8 @@ describe("Fan View & Creator Studio Workspace and Identity Separation", () => {
   });
 
   it("11–15. separates fan purchases from creator earnings, separates fan vs creator invitation links, blocks fans from creator referrals, preserves MFA, and supports EN/FR/AR", async () => {
-    const creatorViewer = await viewer(s.creator.id);
-    const fanViewer = await viewer(s.member.id);
+    const creatorViewer = await viewer(s.creatorIds.isadora);
+    const fanViewer = await viewer(s.memberId);
 
     // 11. Fan My Access vs Creator Earnings stay distinct
     const fanSubs = await mySubscriptions(creatorViewer);

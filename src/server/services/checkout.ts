@@ -1,4 +1,5 @@
 import "server-only";
+import { hmac } from "@/server/auth/crypto";
 import { asViewer } from "@/server/db";
 import type { Viewer } from "@/server/auth/permissions";
 import { AppError } from "@/server/errors";
@@ -10,7 +11,15 @@ import { quote, type QuoteTarget } from "./club";
 import { assertFan } from "./fan";
 
 const SANDBOX_PROVIDER = "sandbox";
-const SANDBOX_WEBHOOK_SECRET = process.env.SESSION_SECRET ?? "divafans-sandbox-webhook-secret-key-0001";
+/**
+ * Sandbox SIMULATOR signing key only. This is not a provider webhook secret:
+ * it signs and verifies mock events inside `processSandboxCheckout`, which
+ * refuses to run in production and only runs behind `testing: true`.
+ * A real processor adapter MUST use the provider-issued endpoint signing
+ * secret from server configuration (never this derivation, never a default)
+ * and verify raw-body signatures before `applyEvent` grants anything.
+ */
+const sandboxWebhookSecret = () => hmac("webhook:sandbox-simulator");
 
 export type CheckoutOutcome = "succeeded" | "failed" | "canceled";
 
@@ -124,8 +133,8 @@ export async function processSandboxCheckout(
     currency: q.currency,
   };
   const authRaw = JSON.stringify(authEvent);
-  const authSig = signHmac(SANDBOX_WEBHOOK_SECRET, authRaw, nowSec);
-  if (!verifyHmac(SANDBOX_WEBHOOK_SECRET, authRaw, authSig, 300, nowSec)) {
+  const authSig = signHmac(sandboxWebhookSecret(), authRaw, nowSec);
+  if (!verifyHmac(sandboxWebhookSecret(), authRaw, authSig, 300, nowSec)) {
     throw new AppError("forbidden", "Webhook signature verification failed.");
   }
   await applyEvent(SANDBOX_PROVIDER, authEvent, authRaw, {
@@ -148,8 +157,8 @@ export async function processSandboxCheckout(
     currency: q.currency,
   };
   const finalRaw = JSON.stringify(finalEvent);
-  const finalSig = signHmac(SANDBOX_WEBHOOK_SECRET, finalRaw, nowSec);
-  if (!verifyHmac(SANDBOX_WEBHOOK_SECRET, finalRaw, finalSig, 300, nowSec)) {
+  const finalSig = signHmac(sandboxWebhookSecret(), finalRaw, nowSec);
+  if (!verifyHmac(sandboxWebhookSecret(), finalRaw, finalSig, 300, nowSec)) {
     throw new AppError("forbidden", "Webhook signature verification failed.");
   }
   const applied = await applyEvent(SANDBOX_PROVIDER, finalEvent, finalRaw, {

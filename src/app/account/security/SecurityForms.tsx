@@ -55,7 +55,7 @@ export function MfaSetup() {
     return (
       <form action={start} className="space-y-4">
         <FormMessage state={started} />
-        <Submit>Set up two-step sign-in</Submit>
+        <Submit>Set up</Submit>
       </form>
     );
   }
@@ -105,8 +105,8 @@ export function MfaManage({ recoveryLeft, mandatory }: { recoveryLeft: number; m
       {!mandatory && off.status !== "success" && (
         <form action={disable} className="space-y-4 border-t border-line pt-6" noValidate>
           <FormMessage state={off} />
-          <Field label="Current code to turn off" name="code" inputMode="numeric" autoComplete="one-time-code" maxLength={6} error={off.fields?.code} />
-          <Submit variant="ghost">Turn off two-step sign-in</Submit>
+          <Field label="Current code to disable" name="code" inputMode="numeric" autoComplete="one-time-code" maxLength={6} error={off.fields?.code} />
+          <Submit variant="ghost">Disable</Submit>
         </form>
       )}
       {off.status === "success" && <FormMessage state={off} />}

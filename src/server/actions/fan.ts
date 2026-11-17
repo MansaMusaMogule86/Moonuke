@@ -39,10 +39,18 @@ export async function membershipAction(_prev: FormState, fd: FormData): Promise<
 export async function saveUserPreferencesAction(_prev: FormState, fd: FormData): Promise<FormState> {
   const viewer = await requireViewer("club.discover");
   try {
+    const digest = String(fd.get("emailDigest") ?? "off");
     await fan.saveUserPreferences(viewer, {
       notifyNewPosts: fd.get("notifyNewPosts") === "on",
       notifyMessages: fd.get("notifyMessages") === "on",
       notifyBilling: fd.get("notifyBilling") === "on",
+      notifyTips: fd.get("notifyTips") === "on",
+      notifySubscriptions: fd.get("notifySubscriptions") === "on",
+      notifyReferrals: fd.get("notifyReferrals") === "on",
+      notifyPayouts: fd.get("notifyPayouts") === "on",
+      notifySecurity: fd.get("notifySecurity") !== "off",
+      emailDigest: digest === "daily" || digest === "weekly" ? digest : "off",
+      timezone: String(fd.get("timezone") ?? "UTC").slice(0, 60) || "UTC",
     });
     revalidatePath("/account/security");
     return { status: "success", message: "Notification preferences saved." };

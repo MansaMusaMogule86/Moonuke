@@ -3,11 +3,15 @@
 import { revalidatePath } from "next/cache";
 import { after } from "next/server";
 import { z } from "zod";
+import { cookies } from "next/headers";
 import type { FormState } from "@/lib/forms";
 import { requireViewer } from "@/server/auth/request";
 import { deliverPending } from "@/server/email/outbox";
 import { isAppError } from "@/server/errors";
+import { isProd } from "@/server/env";
 import { reviewVerification, saveProfile, submitVerification, updateCreatorName, type ReviewAction } from "@/server/services/creatorOnboarding";
+import { confirmCreatorReferralOnboarding, resolveRecruitmentCode } from "@/server/services/creatorReferralsAndWithdrawals";
+import { RECRUIT_COOKIE, RECRUIT_COOKIE_MAX_AGE } from "@/server/auth/request";
 import { creatorChosenName, creatorNameSchema, fieldErrors, uuid } from "@/server/validation";
 
 const str = (fd: FormData, k: string) => (typeof fd.get(k) === "string" ? (fd.get(k) as string) : "");
@@ -116,6 +120,52 @@ export async function reviewVerificationAction(_prev: FormState, fd: FormData): 
     if (action === "verify") after(() => deliverPending().catch(() => {}));
     const label = { in_review: "Marked in review.", needs_more_info: "Asked for more information.", reject: "Verification rejected.", verify: "Verified and published.", unpublish: "Profile unpublished." }[action];
     return { status: "success", message: label, data: { status: r.status, published: String(r.published) } };
+  } catch (e) {
+    return fail(e);
+  }
+}
+
+function codeFromForm(fd: FormData): string | null {
+  const raw = typeof fd.get("recruitCode") === "string" ? (fd.get("recruitCode") as string) : "";
+  const clean = raw.trim().toLowerCase();
+  return /^[a-z0-9_-]{4,32}$/.test(clean) ? clean : null;
+}
+
+/**
+ * Remembers a creator recruitment code from the public /recruit/[code] page.
+ * Validates the code is live before storing it; never reveals which existing
+ * account it belongs to beyond the public landing page itself.
+ */
+export async function rememberRecruitmentAction(_prev: FormState, fd: FormData): Promise<FormState> {
+  const code = codeFromForm(fd);
+  if (!code) return { status: "error", message: "That recruitment link is invalid." };
+  const resolved = await resolveRecruitmentCode(code);
+  if (!resolved) return { status: "error", message: "That recruitment link is invalid or no longer active." };
+  (await cookies()).set(RECRUIT_COOKIE, resolved.recruitmentCode, {
+    httpOnly: true,
+    secure: isProd(),
+    sameSite: "lax",
+    path: "/",
+    maxAge: RECRUIT_COOKIE_MAX_AGE,
+  });
+  return { status: "success", message: "Referral remembered. It will be attached when you apply." };
+}
+
+/**
+ * Confirms the signed-in creator's own referral attribution (single level,
+ * terms accepted explicitly). Never touches another creator's attribution.
+ */
+export async function confirmReferralAttributionAction(_prev: FormState, fd: FormData): Promise<FormState> {
+  const viewer = await requireViewer("club.discover");
+  if (viewer.role !== "creator") return { status: "error", message: "Creator account required." };
+  if (fd.get("acceptTerms") !== "on") {
+    return { status: "error", message: "Accept the referral terms to confirm attribution.", fields: { acceptTerms: "Required." } };
+  }
+  try {
+    const row = await confirmCreatorReferralOnboarding(viewer, { acceptReferralTerms: true });
+    if (!row) return { status: "error", message: "No referral attribution to confirm." };
+    revalidatePath("/studio/referrals");
+    return { status: "success", message: "Referral attribution confirmed." };
   } catch (e) {
     return fail(e);
   }

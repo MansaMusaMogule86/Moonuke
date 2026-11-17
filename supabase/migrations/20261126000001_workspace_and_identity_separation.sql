@@ -72,7 +72,7 @@ update app.users u
 create or replace function app.users_workspace_identity_guard()
 returns trigger
 language plpgsql
-set search_path = app, pg_temp
+set search_path = app, public, pg_temp
 as $$
 begin
   if new.id is null then
@@ -85,7 +85,7 @@ begin
       if new.fan_alias is null
          or lower(new.fan_alias::text) = lower(new.alias::text)
          or new.fan_alias::text ~* '^diva(\s+|[:._·—–-]+|$)' then
-        new.fan_alias := ('Member ' || upper(substr(md5(new.id::text), 1, 4)))::citext;
+        new.fan_alias := ('Member ' || upper(substr(md5(new.id::text), 1, 4)))::public.citext;
       end if;
     else
       new.preferred_workspace := 'fan';
@@ -99,7 +99,7 @@ begin
     end if;
     if new.fan_alias is null then
       if new.role = 'creator' then
-        new.fan_alias := ('Member ' || upper(substr(md5(new.id::text), 1, 4)))::citext;
+        new.fan_alias := ('Member ' || upper(substr(md5(new.id::text), 1, 4)))::public.citext;
       else
         new.fan_alias := new.alias;
       end if;
@@ -127,7 +127,7 @@ returns text
 language plpgsql
 volatile
 security definer
-set search_path = app, pg_temp
+set search_path = app, public, pg_temp
 as $$
 declare
   v_uid uuid := app.uid();
@@ -167,20 +167,20 @@ begin
   if exists (
     select 1 from app.users x
      where x.id <> v_uid
-       and (x.fan_alias = v_clean::citext or x.alias = v_clean::citext)
+       and (x.fan_alias = v_clean::public.citext or x.alias = v_clean::public.citext)
   ) then
     raise exception 'that fan alias is already taken' using errcode = '23505';
   end if;
 
   if v_role = 'member' then
     update app.users
-       set fan_alias = v_clean::citext,
-           alias = v_clean::citext,
+       set fan_alias = v_clean::public.citext,
+           alias = v_clean::public.citext,
            updated_at = now()
      where id = v_uid;
   else
     update app.users
-       set fan_alias = v_clean::citext,
+       set fan_alias = v_clean::public.citext,
            updated_at = now()
      where id = v_uid;
   end if;

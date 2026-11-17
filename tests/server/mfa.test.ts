@@ -122,6 +122,36 @@ describe("member enrolment, challenge, recovery codes", () => {
     expect((await mfaStatus(v)).enrolled).toBe(false);
     await expect(disableMfa({ ...v, aal: 1 } as Viewer, "123456")).rejects.toMatchObject({ code: "forbidden" });
   });
+
+  it("disabling requires recent reauthentication and preserves creator status", async () => {
+    const { v, secret, codes } = await enrol("isadora@divafans.test");
+    expect(codes).toHaveLength(10);
+    const verified = { ...v, aal: 2 as const, mfa: "verified" as const };
+    // Stale second-factor verification is rejected by the recent-reauth guard
+    // before any code is even checked.
+    await system((q) =>
+      q.query(`update app.sessions set mfa_verified_at = now() - interval '2 hours' where public_id = $1`, [v.sessionId!]),
+    );
+    const staleStep = currentStep() + 2;
+    await expect(disableMfa(verified, codeAt(secret, staleStep))).rejects.toMatchObject({ code: "forbidden" });
+    // Fresh verification: challenge with a one-time recovery code so the
+    // TOTP step sequence is not consumed across the two-step chain.
+    const again = await session("isadora@divafans.test");
+    expect(again.v.mfa).toBe("pending");
+    await verifyChallenge(again.v, codes[0].toLowerCase(), meta);
+    const fresh = (await resolveSession(again.token))!;
+    expect(fresh.aal).toBe(2);
+    // Disable with the freshest unconsumed step (recovery challenge did not
+    // advance last_used_step past enrolment).
+    await disableMfa(fresh, codeAt(secret, currentStep() + 1));
+    expect((await mfaStatus(fresh)).enrolled).toBe(false);
+    const role = await system((q) => q.one<{ role: string }>(`select role::text as role from app.users where id = $1`, [fresh.id]));
+    expect(role?.role).toBe("creator");
+    const codesLeft = await system((q) =>
+      q.one<{ n: number }>(`select count(*)::int as n from app.mfa_recovery_codes where user_id = $1 and used_at is null`, [fresh.id]),
+    );
+    expect(codesLeft?.n ?? 1).toBe(0);
+  });
 });
 
 describe("session management", () => {

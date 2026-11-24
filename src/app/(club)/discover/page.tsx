@@ -6,6 +6,7 @@ import { Reveal } from "@/components/ui/Reveal";
 import { cn } from "@/lib/cn";
 import { requireViewer } from "@/server/auth/request";
 import { discover, listCategories } from "@/server/services/club";
+import { resolveWorkspaceIdentity } from "@/server/services/workspace";
 import { discoverSchema } from "@/server/validation";
 
 export const metadata: Metadata = { title: "Discover" };
@@ -42,6 +43,8 @@ export default async function DiscoverPage({ searchParams }: { searchParams: SP 
   };
   const activeCategory = categories.find((c) => c.slug === category);
 
+  const fanIdentity = resolveWorkspaceIdentity(viewer, "fan");
+
   return (
     <div className="smoke-ambient mx-auto max-w-[1600px] px-5 pb-28 pt-14 md:px-10 md:pt-20">
       {justBlocked && (
@@ -51,7 +54,7 @@ export default async function DiscoverPage({ searchParams }: { searchParams: SP 
         </p>
       )}
       <Reveal>
-        <p className="eyebrow mb-5">The Circle · {viewer.alias}</p>
+        <p className="eyebrow mb-5">The Circle · {fanIdentity.displayName}</p>
         <h1 className="font-display text-[56px] leading-[0.95] tracking-[-0.03em] text-ivory md:text-[112px]">
           {activeCategory ? (
             <em className="text-metal">{activeCategory.label}</em>

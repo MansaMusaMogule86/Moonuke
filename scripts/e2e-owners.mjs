@@ -66,11 +66,11 @@ async function signIn(email, opts = desktop) {
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(PW);
   await page.getByRole("button", { name: "Sign in" }).click();
-  await page.waitForURL(/\/(owner|discover|pending|signin\/verify|studio)/);
+  await page.waitForURL(/\/(owner|home|discover|pending|signin\/verify|studio)/);
   if (page.url().endsWith("/signin/verify")) {
     await page.getByLabel("Code").fill(await codeFor(email));
     await page.getByRole("button", { name: "Verify" }).click();
-    await page.waitForURL(/\/(owner|admin|discover|studio)/);
+    await page.waitForURL(/\/(owner|admin|home|discover|studio)/);
   }
   return { ctx, page };
 }

@@ -4,6 +4,7 @@ import { AuthShell } from "@/components/layout/AuthShell";
 import { Submit } from "@/components/forms";
 import { getViewer } from "@/server/auth/request";
 import { signOutAction } from "@/server/actions/auth";
+import { resolvePostLoginDestination } from "@/server/services/workspace";
 
 export const metadata: Metadata = { title: "Awaiting approval", robots: { index: false } };
 
@@ -11,7 +12,7 @@ export default async function PendingPage() {
   const viewer = await getViewer();
   if (!viewer) redirect("/signin");
   if (viewer.mfa === "pending") redirect("/signin/verify");
-  if (viewer.status === "active") redirect("/discover");
+  if (viewer.status === "active") redirect(await resolvePostLoginDestination(viewer));
 
   return (
     <AuthShell

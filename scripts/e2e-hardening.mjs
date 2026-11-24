@@ -39,11 +39,11 @@ async function signIn(email, opts = desktop, password = PW) {
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Sign in" }).click();
-  await page.waitForURL(/\/(discover|pending|signin\/verify)/);
+  await page.waitForURL(/\/(home|discover|studio|owner|admin|pending|signin\/verify)/);
   if (page.url().endsWith("/signin/verify")) {
     await page.getByLabel("Code").fill(await freshCode(devTotpSecretFor(email)));
     await page.getByRole("button", { name: "Verify" }).click();
-    await page.waitForURL(/\/(admin|discover)/);
+    await page.waitForURL(/\/(owner|admin|home|discover|studio)/);
   }
   return { ctx, page };
 }

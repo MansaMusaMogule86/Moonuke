@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/Button";
 import { getViewer } from "@/server/auth/request";
 import { featureEnabled } from "@/server/flags";
 import { referralCreator } from "@/server/services/creatorReferral";
+import { resolvePostLoginDestination } from "@/server/services/workspace";
 import { SignupForm } from "./SignupForm";
 
 // Canonical fan sign-up. It ONLY works with a valid creator referral: the handle
@@ -16,7 +17,7 @@ export const dynamic = "force-dynamic";
 export default async function SignupPage({ searchParams }: { searchParams: Promise<{ creator?: string }> }) {
   const { creator: handle } = await searchParams;
   const viewer = await getViewer();
-  if (viewer) redirect(viewer.status === "active" ? "/discover" : "/pending");
+  if (viewer) redirect(await resolvePostLoginDestination(viewer));
 
   const creator = handle && featureEnabled("creator_referrals") ? await referralCreator(handle) : null;
 

@@ -23,14 +23,23 @@ export async function switchWorkspaceAction(fd: FormData) {
   const targetRaw = str(fd, "workspace");
   const target = targetRaw === "studio" ? "studio" : "fan";
 
-  // Ordinary fans cannot switch to Creator Studio
+  // Ordinary fans and owners cannot switch to Creator Studio
   if (target === "studio" && viewer.role !== "creator") {
-    redirect("/home");
+    redirect(viewer.role === "owner" ? "/owner" : "/home");
   }
 
-  const res = await switchWorkspace(viewer, target);
-  await setWorkspaceCookie(res.workspace);
-  redirect(res.redirectTo);
+  let destination = target === "studio" ? "/studio" : "/home";
+  try {
+    const res = await switchWorkspace(viewer, target);
+    await setWorkspaceCookie(res.workspace);
+    destination = res.redirectTo;
+  } catch (e) {
+    if (isAppError(e)) {
+      redirect(viewer.role === "owner" ? "/owner" : "/home");
+    }
+    throw e;
+  }
+  redirect(destination);
 }
 
 export async function switchLocaleAction(fd: FormData) {

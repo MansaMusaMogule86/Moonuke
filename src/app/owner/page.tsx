@@ -273,6 +273,15 @@ export default async function OwnerOverviewPage() {
                     )}
 
                     {p.status === "READY_FOR_PAYOUT" && <SimulatePayoutForm periodId={p.id} />}
+                    {p.status === "SIMULATED" && (
+                      <p
+                        role="status"
+                        className="mt-3 rounded-xl border border-gold/30 bg-gold/[0.08] px-4 py-2.5 text-[12px] text-gold-soft"
+                      >
+                        Simulated payout run completed (SIMULATED). Separate payout records generated for Account A and
+                        Account B; live settlement transfers remain disabled.
+                      </p>
+                    )}
                   </li>
                 );
               })}

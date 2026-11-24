@@ -1,6 +1,7 @@
 import "server-only";
 import { Pool, type PoolClient } from "pg";
 import { databaseUrl } from "@/server/env";
+import { log } from "@/server/log";
 
 export type Q = {
   query<R = Record<string, unknown>>(text: string, params?: unknown[]): Promise<R[]>;
@@ -11,7 +12,11 @@ const g = globalThis as unknown as { __mkPool?: Pool };
 
 export function pool(): Pool {
   if (!g.__mkPool) {
-    g.__mkPool = new Pool({ connectionString: databaseUrl(), max: 10, idleTimeoutMillis: 30_000 });
+    const p = new Pool({ connectionString: databaseUrl(), max: 10, idleTimeoutMillis: 30_000 });
+    p.on("error", (err: Error & { code?: string }) => {
+      log("error", "db.pool_error", { name: err.name, pgCode: err.code, message: err.message });
+    });
+    g.__mkPool = p;
   }
   return g.__mkPool;
 }

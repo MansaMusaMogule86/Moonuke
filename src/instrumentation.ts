@@ -26,7 +26,11 @@ export const onRequestError: Instrumentation.onRequestError = async (err, reques
     pgCode: e.code,
     message: e.message,
     method: request.method,
-    path: request.path.split("?")[0].replace(/\/invite\/[^/]+/, "/invite/[token]").replace(/\/reset\/[^/]+/, "/reset/[token]"),
+    path: request.path
+      .split("?")[0]
+      .replace(/\/invite\/[^/]+/, "/invite/[token]")
+      .replace(/\/reset\/[^/]+/, "/reset/[token]")
+      .replace(/\/verify-email\/[^/]+/, "/verify-email/[token]"),
     routeType: context.routeType,
     route: context.routePath,
   });

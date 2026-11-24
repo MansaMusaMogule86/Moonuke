@@ -43,11 +43,11 @@ async function signIn(email, opts = desktop, password = PW) {
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Sign in" }).click();
-  await page.waitForURL(/\/(discover|pending|signin\/verify|account\/security)/);
+  await page.waitForURL(/\/(home|discover|studio|owner|admin|pending|signin\/verify|account\/security)/);
   if (page.url().endsWith("/signin/verify")) {
     await page.getByLabel("Code").fill(await freshCode(devTotpSecretFor(email)));
     await page.getByRole("button", { name: "Verify" }).click();
-    await page.waitForURL(/\/(admin|discover)/);
+    await page.waitForURL(/\/(owner|admin|home|discover|studio)/);
   }
   return { ctx, page };
 }
@@ -77,7 +77,7 @@ const v = await browser.newContext(desktop);
 const vp = await v.newPage();
 await vp.goto(link);
 check("invite is for a creator", await vp.getByText(/Invitation · creator/i).isVisible());
-await vp.getByLabel("Alias").fill("Nova R");
+await vp.getByLabel("Your name").fill("Nova R");
 await vp.getByLabel("Email").fill("someone@example.com");
 await vp.getByLabel("Password").fill("nova-very-long-pass-1");
 await vp.getByLabel(/18 or older/).check();
@@ -146,20 +146,19 @@ check("draft sent for creator approval", true);
 
 // ================================================================ creator consents, adds a social
 const n = await signIn("nova@example.com", desktop, "nova-very-long-pass-1");
-// Creators must set up two-step sign-in before any creator tool opens.
-check("new creator without MFA → forced setup", /\/account\/security\?setup=required/.test(n.page.url()), n.page.url());
-await n.page.goto(`${BASE}/studio`);
-check("studio stays closed until two-step sign-in is on", /\/account\/security/.test(n.page.url()), n.page.url());
-check("setup banner explains the creator requirement", await n.page.getByRole("alert").filter({ hasText: "required for creator accounts" }).isVisible());
-await n.page.getByRole("button", { name: "Set up two-step sign-in" }).click();
+// Creators with unfinished onboarding resume at /studio/settings; MFA is optional for creators (owner MFA stays mandatory).
+check("new creator resumes unfinished onboarding in studio", /\/studio\/settings/.test(n.page.url()), n.page.url());
+await n.page.goto(`${BASE}/account/security`);
+await n.page.getByRole("button", { name: /^Set up( two-step sign-in)?$/ }).click();
 await n.page.getByTestId("mfa-secret").waitFor();
 const novaSecret = (await n.page.getByTestId("mfa-secret").textContent()).trim();
 await n.page.getByLabel("Code from your app").fill(await freshCode(novaSecret));
 await n.page.getByRole("button", { name: "Turn on two-step sign-in" }).click();
 await n.page.getByTestId("recovery-codes").waitFor();
-await n.page.goto(`${BASE}/studio`);
-check("white-glove studio", await n.page.getByText(/White-glove/).first().isVisible());
+check("creator optional MFA enrollment succeeds", true);
+await n.page.goto(`${BASE}/studio/settings`);
 const card = n.page.getByRole("article", { name: "Profile proposal from the house" });
+check("white-glove studio", await card.isVisible());
 check("proposal shows assistant badge and message", (await card.getByText("Assistant-drafted").count()) === 1 && (await card.getByText("A first pass from our call").count()) === 1);
 check("concierge notes never reach the creator", !(await n.page.content()).includes("Prefers evenings"));
 await shot(n.page, "studio-proposal-desktop");
@@ -186,7 +185,7 @@ await soc.getByText("Marked verified.").waitFor();
 check("social verified in place", (await soc.getByText("verified", { exact: true }).count()) >= 1);
 
 // ================================================================ creator shows it, submits verification
-await n.page.goto(`${BASE}/studio`);
+await n.page.goto(`${BASE}/studio/settings`);
 await n.page.getByRole("button", { name: "Show on profile" }).click();
 await n.page.waitForTimeout(800);
 await n.page.getByLabel(/I am 18 or older, and I/).check();
@@ -220,7 +219,7 @@ check("member /admin/onboarding/case → 404", memberAdmin.status() === 404);
 
 // ================================================================ profile import (creator, export file → proposal → consent)
 const ri = await signIn("rhea@divafans.test");
-await ri.page.goto(`${BASE}/studio`);
+await ri.page.goto(`${BASE}/studio/settings`);
 const imp = ri.page.locator("section").filter({ has: ri.page.getByRole("heading", { name: "Import a profile" }) });
 await imp.locator('input[type="file"]').setInputFiles({
   name: "export.json",

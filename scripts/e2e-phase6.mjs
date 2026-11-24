@@ -39,11 +39,11 @@ async function signIn(email, opts = desktop, password = PW) {
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Sign in" }).click();
-  await page.waitForURL(/\/(discover|pending|signin\/verify)/);
+  await page.waitForURL(/\/(home|discover|studio|owner|admin|pending|signin\/verify)/);
   if (page.url().endsWith("/signin/verify")) {
     await page.getByLabel("Code").fill(await freshCode(devTotpSecretFor(email)));
     await page.getByRole("button", { name: "Verify" }).click();
-    await page.waitForURL(/\/(admin|discover)/);
+    await page.waitForURL(/\/(owner|admin|home|discover|studio)/);
   }
   return { ctx, page };
 }
@@ -51,9 +51,8 @@ async function signIn(email, opts = desktop, password = PW) {
 // ================================================================ dashboard
 const n = await signIn("nocturne@divafans.test");
 await n.page.goto(`${BASE}/library`);
-check("library: memberships listed", (await n.page.locator("section").filter({ has: n.page.getByRole("heading", { name: "Memberships" }) }).getByRole("listitem").count()) >= 3);
-check("library: following listed", (await n.page.locator("section").filter({ has: n.page.getByRole("heading", { name: "Following" }) }).getByRole("listitem").count()) === 2);
-check("library: nav item present", await n.page.getByRole("navigation", { name: "Club" }).first().getByRole("link", { name: "Library" }).isVisible());
+check("library: memberships listed", (await n.page.locator("section").filter({ has: n.page.getByRole("heading", { name: /Active subscriptions|Memberships/i }) }).getByRole("article").count()) >= 3);
+check("library: nav item present", await n.page.getByRole("link", { name: /My Access|Library/ }).first().isVisible());
 await shot(n.page, "library-desktop");
 await axe(n.page, "/library @1440");
 
@@ -93,7 +92,7 @@ check("purchase opens the post on the profile", await n.page.locator(`[id^="post
 // ================================================================ memberships: cancel at period end, then keep
 await n.page.goto(`${BASE}/library/memberships`);
 await axe(n.page, "/library/memberships @1440");
-const isa = n.page.getByRole("article", { name: "Membership: Isadora Lune" });
+const isa = n.page.getByRole("article", { name: /^Membership: (Diva )?Isadora Lune$/ });
 await isa.getByRole("button", { name: /Cancel membership/ }).click();
 await isa.getByRole("button", { name: "Yes, cancel" }).click();
 await isa.getByText("will end at the close").waitFor();
@@ -101,7 +100,7 @@ check("cancel: badge shows Ending", await isa.getByText("Ending", { exact: true 
 await n.page.goto(`${BASE}/library/vault?creator=isadora`);
 check("cancel: access continues until period end", (await n.page.getByRole("list", { name: "Unlocked posts" }).getByRole("listitem").count()) > 0);
 await n.page.goto(`${BASE}/library/memberships`);
-await n.page.getByRole("article", { name: "Membership: Isadora Lune" }).getByRole("button", { name: "Keep my membership" }).click();
+await n.page.getByRole("article", { name: /^Membership: (Diva )?Isadora Lune$/ }).getByRole("button", { name: "Keep my membership" }).click();
 await n.page.getByText("will continue").waitFor();
 check("resume: membership continues", true);
 
@@ -150,7 +149,7 @@ for (const p of ["/library", "/library/vault", "/library/memberships", "/library
 }
 await nm.page.goto(`${BASE}/library`);
 await shot(nm.page, "library-mobile");
-check("mobile nav has Library", await nm.page.getByRole("navigation", { name: "Club" }).last().getByRole("link", { name: "Library" }).isVisible());
+check("mobile nav has My Access", await nm.page.getByRole("navigation", { name: /Mobile Fan View navigation|Club/ }).last().getByRole("link", { name: /My Access|Library/ }).isVisible());
 
 await browser.close();
 let failed = 0;

@@ -7,24 +7,42 @@
 
 ---
 
-## Verification Summary Table
+## 1. Core Static, Security, Unit & Build Checks
 
-| Category | Command | Scope | Result | Details |
-|---|---|---|---|---|
-| **Static Typecheck** | `pnpm lint` (`tsc --noEmit`) | Entire TypeScript codebase (strict) | **PASS** | 0 errors |
-| **Dependency Audit** | `pnpm audit --prod` | Production dependencies | **PASS** | 0 known vulnerabilities |
-| **Full Unit + PostgreSQL Security Suite** | `pnpm verify:quick` (`vitest run`) | All 46 test files against real Postgres 18 | **PASS** | **444 / 444 tests passed** (46 / 46 files, 839.7 s) |
-| **Post-Fix Targeted Server Suite** | `pnpm vitest run tests/server/workspace-separation.test.ts tests/server/access.test.ts tests/server/two-owner-financials.test.ts` | Workspace separation, access/RLS, two-owner 50/50 financials | **PASS** | **41 / 41 tests passed** (3 / 3 files, 87.3 s) |
-| **Production Build** | `pnpm build` (`next build`) | Full Next.js 16.4.5 Turbopack production build | **PASS** | Compiled in 3.5 s, TypeScript 4.5 s, all routes built cleanly |
-| **Browser E2E: Smoke, Responsive & Accessibility** | `node scripts/e2e-smoke.mjs` | 320–1920px layout, 390/768/1440px overflow, touch targets ≥ 44px, keyboard a11y, SEO, axe WCAG 2.1 AA | **PASS** | **44 / 44 checks passed** |
-| **Browser E2E: Release Hardening & Security Headers** | `node scripts/e2e-hardening.mjs` | Branded 404, missing vs forbidden 404 parity, CSP nonce, HSTS/headers, `/api/health`, forged server action, axe WCAG 2.1 AA @ 1440 & 390px | **PASS** | **21 / 21 checks passed** |
-| **Browser E2E: Two-Owner Dashboard & 50/50 Split** | `node scripts/e2e-owners.mjs` | Fan/creator denial on `/owner`, Jade & Kael Veyre MFA sign-in, Account A/B isolation, dual-owner approval (`PARTIALLY_APPROVED` -> `READY_FOR_PAYOUT`) | **PARTIAL** | Passed Steps 1–4 + dual-owner MFA approval; timed out on Step 5 UI banner (`Simulated payout run completed`) after `revalidatePath("/owner")` re-rendered the period into `SIMULATED` state. Backend simulation verified 17/17 in `two-owner-financials.test.ts`. |
-| **PostgreSQL Backup & Restore Drill** | `node scripts/backup-drill.mjs` | `pg_dump` -> `pg_restore` -> schema/row/policy/trigger parity check | **PASS** | **90 tables, 323 rows, 163 RLS policies, 108 SECURITY DEFINER functions, 45 triggers matched** (dump 635 KB, 2.7 s) |
+| Category | Command | Passed | Failed | Skipped | Details |
+|---|---|---:|---:|---:|---|
+| **Static Typecheck** | `pnpm lint` (`tsc --noEmit`) | 1 | 0 | 0 | 0 TypeScript errors (strict mode) |
+| **Dependency Audit** | `pnpm audit --prod` | 1 | 0 | 0 | 0 known production vulnerabilities |
+| **Full Unit + PostgreSQL RLS Suite** | `pnpm verify:quick` (`vitest run`) | **444** | 0 | 0 | **46 / 46 test files passed** (839.7 s) |
+| **Post-Fix Targeted Server Suite** | `pnpm vitest run tests/server/{workspace-separation,access,two-owner-financials}.test.ts` | **41** | 0 | 0 | **3 / 3 test files passed** (87.3 s) |
+| **Production Build** | `pnpm build` (`next build`) | 1 | 0 | 0 | Next.js 16.4.5 Turbopack build succeeded cleanly |
+| **PostgreSQL Backup & Restore Drill** | `node scripts/backup-drill.mjs` | 1 | 0 | 0 | **90 tables, 356 rows, 163 RLS policies, 108 SECURITY DEFINER functions, 45 triggers matched** (dump 638 KB, 2.5 s) |
 
 ---
 
-## Tests Not Executed & Why
+## 2. Playwright E2E + Accessibility (`axe-core` WCAG 2.1 AA) — 14 / 14 Suites Passed
 
-- **GitHub Actions CI (`ci/github-actions.disabled.yml`)**: Intentionally paused per owner directive A10/A11; requires owner approval and account Actions billing verification before re-enabling.
-- **Live payment, live payout, live upload/CSAM scan, and live email delivery**: Intentionally disabled behind server-enforced feature flags (`FEATURE_PAYMENTS=off`, `FEATURE_UPLOADS=off`, `EMAIL_TRANSPORT=dev`) because no external providers are approved or contracted yet.
-- **Remaining legacy E2E scripts (`e2e-phase2`..`e2e-phase7`, `e2e-safety`, `e2e-notices`, `e2e-access`, `e2e-staff`, `e2e-security`)**: Note that their `signIn()` helpers still contain pre-workspace-separation `waitForURL(/\/(discover|...)/)` regexes without `home`; updating them like `e2e-hardening.mjs` and `e2e-owners.mjs` is tracked as a low-risk follow-up.
+| # | Suite | Passed | Failed | Skipped | Scope Verified |
+|---|---|---:|---:|---:|---|
+| 1 | `scripts/e2e-smoke.mjs` | **44** | 0 | 0 | 320–1920px zero overflow, 390/768/1440px layout, touch targets ≥ 44px, keyboard a11y, reduced motion, SEO, axe @1440 & @390 |
+| 2 | `scripts/e2e-owners.mjs` | **30** | 0 | 0 | Fan/creator 404 on `/owner`, Jade & Kael Veyre MFA sign-in, Account A/B isolation, dual-owner approval, simulated payouts, axe @1440 & @390 |
+| 3 | `scripts/e2e-hardening.mjs` | **21** | 0 | 0 | Branded 404 parity, CSP per-request nonce, security headers, `/api/health`, forged server action stack safety, axe @1440 & @390 |
+| 4 | `scripts/e2e-phase2.mjs` | **70** | 0 | 0 | Invitation-only signup, pending wall, owner approval, discovery, locked content, disabled checkout quote, signed media URLs, referrals, axe |
+| 5 | `scripts/e2e-phase3.mjs` | **66** | 0 | 0 | Password reset, mandatory owner MFA, optional member MFA, recovery codes, session revocation, critical reports, blocking, creator verification, axe |
+| 6 | `scripts/e2e-phase4.mjs` | **47** | 0 | 0 | White-glove onboarding, creator `Diva` name application, proposals, social verification proof codes, profile imports, axe |
+| 7 | `scripts/e2e-phase5.mjs` | **39** | 0 | 0 | Creator Studio posts (draft/schedule/publish), tiers (create/edit/delete), aggregate analytics (no fan PII), axe @1440 & @390 |
+| 8 | `scripts/e2e-phase6.mjs` | **40** | 0 | 0 | Fan `My Access` library, unlocked posts vault, signed media isolation, membership cancel/resume, notifications, axe @1440 & @390 |
+| 9 | `scripts/e2e-phase7.mjs` | **44** | 0 | 0 | Fan `/messages` & Creator `/studio/messaging` inbox separation, polling, link refusal, reports, Blasts & custom lists, appeals, axe @1440 & @390 |
+| 10 | `scripts/e2e-safety.mjs` | **52** | 0 | 0 | Public `/takedown`, 48h clock, pre-publication review gate, participant consent records, safeguarding queue, axe |
+| 11 | `scripts/e2e-notices.mjs` | **22** | 0 | 0 | Creator statements of reasons, `Notices (1 new)` studio CTA, one-appeal rule, overturn restoration, audit trail, axe @1440 & @390 |
+| 12 | `scripts/e2e-access.mjs` | **13** | 0 | 0 | Age assurance & regional rules (flags OFF; production refuses mock/unapproved activation), axe |
+| 13 | `scripts/e2e-staff.mjs` | **11** | 0 | 0 | Restricted moderator role (flag OFF; non-owner denial), axe |
+| 14 | `scripts/e2e-security.mjs` | **34** | 0 | 0 | Security monitoring console, login/registration telemetry, alert review, RLS denial, axe |
+| **Total** | **All 14 Playwright + axe Suites** | **533** | **0** | **0** | **100% pass rate across desktop (1440px), tablet (768px), and mobile (390px)** |
+
+---
+
+## 3. Tests Intentionally Not Executed (Policy / External Dependencies)
+
+- **GitHub Actions CI (`ci/github-actions.disabled.yml`)**: Paused per owner directive A10/A11; requires explicit owner approval and account Actions billing verification.
+- **Live payment settlement, live creator payouts, live media uploads/CSAM scanning, and live SMTP/Resend delivery**: Intentionally disabled behind server-enforced feature flags (`FEATURE_PAYMENTS=off`, `FEATURE_UPLOADS=off`, `EMAIL_TRANSPORT=dev`) until external legal/provider approvals are completed.

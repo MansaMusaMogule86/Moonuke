@@ -11,6 +11,7 @@ import { myBlasts } from "@/server/services/blasts";
 import { getOnboarding } from "@/server/services/creatorOnboarding";
 import { myEarnings } from "@/server/services/earnings";
 import { myCreatorConversations } from "@/server/services/messaging";
+import { unreadNotices } from "@/server/services/notices";
 import { myAnalytics, myPosts } from "@/server/services/studio";
 
 export const metadata: Metadata = { title: "Overview · Studio" };
@@ -41,13 +42,14 @@ export default async function StudioOverviewPage() {
   const viewer = await requireViewer("club.discover");
   if (viewer.role !== "creator") notFound();
 
-  const [a, posts, blasts, earnings, onboarding, conversations] = await Promise.all([
+  const [a, posts, blasts, earnings, onboarding, conversations, newNotices] = await Promise.all([
     myAnalytics(viewer),
     myPosts(viewer),
     myBlasts(viewer),
     myEarnings(viewer),
     getOnboarding(viewer),
     myCreatorConversations(viewer),
+    unreadNotices(viewer),
   ]);
   const unread = conversations.filter((c) => c.unread).length;
   const verified = onboarding.verification.status === "verified";
@@ -80,6 +82,11 @@ export default async function StudioOverviewPage() {
         }
         actions={
           <>
+            {newNotices > 0 && (
+              <Button href="/studio/notices" variant="outline">
+                Notices ({newNotices} new)
+              </Button>
+            )}
             <Button href="/studio/blasts" variant="outline">Send a Blast</Button>
             <Button href="/studio/posts/new">New post</Button>
           </>

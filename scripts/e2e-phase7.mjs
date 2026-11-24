@@ -39,11 +39,11 @@ async function signIn(email, opts = desktop, password = PW) {
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Sign in" }).click();
-  await page.waitForURL(/\/(discover|pending|signin\/verify)/);
+  await page.waitForURL(/\/(home|discover|studio|owner|admin|pending|signin\/verify)/);
   if (page.url().endsWith("/signin/verify")) {
     await page.getByLabel("Code").fill(await freshCode(devTotpSecretFor(email)));
     await page.getByRole("button", { name: "Verify" }).click();
-    await page.waitForURL(/\/(admin|discover)/);
+    await page.waitForURL(/\/(owner|admin|home|discover|studio)/);
   }
   return { ctx, page };
 }
@@ -51,16 +51,16 @@ async function signIn(email, opts = desktop, password = PW) {
 // ================================================================ member opens a conversation from the profile
 const n = await signIn("nocturne@divafans.test");
 await n.page.goto(`${BASE}/c/isadora`);
-await n.page.getByRole("button", { name: /^Message Isadora Lune$/ }).click();
+await n.page.getByRole("button", { name: /^Message (Diva )?Isadora Lune$/ }).click();
 await n.page.waitForURL(/\/messages\/[0-9a-f-]{36}$/);
 const convUrl = n.page.url();
 const convId = convUrl.split("/").pop();
 check("member opens a conversation", true);
 await axe(n.page, "/messages/[id] (empty) @1440");
-const box = n.page.getByLabel("Message Isadora Lune");
+const box = n.page.getByLabel(/^Message (Diva )?Isadora Lune$/);
 await box.fill("Hello from the e2e member");
 await n.page.getByRole("button", { name: "Send" }).click();
-await n.page.getByRole("list", { name: "Conversation with Isadora Lune" }).getByText("Hello from the e2e member").waitFor();
+await n.page.getByRole("list", { name: /^Conversation with (Diva )?Isadora Lune$/ }).getByText("Hello from the e2e member").waitFor();
 check("message sent and shown", (await box.inputValue()) === "");
 
 // Links/contact details are refused and the draft is kept.
@@ -75,13 +75,13 @@ await box.fill("");
 const c = await signIn("isadora@divafans.test");
 await c.page.goto(`${BASE}/notifications`);
 check("creator notified (no message text)", (await c.page.getByText("New message from Nocturne").count()) > 0 && !(await c.page.content()).includes("Hello from the e2e member"));
-await c.page.goto(`${BASE}/messages`);
-const row = c.page.getByRole("list", { name: "Conversations" }).getByRole("link").filter({ hasText: "Nocturne" });
+await c.page.goto(`${BASE}/studio/messaging`);
+const row = c.page.getByRole("list", { name: /Member conversations|Conversations/ }).getByRole("link").filter({ hasText: "Nocturne" });
 check("inbox shows unread", /Unread/.test(await row.innerText()));
 await shot(c.page, "messages-inbox-desktop");
-await axe(c.page, "/messages @1440");
+await axe(c.page, "/studio/messaging @1440");
 await row.click();
-await c.page.waitForURL(/\/messages\//);
+await c.page.waitForURL(/\/(studio\/messaging|messages)\//);
 await c.page.getByText("Hello from the e2e member").waitFor();
 await c.page.getByLabel("Message Nocturne").fill("Thank you — welcome to the salon.");
 await c.page.getByRole("button", { name: "Send" }).click();
@@ -94,7 +94,7 @@ await axe(n.page, "/messages/[id] @1440");
 // ================================================================ access control
 const v = await signIn("velvet@divafans.test");
 await v.page.goto(`${BASE}/c/isadora`);
-check("non-member sees no Message button", (await v.page.getByRole("button", { name: /^Message Isadora Lune$/ }).count()) === 0);
+check("non-member sees no Message button", (await v.page.getByRole("button", { name: /^Message (Diva )?Isadora Lune$/ }).count()) === 0);
 check("non-member: conversation page → 404", (await v.page.goto(convUrl)).status() === 404);
 check("non-member: messages API → 404", (await v.ctx.request.get(`${BASE}/api/messages/${convId}`)).status() === 404);
 const anon = await browser.newContext(desktop);
@@ -212,7 +212,7 @@ for (const p of ["/messages", convUrl.replace(BASE, "")]) {
   check(`mobile ${p.startsWith("/messages/") ? "thread" : p}: no horizontal overflow`, ov <= 0, String(ov));
 }
 await shot(nm.page, "messages-thread-mobile");
-check("mobile nav has Messages", await nm.page.getByRole("navigation", { name: "Club" }).last().getByRole("link", { name: "Messages" }).isVisible());
+check("mobile nav has Messages", await nm.page.getByRole("navigation", { name: /Mobile Fan View navigation|Club/ }).last().getByRole("link", { name: "Messages" }).isVisible());
 
 await browser.close();
 let failed = 0;

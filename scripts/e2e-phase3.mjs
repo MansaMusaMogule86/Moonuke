@@ -47,13 +47,13 @@ async function signIn(email, password = PW, opts = desktop) {
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Sign in" }).click();
-  await page.waitForURL(/\/(discover|pending|signin\/verify|account\/security)/);
+  await page.waitForURL(/\/(home|discover|studio|owner|admin|pending|signin\/verify|account\/security)/);
   // Creators complete two-step sign-in with their own dev factor; the owner's flow is tested explicitly below.
   const isCreator = (await db.query(`select 1 from app.users where email = $1 and role = 'creator'`, [email])).rowCount === 1;
   if (page.url().endsWith("/signin/verify") && isCreator) {
     await page.getByLabel("Code").fill(await freshCode(devTotpSecretFor(email)));
     await page.getByRole("button", { name: "Verify" }).click();
-    await page.waitForURL(/\/(discover|studio|pending)/);
+    await page.waitForURL(/\/(home|discover|studio|pending)/);
   }
   return { ctx, page };
 }
@@ -62,7 +62,7 @@ async function ownerSignIn(opts = desktop) {
   const o = await signIn("owner@divafans.test", PW, opts);
   await o.page.getByLabel("Code").fill(await freshCode(ownerSecret));
   await o.page.getByRole("button", { name: "Verify" }).click();
-  await o.page.waitForURL(/\/admin/);
+  await o.page.waitForURL(/\/(owner|admin)/);
   return o;
 }
 
@@ -98,7 +98,7 @@ async function ownerSignIn(opts = desktop) {
   await page.getByText("If an account uses that address").waitFor();
   check("forgot: unknown email gets identical response", true);
   const v = await signIn("velvet@divafans.test", "velvet-new-password-1");
-  check("new password works", v.page.url().endsWith("/discover"));
+  check("new password works", /\/(home|discover)$/.test(v.page.url()));
   await v.ctx.close();
   await ctx.close();
 }
@@ -135,7 +135,7 @@ async function ownerSignIn(opts = desktop) {
     check(`owner without MFA: ${p} blocked`, /\/account\/security/.test(o.page.url()), o.page.url());
   }
   check("setup banner explains requirement", await o.page.getByRole("alert").filter({ hasText: "required for the owner" }).isVisible());
-  await o.page.getByRole("button", { name: "Set up two-step sign-in" }).click();
+  await o.page.getByRole("button", { name: /^Set up( two-step sign-in)?$/ }).click();
   const secretEl = o.page.getByTestId("mfa-secret");
   await secretEl.waitFor();
   ownerSecret = (await secretEl.textContent()).trim();
@@ -164,7 +164,7 @@ async function ownerSignIn(opts = desktop) {
   await b.page.goto(`${BASE}/discover`);
   check("revoked session is signed out", b.page.url().endsWith("/signin"));
 
-  await a.page.getByRole("button", { name: "Set up two-step sign-in" }).click();
+  await a.page.getByRole("button", { name: /^Set up( two-step sign-in)?$/ }).click();
   await a.page.getByTestId("mfa-secret").waitFor();
   const secret = (await a.page.getByTestId("mfa-secret").textContent()).trim();
   await a.page.getByLabel("Code from your app").fill(await freshCode(secret));
@@ -177,8 +177,8 @@ async function ownerSignIn(opts = desktop) {
   check("member with MFA → challenge", c.page.url().endsWith("/signin/verify"));
   await c.page.getByLabel("Code").fill(codes[0]);
   await c.page.getByRole("button", { name: "Verify" }).click();
-  await c.page.waitForURL(/\/discover/);
-  check("recovery code signs in", c.page.url().endsWith("/discover"));
+  await c.page.waitForURL(/\/(home|discover)/);
+  check("recovery code signs in", /\/(home|discover)$/.test(c.page.url()));
   const d = await signIn("nocturne@divafans.test");
   await d.page.getByLabel("Code").fill(codes[0]);
   await d.page.getByRole("button", { name: "Verify" }).click();
@@ -238,7 +238,7 @@ async function ownerSignIn(opts = desktop) {
   // Block from profile → leaves the profile, shows confirmation, profile now 404
   await v.page.goto(`${BASE}/c/valentin`);
   await v.page.getByRole("button", { name: "Block", exact: true }).click();
-  await v.page.getByRole("dialog").getByRole("button", { name: /Block Valentin/ }).click();
+  await v.page.getByRole("dialog").getByRole("button", { name: /Block (Diva )?Valentin/ }).click();
   await v.page.waitForURL(/\/discover\?blocked=1/);
   check("block → back to discovery with notice", await v.page.getByRole("status").filter({ hasText: "Blocked" }).isVisible());
   check("blocked creator gone from discovery", (await v.page.locator('a[href="/c/valentin"]').count()) === 0);
@@ -248,7 +248,7 @@ async function ownerSignIn(opts = desktop) {
   await shot(v.page, "privacy-desktop");
   await axe(v.page, "/account/privacy @1440");
   check("privacy lists report statuses", (await v.page.getByText("Received").count()) >= 1);
-  await v.page.getByRole("button", { name: "Unblock Valentin Ash" }).click();
+  await v.page.getByRole("button", { name: /Unblock (Diva )?Valentin Ash/ }).click();
   await v.page.getByText("Unblocked").waitFor();
   const back = await v.page.goto(`${BASE}/c/valentin`);
   check("unblock restores profile", back.status() === 200);
@@ -292,11 +292,11 @@ async function ownerSignIn(opts = desktop) {
   const hiddenRes = await m.page.goto(`${BASE}/c/rhea`);
   check("unverified creator profile 404 for members", hiddenRes.status() === 404);
   const r = await signIn("rhea@divafans.test");
-  check("creator nav shows Studio", await r.page.getByRole("navigation", { name: "Club" }).first().getByRole("link", { name: "Studio" }).isVisible());
-  await r.page.goto(`${BASE}/studio`);
+  check("creator nav shows Studio", /\/studio/.test(r.page.url()) && (await r.page.getByRole("link", { name: "Overview" }).first().isVisible()));
+  await r.page.goto(`${BASE}/studio/settings`);
   check("studio shows submitted status", await r.page.getByText("Submitted", { exact: true }).isVisible());
   await shot(r.page, "studio-desktop");
-  await axe(r.page, "/studio @1440");
+  await axe(r.page, "/studio/settings @1440");
   await r.page.getByLabel("Tagline (optional)").fill("Kiln notes, glaze tests and the pieces that crack.");
   await r.page.getByRole("button", { name: "Save profile" }).click();
   await r.page.getByText("Profile saved").waitFor();

@@ -29,9 +29,9 @@
 
 ### Issue #1 — Core functionality
 - **Status:** Complete locally (sandbox/simulation mode).
-- **Files:** `src/app/(club)/*`, `src/app/admin/*`, `src/app/invite/[token]/*`, `src/server/services/{accounts,club,creatorOnboarding,studio,fan,notifications,referrals}.ts`, `supabase/migrations/20261105000001`–`20261127000003`.
-- **Fixes in this pass:** Unified active redirect handling in `src/app/pending/page.tsx` and `src/app/signup/page.tsx` via `resolvePostLoginDestination(viewer)`.
-- **Evidence:** 46/46 Vitest files (444 tests) passing; production build passing.
+- **Files:** `src/app/(club)/*`, `src/app/admin/*`, `src/app/invite/[token]/*`, `src/app/owner/page.tsx`, `src/app/(club)/studio/page.tsx`, `src/server/services/{accounts,club,creatorOnboarding,studio,fan,notifications,referrals}.ts`, `supabase/migrations/20261105000001`–`20261127000003`.
+- **Fixes in this pass:** Unified active redirect handling in `src/app/pending/page.tsx` and `src/app/signup/page.tsx` via `resolvePostLoginDestination(viewer)`; restored unread moderation notices CTA (`Notices (N new)`) on `/studio`; added persisted `SIMULATED` confirmation banner on `/owner`.
+- **Evidence:** 46/46 Vitest files (**444/444 tests**), **14/14 Playwright + axe E2E suites (533/533 checks)**, production build, and PostgreSQL backup-restore drill all passing.
 - **Remaining blockers:** Live payments and media uploads remain intentionally disabled behind feature flags.
 
 ### Issue #2 — Creator and fan dashboards

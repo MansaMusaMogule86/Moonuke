@@ -27,11 +27,11 @@ async function signIn(email, opts = desktop) {
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(PW);
   await page.getByRole("button", { name: "Sign in" }).click();
-  await page.waitForURL(/\/(discover|pending|signin\/verify)/);
+  await page.waitForURL(/\/(home|discover|studio|owner|admin|pending|signin\/verify)/);
   if (page.url().endsWith("/signin/verify")) {
     await page.getByLabel("Code").fill(await freshCode(devTotpSecretFor(email)));
     await page.getByRole("button", { name: "Verify" }).click();
-    await page.waitForURL(/\/(admin|discover)/);
+    await page.waitForURL(/\/(owner|admin|home|discover|studio)/);
     await page.goto(`${BASE}/discover`);
   }
   return { ctx, page };
@@ -56,7 +56,7 @@ async function axe(page, label) {
 // ---------------------------------------------------------------- owner issues an invitation
 const owner = await signIn("owner@divafans.test");
 check("owner lands on /discover", owner.page.url().endsWith("/discover"));
-check("owner sees Admin nav", await owner.page.getByRole("navigation", { name: "Club" }).first().getByRole("link", { name: "Admin" }).isVisible());
+check("owner sees Admin nav", await owner.page.getByRole("link", { name: "Admin" }).first().isVisible());
 
 await owner.page.goto(`${BASE}/admin/invitations`);
 await owner.page.getByLabel("Private note").fill("e2e invite");
@@ -143,10 +143,10 @@ check("PPV body NOT in HTML", !html.includes("The full set, as promised"));
 await shot(visitor, "profile-desktop");
 await axe(visitor, "/c/isadora @1440");
 
-await visitor.getByRole("button", { name: /Join VIP · \$48/ }).click();
+await visitor.getByRole("button", { name: /(Join|Subscribe) VIP · \$48/ }).click();
 const sheet = visitor.getByRole("dialog");
-await sheet.getByText("$48").waitFor();
-check("checkout quote from server", await sheet.getByText("$48").isVisible());
+await sheet.getByText(/\$48/).first().waitFor();
+check("checkout quote from server", await sheet.getByText(/\$48/).first().isVisible());
 check("checkout disabled", await sheet.getByRole("button", { name: "Checkout unavailable" }).isDisabled());
 await shot(visitor, "checkout-sheet-desktop");
 await visitor.keyboard.press("Escape");
@@ -184,7 +184,7 @@ await axe(noct.page, "/refer @1440");
 await noct.page.getByLabel("Their name").fill("Lyra");
 await noct.page.getByLabel("Their email").fill("lyra@example.com");
 await noct.page.getByLabel("How do you know them?").fill("We studied together in Vienna for years.");
-await noct.page.getByRole("button", { name: "Send request to the house" }).click();
+await noct.page.getByRole("button", { name: /Request fan invitation|Send request to the house/ }).click();
 await noct.page.getByText("Request sent to the house").waitFor();
 check("referral request recorded", await noct.page.getByText("lyra@example.com").isVisible());
 await shot(noct.page, "refer-desktop");
@@ -239,7 +239,7 @@ check("wrong password → generic error", (await badPage.locator("form [role=ale
 
 // ---------------------------------------------------------------- mobile pass
 const m = await signIn("nocturne@divafans.test", mobile);
-check("mobile bottom tab bar", await m.page.locator("nav[aria-label=Club].fixed").isVisible());
+check("mobile bottom tab bar", await m.page.locator('nav[aria-label="Mobile Fan View navigation"].fixed').isVisible());
 await shot(m.page, "discover-mobile");
 await axe(m.page, "/discover @390");
 await m.page.goto(`${BASE}/c/isadora`);

@@ -39,11 +39,11 @@ async function signIn(email, opts = desktop, password = PW) {
   await page.getByLabel("Email").fill(email);
   await page.getByLabel("Password").fill(password);
   await page.getByRole("button", { name: "Sign in" }).click();
-  await page.waitForURL(/\/(discover|pending|signin\/verify)/);
+  await page.waitForURL(/\/(home|discover|studio|owner|admin|pending|signin\/verify)/);
   if (page.url().endsWith("/signin/verify")) {
     await page.getByLabel("Code").fill(await freshCode(devTotpSecretFor(email)));
     await page.getByRole("button", { name: "Verify" }).click();
-    await page.waitForURL(/\/(admin|discover)/);
+    await page.waitForURL(/\/(owner|admin|home|discover|studio)/);
   }
   return { ctx, page };
 }
@@ -172,7 +172,7 @@ check("member /studio/tiers → 404", memberTiers.status() === 404);
 
 // ================================================================ analytics (aggregates only)
 await c.page.goto(`${BASE}/studio`);
-await c.page.getByRole("link", { name: "Analytics", exact: true }).click();
+await c.page.getByRole("link", { name: /^(Members|Analytics)$/ }).first().click();
 await c.page.waitForURL(/\/studio\/analytics$/);
 await shot(c.page, "studio-analytics-desktop");
 await axe(c.page, "/studio/analytics @1440");
